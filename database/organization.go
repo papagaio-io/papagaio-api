@@ -1,11 +1,14 @@
 package database
 
-import "wecode.sorint.it/opensource/papagaio-be/dto"
+import (
+	"wecode.sorint.it/opensource/papagaio-be/dto"
+)
 
 func (db *Database) GetOrganizations() []dto.Organization {
-	//call the real database
 
 	return []dto.Organization{
-		{Name: "Test the Database from real database"},
+		{OrganizationName: "Test the Database from real database",
+			OrganizationType: "Test the Database from real database",
+			OrganizationURL:  "Test the Database from real database"},
 	}
 }

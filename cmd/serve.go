@@ -1,11 +1,18 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 	"net/http"
+	"os"
 
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	"github.com/spf13/cobra"
+	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/controller"
+	"wecode.sorint.it/opensource/papagaio-be/repository"
+	"wecode.sorint.it/opensource/papagaio-be/service"
 )
 
 var serveCmd = &cobra.Command{
@@ -15,15 +22,34 @@ var serveCmd = &cobra.Command{
 	Run:   serve,
 }
 
-func init() {
+func Init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
 func serve(cmd *cobra.Command, args []string) {
-	fmt.Println("Papagaio Server Starting")
-	router := controller.NewRouter()
-	if err := http.ListenAndServe(":9000", router); err != nil {
-		panic(err)
+	//config.SetupConfig()
+	db := repository.NewAppDb(config.Config)
+
+	ctrlOrganization := service.OrganizationService{
+		Db: &db,
 	}
 
+	router := mux.NewRouter()
+
+	controller.SetupHTTPClient()
+	controller.SetupRouter(router, &ctrlOrganization)
+
+	log.Println("Papagaio Server Starting on port ", config.Config.Server.Port)
+
+	logRouter := http.Handler(router)
+
+	if config.Config.LogHTTPRequest {
+		logRouter = handlers.LoggingHandler(os.Stdout, router)
+	} else {
+		logRouter = router
+	}
+
+	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
+		log.Println("http server error:", e)
+	}
 }

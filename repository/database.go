@@ -1,41 +1,57 @@
 package repository
 
 import (
-	"go.mongodb.org/mongo-driver/mongo"
+	"fmt"
+	"log"
+
+	"github.com/dgraph-io/badger"
 	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
 type Database interface {
-	GetOrganizations() []model.Organization
+	GetOrganizations() (*[]model.Organization, error)
+	SaveOrganization(organization *model.Organization) error
+	GetOrganizationByName(organizationName string) (*model.Organization, error)
 }
 
 type AppDb struct {
-	DB *mongo.Client
+	DB *badger.DB
 }
 
 func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
+
+	databaseDataTest(&db) //TODO remove only for test
+
 	return db
 }
 
 func (AppDb *AppDb) Init(config config.Configuration) {
-	/*badgerDb, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
+	var err error
+	AppDb.DB, err = badger.Open(badger.DefaultOptions("/badger/papagaio-be").WithSyncWrites(true).WithTruncate(true))
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+}
 
-	////////
+func databaseDataTest(db *AppDb) {
+	db.SaveOrganization(&model.Organization{OrganizationName: "ORG/ALE/Sorint", OrganizationType: "gitea", OrganizationURL: "www.wecode.it"})
+	db.SaveOrganization(&model.Organization{OrganizationName: "ORG/SIMONE/SorintDeb", OrganizationType: "gitea", OrganizationURL: "www.wecode.it"})
+	db.SaveOrganization(&model.Organization{OrganizationName: "UatProjects", OrganizationType: "gitea", OrganizationURL: "www.wecode.it"})
 
-	dbConnectionString := "/tmp/badger"
-
-	var err error
-	AppDb.DB, err = gorm.Open(config.Database.DbType, dbConnectionString)
-
+	organizations, err := db.GetOrganizations()
 	if err != nil {
-		log.Println("error db connection")
-		log.Fatal(err)
-	}*/
+		fmt.Println("GetOrganizations error:", err)
+	} else {
+		for _, o := range *organizations {
+			fmt.Println("organization :", o.OrganizationName, o.OrganizationURL, o.OrganizationType)
+		}
+	}
+
+	myOrg, _ := db.GetOrganizationByName("ORG/ALE/Sorint")
+	if myOrg != nil {
+		fmt.Println("myOrg name:", myOrg.OrganizationURL)
+	}
 }

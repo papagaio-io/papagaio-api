@@ -3,7 +3,7 @@ module wecode.sorint.it/opensource/papagaio-be
 go 1.15
 
 require (
-	github.com/dgraph-io/badger/v3 v3.2011.1 // indirect
+	github.com/dgraph-io/badger v1.6.2
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/rs/cors v1.7.0

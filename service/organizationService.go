@@ -12,7 +12,7 @@ type OrganizationService struct {
 }
 
 func (service *OrganizationService) GetOrganizations(w http.ResponseWriter, r *http.Request) {
-	organization := service.Db.GetOrganizations()
+	organization, _ := service.Db.GetOrganizations()
 	jsonResponse, _ := json.Marshal(organization)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)

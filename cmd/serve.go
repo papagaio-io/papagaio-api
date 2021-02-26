@@ -52,4 +52,6 @@ func serve(cmd *cobra.Command, args []string) {
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)
 	}
+
+	defer db.DB.Close()
 }

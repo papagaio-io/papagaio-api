@@ -12,7 +12,7 @@ import (
 type Database interface {
 	GetOrganizations() (*[]model.Organization, error)
 	SaveOrganization(organization *model.Organization) error
-	GetOrganizationByName(organizationName string) (*model.Organization, error)
+	GetOrganizationByName(organizationName string, userName string) (*model.Organization, error)
 }
 
 type AppDb struct {
@@ -37,21 +37,21 @@ func (AppDb *AppDb) Init(config config.Configuration) {
 }
 
 func databaseDataTest(db *AppDb) {
-	db.SaveOrganization(&model.Organization{OrganizationName: "ORG/ALE/Sorint", OrganizationType: "gitea", OrganizationURL: "www.wecode.it"})
-	db.SaveOrganization(&model.Organization{OrganizationName: "ORG/SIMONE/SorintDeb", OrganizationType: "gitea", OrganizationURL: "www.wecode.it"})
-	db.SaveOrganization(&model.Organization{OrganizationName: "UatProjects", OrganizationType: "gitea", OrganizationURL: "www.wecode.it"})
+	db.SaveOrganization(&model.Organization{Name: "Sorint", UserName: "Ale", Type: "gitea", URL: "www.wecode.it"})
+	db.SaveOrganization(&model.Organization{Name: "SorintDeb", UserName: "Simone", Type: "gitea", URL: "www.wecode.it"})
+	db.SaveOrganization(&model.Organization{Name: "UatProjects", UserName: "Usernameexample", Type: "gitea", URL: "www.wecode.it"})
 
 	organizations, err := db.GetOrganizations()
 	if err != nil {
 		fmt.Println("GetOrganizations error:", err)
 	} else {
 		for _, o := range *organizations {
-			fmt.Println("organization :", o.OrganizationName, o.OrganizationURL, o.OrganizationType)
+			fmt.Println("organization :", o.Name, o.URL, o.Type)
 		}
 	}
 
-	myOrg, _ := db.GetOrganizationByName("ORG/ALE/Sorint")
+	myOrg, _ := db.GetOrganizationByName("Sorint", "ALE")
 	if myOrg != nil {
-		fmt.Println("myOrg name:", myOrg.OrganizationURL)
+		fmt.Println("myOrg name:", myOrg.URL)
 	}
 }

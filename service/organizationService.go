@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
 )
 
@@ -12,19 +13,30 @@ type OrganizationService struct {
 }
 
 func (service *OrganizationService) GetOrganizations(w http.ResponseWriter, r *http.Request) {
-	organization, _ := service.Db.GetOrganizations()
-	jsonResponse, _ := json.Marshal(organization)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	w.Write(jsonResponse)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	org, err := service.Db.GetOrganizations()
+	if err != nil {
+		InternalServerError(w)
+		return
+	}
+
+	JSONokResponse(w, org)
 }
 
-func (service *OrganizationService) CreateOrganizationEndpoint(w http.ResponseWriter, r *http.Request) {
-	/*w.Header().Add("content-type", "application/json")
-	var organization model.Organization
-	_ = json.NewDecoder(r.Body).Decode(&organization)
-	collection := service.Db.Database("papagaioFirstDatabase").Collection("organization")
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	result, _ := collection.InsertOne(ctx, organization)
-	json.NewEncoder(r).Encode(result)*/
+func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	var org *model.Organization
+	json.NewDecoder(r.Body).Decode(&org)
+
+	err := service.Db.SaveOrganization(org)
+	if err != nil {
+		InternalServerError(w)
+		return
+	}
+
+	JSONokResponse(w, org)
 }

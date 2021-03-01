@@ -27,6 +27,7 @@ func Init() {
 }
 
 func serve(cmd *cobra.Command, args []string) {
+	config.Config.Server.Port = "8080" //TODO remove after complited SetupConfig
 	//config.SetupConfig()
 	db := repository.NewAppDb(config.Config)
 

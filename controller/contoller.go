@@ -6,5 +6,5 @@ import (
 
 type OrganizationController interface {
 	GetOrganizations(w http.ResponseWriter, r *http.Request)
-	CreateOrganizationEndpoint(w http.ResponseWriter, r *http.Request)
+	CreateOrganization(w http.ResponseWriter, r *http.Request)
 }

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	"log"
 	"strings"
 
@@ -21,31 +22,35 @@ func (db *AppDb) GetOrganizations() (*[]model.Organization, error) {
 			dst := make([]byte, 0)
 			value, err := item.ValueCopy(dst)
 
+			var organization model.Organization
+			json.Unmarshal(value, &organization)
+
 			if err != nil {
 				log.Println("GetOrganizations read value error:", err)
 				return err
 			}
 
-			retVal = append(retVal, model.Organization{OrganizationName: string(item.Key()), OrganizationURL: string(value), OrganizationType: "TODO"})
+			retVal = append(retVal, organization)
 		}
 		return nil
 	})
-
-	if err != nil {
-		log.Println("repository error:", err)
-	}
 
 	return &retVal, err
 }
 
 func (db *AppDb) SaveOrganization(organization *model.Organization) error {
-	err := db.DB.Update(func(txn *badger.Txn) error {
-		e := badger.NewEntry([]byte(organization.OrganizationName), []byte(organization.OrganizationURL))
-		err := txn.SetEntry(e)
+	key := "ORG/" + organization.UserName + "/" + organization.Name
+	value, err := json.Marshal(organization)
+	if err != nil {
+		log.Println("SaveOrganization erro in json marshal", err)
+		return err
+	}
 
-		if err != nil {
-			log.Println("repository error:", err)
-		}
+	//TODO Verify if the organization key already exists
+
+	err = db.DB.Update(func(txn *badger.Txn) error {
+		e := badger.NewEntry([]byte(key), value)
+		err := txn.SetEntry(e)
 
 		return err
 	})
@@ -53,8 +58,8 @@ func (db *AppDb) SaveOrganization(organization *model.Organization) error {
 	return err
 }
 
-func (db *AppDb) GetOrganizationByName(organizationName string) (*model.Organization, error) {
-	var organization *model.Organization = nil
+func (db *AppDb) GetOrganizationByName(name string, userName string) (*model.Organization, error) {
+	var organization *model.Organization
 
 	dst := make([]byte, 0)
 	err := db.DB.View(func(txn *badger.Txn) error {
@@ -62,11 +67,11 @@ func (db *AppDb) GetOrganizationByName(organizationName string) (*model.Organiza
 		opts.PrefetchValues = false
 		it := txn.NewIterator(opts)
 		defer it.Close()
-		prefix := []byte(organizationName)
+		prefix := []byte("ORG/" + userName + "/" + name)
 		for it.Seek(prefix); it.Valid(); it.Next() {
 			item := it.Item()
 			key := string(item.Key())
-			if strings.Compare(key, organizationName) != 0 {
+			if strings.Compare(key, name) != 0 {
 				continue
 			}
 
@@ -77,7 +82,9 @@ func (db *AppDb) GetOrganizationByName(organizationName string) (*model.Organiza
 				return err
 			}
 
-			organization = &model.Organization{OrganizationName: key, OrganizationURL: string(dst), OrganizationType: "TODO"}
+			json.Unmarshal(dst, &organization)
+
+			break
 		}
 
 		return nil

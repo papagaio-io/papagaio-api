@@ -31,5 +31,5 @@ func setupGetOrganizationsRouter(router *mux.Router, ctrl OrganizationController
 }
 
 func setupCreateOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.HandleFunc("", ctrl.CreateOrganizationEndpoint).Methods("POST")
+	router.HandleFunc("", ctrl.CreateOrganization).Methods("POST")
 }

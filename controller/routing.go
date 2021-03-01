@@ -17,7 +17,7 @@ func SetupHTTPClient() {
 func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController) {
 	setupPingRouter(router)
 	setupGetOrganizationsRouter(router.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
-	setupCreateOrganizationEndpoint(router.PathPrefix("/organizationdbtest").Subrouter(), ctrlOrganization)
+	setupCreateOrganizationEndpoint(router.PathPrefix("/saveorganization").Subrouter(), ctrlOrganization)
 }
 
 func setupPingRouter(router *mux.Router) {

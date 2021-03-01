@@ -12,7 +12,7 @@ import (
 type Database interface {
 	GetOrganizations() (*[]model.Organization, error)
 	SaveOrganization(organization *model.Organization) error
-	GetOrganizationByName(organizationName string, userName string) (*model.Organization, error)
+	GetOrganization(organizationName string, userName string) (*model.Organization, error)
 }
 
 type AppDb struct {
@@ -50,7 +50,7 @@ func databaseDataTest(db *AppDb) {
 		}
 	}
 
-	myOrg, _ := db.GetOrganizationByName("Sorint", "ALE")
+	myOrg, _ := db.GetOrganization("Sorint", "ALE")
 	if myOrg != nil {
 		fmt.Println("myOrg name:", myOrg.URL)
 	}

@@ -46,8 +46,6 @@ func (db *AppDb) SaveOrganization(organization *model.Organization) error {
 		return err
 	}
 
-	//TODO Verify if the organization key already exists
-
 	err = db.DB.Update(func(txn *badger.Txn) error {
 		e := badger.NewEntry([]byte(key), value)
 		err := txn.SetEntry(e)
@@ -58,7 +56,7 @@ func (db *AppDb) SaveOrganization(organization *model.Organization) error {
 	return err
 }
 
-func (db *AppDb) GetOrganizationByName(name string, userName string) (*model.Organization, error) {
+func (db *AppDb) GetOrganization(name string, userName string) (*model.Organization, error) {
 	var organization *model.Organization
 
 	dst := make([]byte, 0)

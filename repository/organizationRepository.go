@@ -39,7 +39,7 @@ func (db *AppDb) GetOrganizations() (*[]model.Organization, error) {
 }
 
 func (db *AppDb) SaveOrganization(organization *model.Organization) error {
-	key := "ORG/" + organization.ID
+	key := "org/" + organization.ID
 	value, err := json.Marshal(organization)
 	if err != nil {
 		log.Println("SaveOrganization erro in json marshal", err)
@@ -56,7 +56,7 @@ func (db *AppDb) SaveOrganization(organization *model.Organization) error {
 	return err
 }
 
-func (db *AppDb) GetOrganization(name string, userName string) (*model.Organization, error) {
+func (db *AppDb) GetOrganizationByName(name string) (*model.Organization, error) {
 	var organization *model.Organization
 
 	dst := make([]byte, 0)
@@ -65,7 +65,7 @@ func (db *AppDb) GetOrganization(name string, userName string) (*model.Organizat
 		opts.PrefetchValues = false
 		it := txn.NewIterator(opts)
 		defer it.Close()
-		prefix := []byte("ORG/" + userName + "/" + name)
+		prefix := []byte("org/" + name)
 		for it.Seek(prefix); it.Valid(); it.Next() {
 			item := it.Item()
 			key := string(item.Key())
@@ -89,4 +89,18 @@ func (db *AppDb) GetOrganization(name string, userName string) (*model.Organizat
 	})
 
 	return organization, err
+}
+
+//TODO
+func (db *AppDb) GetOrganizationByID(organizationID string) (*model.Organization, error) {
+	var org *model.Organization
+	var err error
+
+	return org, err
+}
+
+//TODO
+func (db *AppDb) DeleteOrganization(organizationID string) error {
+	var err error
+	return err
 }

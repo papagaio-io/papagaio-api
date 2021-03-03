@@ -1,10 +1,11 @@
 package model
 
 type Organization struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	UserRefOwner string `json:"userRefOwner"`
-	Visibility   string `json:"visibility"`
+	ID                string `json:"id"`
+	Name              string `json:"name"`
+	UserEmail         string `json:"userEmail"`
+	AgolaUserRefOwner string `json:"agolaUserRefOwner"`
+	Visibility        string `json:"visibility"`
 	//Token string `json:"token"`
 	RemoteSourceName string `json:"remoteSourceName"`
 

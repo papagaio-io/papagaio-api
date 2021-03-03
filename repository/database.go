@@ -11,7 +11,19 @@ import (
 type Database interface {
 	GetOrganizations() (*[]model.Organization, error)
 	SaveOrganization(organization *model.Organization) error
-	GetOrganization(organizationName string, userName string) (*model.Organization, error)
+	GetOrganizationByName(organizationName string) (*model.Organization, error)
+	GetOrganizationByID(organizationID string) (*model.Organization, error)
+	DeleteOrganization(organizationID string) error
+
+	GetGitSources() (*[]model.GitSource, error)
+	SaveGitSource(gitSource *model.GitSource) error
+	GetGitSourceByID(id string) (*model.GitSource, error)
+	DeleteGitSource(id string) error
+
+	SaveUser(user *model.User) error
+	UpdateUser(user *model.User) error
+	GetUserByEmail(email string) (*model.User, error)
+	DeleteUser(email string) error
 }
 
 type AppDb struct {
@@ -27,9 +39,9 @@ func NewAppDb(config config.Configuration) AppDb {
 	return db
 }
 
-func (AppDb *AppDb) Init(config config.Configuration) {
+func (db *AppDb) Init(config config.Configuration) {
 	var err error
-	AppDb.DB, err = badger.Open(badger.DefaultOptions("/badger/papagaio-be").WithSyncWrites(true).WithTruncate(true))
+	db.DB, err = badger.Open(badger.DefaultOptions("/badger/papagaio-be").WithSyncWrites(true).WithTruncate(true))
 	if err != nil {
 		log.Fatal(err)
 	}

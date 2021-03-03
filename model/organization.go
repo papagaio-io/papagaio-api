@@ -1,8 +1,14 @@
 package model
 
 type Organization struct {
-	Name     string `json:"name"`
-	UserName string `json:"username"`
-	Type     string `json:"type"`
-	URL      string `json:"url"` //json:"url,omitempty"
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	UserRefOwner string `json:"userRefOwner"`
+	Visibility   string `json:"visibility"`
+	//Token string `json:"token"`
+	RemoteSourceName string `json:"remoteSourceName"`
+
+	GitSourceID int    `json:"gitSourceId"`
+	GirOrgRef   string `json:"gitOrgRef"`
+	WebHookID   int    `json:"webHookId"`
 }

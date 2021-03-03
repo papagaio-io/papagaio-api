@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/dgraph-io/badger"
@@ -23,7 +22,7 @@ func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
 
-	databaseDataTest(&db) //TODO remove only for test
+	//databaseDataTest(&db) //TODO remove only for test
 
 	return db
 }
@@ -36,7 +35,7 @@ func (AppDb *AppDb) Init(config config.Configuration) {
 	}
 }
 
-func databaseDataTest(db *AppDb) {
+/*func databaseDataTest(db *AppDb) {
 	db.SaveOrganization(&model.Organization{Name: "Sorint", UserName: "Ale", Type: "gitea", URL: "www.wecode.it"})
 	db.SaveOrganization(&model.Organization{Name: "SorintDeb", UserName: "Simone", Type: "gitea", URL: "www.wecode.it"})
 	db.SaveOrganization(&model.Organization{Name: "UatProjects", UserName: "Usernameexample", Type: "gitea", URL: "www.wecode.it"})
@@ -54,4 +53,4 @@ func databaseDataTest(db *AppDb) {
 	if myOrg != nil {
 		fmt.Println("myOrg name:", myOrg.URL)
 	}
-}
+}*/

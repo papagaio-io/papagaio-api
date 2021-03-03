@@ -10,6 +10,6 @@ type Organization struct {
 	RemoteSourceName string `json:"remoteSourceName"`
 
 	GitSourceID int    `json:"gitSourceId"`
-	GirOrgRef   string `json:"gitOrgRef"`
+	GitOrgRef   string `json:"gitOrgRef"`
 	WebHookID   int    `json:"webHookId"`
 }

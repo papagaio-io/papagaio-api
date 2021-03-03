@@ -14,7 +14,7 @@ func SetupHTTPClient() {
 	}
 }
 
-func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController) {
+func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlMember MemberController, ctrlWebHook WebHookController) {
 	setupPingRouter(router)
 	setupGetOrganizationsRouter(router.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
 	setupCreateOrganizationEndpoint(router.PathPrefix("/saveorganization").Subrouter(), ctrlOrganization)

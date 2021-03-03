@@ -17,3 +17,9 @@ type MemberController interface {
 	AddMember(w http.ResponseWriter, r *http.Request)
 	RemoveMember(w http.ResponseWriter, r *http.Request)
 }
+
+type GitSourceController interface {
+	GetGitSources(w http.ResponseWriter, r *http.Request)
+	AddGitSource(w http.ResponseWriter, r *http.Request)
+	RemoveGitSource(w http.ResponseWriter, r *http.Request)
+}

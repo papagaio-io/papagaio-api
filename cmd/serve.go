@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
+	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
 	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/controller"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
@@ -27,7 +29,14 @@ func Init() {
 }
 
 func serve(cmd *cobra.Command, args []string) {
-	config.Config.Server.Port = "8080" //TODO remove after complited SetupConfig
+	//Insert only for test
+	config.Config.Server.Port = "8080"
+	config.Config.Agola.AgolaAddr = "https://agola.sorintdev.it"
+	config.Config.Agola.AdminToken = "token admintoken"
+
+	token, err := agolaApi.CreateUserToken("test", "rrrrrr")
+	fmt.Println("token created for test user: ", token, err)
+
 	//config.SetupConfig()
 	db := repository.NewAppDb(config.Config)
 

@@ -20,6 +20,13 @@ type Configuration struct {
 	DisableSSLCertificateValidation bool
 	// Keycloak configuration
 	Keycloak KeycloakConfig
+	//Agola address
+	Agola AgolaConfig
+}
+
+type AgolaConfig struct {
+	AgolaAddr  string
+	AdminToken string
 }
 
 // DbConfig contains all informations required to connect to repository

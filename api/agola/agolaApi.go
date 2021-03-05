@@ -57,10 +57,24 @@ func DeleteProject(agolaProjectRef string, organization *model.Organization) err
 	return err
 }
 
-//TODO
-func GetRemoteSources() []string {
-	var remoteSources []string
-	return remoteSources
+func GetRemoteSources() *[]RemoteSourcesDto {
+	client := &http.Client{}
+	URLApi := getRemoteSourcesUrl()
+	req, err := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return nil
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var jsonResponse []RemoteSourcesDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse
 }
 
 //TODO

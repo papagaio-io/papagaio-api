@@ -5,3 +5,7 @@ type AgolaCreateORGDto struct {
 	Name       string `json:"name"`
 	Visibility string `json:"visibility"`
 }
+
+type RemoteSourcesDto struct {
+	Name string `json:"name"`
+}

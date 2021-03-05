@@ -12,7 +12,6 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
-//TODO
 func CreateOrganization(name string, visibility string) (string, error) {
 	client := &http.Client{}
 	URLApi := getCreateORGUrl()
@@ -77,7 +76,6 @@ func GetRemoteSources() *[]RemoteSourcesDto {
 	return &jsonResponse
 }
 
-//TODO
 func AddOrganizationMember(agolaOrganizationRef string, agolaUserRef string, role string) error {
 	var err error
 	client := &http.Client{}

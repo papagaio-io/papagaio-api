@@ -22,7 +22,6 @@ type Database interface {
 	DeleteGitSource(id string) error
 
 	SaveUser(user *model.User) error
-	UpdateUser(user *model.User) error
 	GetUserByEmail(email string) (*model.User, error)
 	DeleteUser(email string) error
 }

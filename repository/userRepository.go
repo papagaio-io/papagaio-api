@@ -1,16 +1,29 @@
 package repository
 
-import "wecode.sorint.it/opensource/papagaio-be/model"
+import (
+	"encoding/json"
+	"log"
+	"strings"
 
-//TODO
+	"github.com/dgraph-io/badger"
+	"wecode.sorint.it/opensource/papagaio-be/model"
+)
+
 func (db *AppDb) SaveUser(user *model.User) error {
-	var err error
-	return err
-}
+	key := "user/" + string(user.Email)
+	value, err := json.Marshal(user)
+	if err != nil {
+		log.Println("SaveUser error in json marshal", err)
+		return err
+	}
 
-//TODO
-func (db *AppDb) UpdateUser(user *model.User) error {
-	var err error
+	err = db.DB.Update(func(txn *badger.Txn) error {
+		e := badger.NewEntry([]byte(key), value)
+		err := txn.SetEntry(e)
+
+		return err
+	})
+
 	return err
 }
 
@@ -20,9 +33,33 @@ func (db *AppDb) DeleteUser(email string) error {
 	return err
 }
 
-//TODO
 func (db *AppDb) GetUserByEmail(email string) (*model.User, error) {
-	var user *model.User
-	var err error
-	return user, err
+	var user model.User
+
+	dst := make([]byte, 0)
+	err := db.DB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = []byte("user/")
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+
+			var localUser model.User
+			dst, _ = item.ValueCopy(dst)
+			json.Unmarshal(dst, &localUser)
+			if strings.Compare(localUser.Email, email) != 0 {
+				continue
+			}
+
+			user = localUser
+
+			break
+		}
+
+		return nil
+	})
+
+	return &user, err
 }

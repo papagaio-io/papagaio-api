@@ -43,7 +43,7 @@ func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
 	key := "gs/" + string(gitSource.ID)
 	value, err := json.Marshal(gitSource)
 	if err != nil {
-		log.Println("SaveGitSource erro in json marshal", err)
+		log.Println("SaveGitSource error in json marshal", err)
 		return err
 	}
 

@@ -78,7 +78,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	JSONokResponse(w, org)
+	JSONokResponse(w, org.ID) //TO VERIFY
 }
 
 //TODO

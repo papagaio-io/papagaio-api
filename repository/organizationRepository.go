@@ -15,6 +15,7 @@ func (db *AppDb) GetOrganizations() (*[]model.Organization, error) {
 	err := db.DB.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false
+		opts.Prefix = []byte("org/")
 		it := txn.NewIterator(opts)
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
@@ -63,24 +64,20 @@ func (db *AppDb) GetOrganizationByName(name string) (*model.Organization, error)
 	err := db.DB.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false
+		opts.Prefix = []byte("org/")
 		it := txn.NewIterator(opts)
 		defer it.Close()
-		prefix := []byte("org/" + name)
-		for it.Seek(prefix); it.Valid(); it.Next() {
+		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
-			key := string(item.Key())
-			if strings.Compare(key, name) != 0 {
+
+			var localOrganization model.Organization
+			dst, _ = item.ValueCopy(dst)
+			json.Unmarshal(dst, &localOrganization)
+			if strings.Compare(localOrganization.Name, name) != 0 {
 				continue
 			}
 
-			var err error
-			dst, err = item.ValueCopy(dst)
-			if err != nil {
-				log.Println("repository error:", err)
-				return err
-			}
-
-			json.Unmarshal(dst, &organization)
+			organization = localOrganization
 
 			break
 		}
@@ -93,10 +90,34 @@ func (db *AppDb) GetOrganizationByName(name string) (*model.Organization, error)
 
 //TODO
 func (db *AppDb) GetOrganizationByID(organizationID string) (*model.Organization, error) {
-	var org *model.Organization
-	var err error
+	var organization model.Organization
 
-	return org, err
+	dst := make([]byte, 0)
+	err := db.DB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = []byte("org/" + organizationID)
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+
+			var localOrganization model.Organization
+			dst, _ = item.ValueCopy(dst)
+			json.Unmarshal(dst, &localOrganization)
+			if strings.Compare(localOrganization.ID, organizationID) != 0 {
+				continue
+			}
+
+			organization = localOrganization
+
+			break
+		}
+
+		return nil
+	})
+
+	return &organization, err
 }
 
 //TODO

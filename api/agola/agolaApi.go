@@ -64,38 +64,6 @@ func GetRemoteSources() []string {
 	return remoteSources
 }
 
-func CreateUserToken(agolaUserRef string, tokenName string) (string, error) {
-	client := &http.Client{}
-
-	URLApi := getCreateTokenUrl(agolaUserRef)
-
-	reqBody := strings.NewReader(`{"token_name": "` + tokenName + `"}`)
-	req, err := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
-	resp, err := client.Do(req)
-	defer resp.Body.Close()
-
-	if err != nil {
-		return "", err
-	}
-	if resp.StatusCode == 400 {
-		return "", errors.New(resp.Status)
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var jsonResponse AgolaCreateTokenDto
-	json.Unmarshal(body, &jsonResponse)
-
-	return jsonResponse.Token, err
-}
-
-//TODO
-func DeleteUserToken(agolaUserRef string, tokenName string) error {
-	var err error
-	return err
-}
-
 //TODO
 func AddOrganizationMember(agolaOrganizationRef string, agolaUserRef string, role string) error {
 	var err error

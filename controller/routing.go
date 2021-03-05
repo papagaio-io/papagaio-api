@@ -22,6 +22,8 @@ func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ct
 	setupGetOrganizationsRouter(router.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
 	setupCreateOrganizationEndpoint(router.PathPrefix("/saveorganization").Subrouter(), ctrlOrganization)
 
+	setupGetGitSourcesEndpoint(router.PathPrefix("/gitsources").Subrouter(), ctrlGitSource)
+
 	setupWebHookEndpoint(router.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
 }
 
@@ -37,6 +39,10 @@ func setupGetOrganizationsRouter(router *mux.Router, ctrl OrganizationController
 
 func setupCreateOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.HandleFunc("", ctrl.CreateOrganization).Methods("POST")
+}
+
+func setupGetGitSourcesEndpoint(router *mux.Router, ctrl GitSourceController) {
+	router.HandleFunc("", ctrl.GetGitSources).Methods("GET")
 }
 
 func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {

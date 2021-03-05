@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/dgraph-io/badger"
@@ -17,7 +18,7 @@ type Database interface {
 
 	GetGitSources() (*[]model.GitSource, error)
 	SaveGitSource(gitSource *model.GitSource) error
-	GetGitSourceByID(id string) (*model.GitSource, error)
+	GetGitSourceByID(id int) (*model.GitSource, error)
 	DeleteGitSource(id string) error
 
 	SaveUser(user *model.User) error
@@ -34,7 +35,7 @@ func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
 
-	//databaseDataTest(&db) //TODO remove only for test
+	databaseDataTest(&db) //TODO remove only for test
 
 	return db
 }
@@ -47,22 +48,36 @@ func (db *AppDb) Init(config config.Configuration) {
 	}
 }
 
-/*func databaseDataTest(db *AppDb) {
-	db.SaveOrganization(&model.Organization{Name: "Sorint", UserName: "Ale", Type: "gitea", URL: "www.wecode.it"})
-	db.SaveOrganization(&model.Organization{Name: "SorintDeb", UserName: "Simone", Type: "gitea", URL: "www.wecode.it"})
-	db.SaveOrganization(&model.Organization{Name: "UatProjects", UserName: "Usernameexample", Type: "gitea", URL: "www.wecode.it"})
+func databaseDataTest(db *AppDb) {
+	db.SaveOrganization(&model.Organization{ID: "123", Name: "Sorint", UserEmail: "Ale"})
+	db.SaveOrganization(&model.Organization{ID: "abc", Name: "SorintDeb", UserEmail: "Simone"})
+	db.SaveOrganization(&model.Organization{ID: "ddd", Name: "UatProjects", UserEmail: "Usernameexample"})
 
 	organizations, err := db.GetOrganizations()
 	if err != nil {
 		fmt.Println("GetOrganizations error:", err)
 	} else {
 		for _, o := range *organizations {
-			fmt.Println("organization :", o.Name, o.URL, o.Type)
+			fmt.Println("organization :", o)
 		}
 	}
 
-	myOrg, _ := db.GetOrganization("Sorint", "ALE")
+	myOrg, _ := db.GetOrganizationByName("Sorint")
 	if myOrg != nil {
-		fmt.Println("myOrg name:", myOrg.URL)
+		fmt.Println("myOrg name:", myOrg)
 	}
-}*/
+
+	//////////
+
+	db.SaveGitSource(&model.GitSource{ID: 1, Name: "Test1"})
+	db.SaveGitSource(&model.GitSource{ID: 2, Name: "Test2"})
+	db.SaveGitSource(&model.GitSource{ID: 3, Name: "Test3"})
+
+	gs, _ := db.GetGitSources()
+	for _, g := range *gs {
+		fmt.Println("gitSource :", g)
+	}
+
+	mygs, _ := db.GetGitSourceByID(1)
+	fmt.Println("mygs: ", mygs)
+}

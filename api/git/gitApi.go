@@ -84,6 +84,19 @@ func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]Repositor
 	return &repositoryesResponse, err
 }
 
+func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
+	client := &http.Client{}
+
+	URLApi := getOrganizationPath(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
+
+	req, _ := http.NewRequest("GET", URLApi, nil)
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+
+	return resp.StatusCode == 200
+
+}
+
 //TODO
 /*func GetGitOrganizations(gitSource *model.GitSource) ([]string, error) {
 	var organizations []string

@@ -49,9 +49,9 @@ func (db *AppDb) Init(config config.Configuration) {
 }
 
 func databaseDataTest(db *AppDb) {
-	db.SaveOrganization(&model.Organization{ID: "123", Name: "Sorint", UserEmail: "Ale"})
-	db.SaveOrganization(&model.Organization{ID: "abc", Name: "SorintDeb", UserEmail: "Simone"})
-	db.SaveOrganization(&model.Organization{ID: "ddd", Name: "UatProjects", UserEmail: "Usernameexample"})
+	db.SaveOrganization(&model.Organization{ID: "123", Name: "Sorint", UserEmailOwner: "Ale"})
+	db.SaveOrganization(&model.Organization{ID: "abc", Name: "SorintDeb", UserEmailOwner: "Simone"})
+	db.SaveOrganization(&model.Organization{ID: "ddd", Name: "UatProjects", UserEmailOwner: "Usernameexample"})
 
 	organizations, err := db.GetOrganizations()
 	if err != nil {

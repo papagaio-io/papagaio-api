@@ -87,6 +87,11 @@ func testSomeAPI() {
 	fmt.Println("gitRepositoryes: ", gitRepositoryes)
 	fmt.Println("err: ", err)
 
+	exists := gitApi.CheckOrganizationExists(&gitSource, "papagaiotest")
+	fmt.Println("exists: ", exists)
+	exists = gitApi.CheckOrganizationExists(&gitSource, "kkklll")
+	fmt.Println("exists: ", exists)
+
 	// idOrganization, err := agolaApi.CreateOrganization("DC-Comics", "public")
 	// fmt.Println("Create Organization: id ", idOrganization, err)
 

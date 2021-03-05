@@ -8,6 +8,9 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/config"
 )
 
+const WebHookPath string = "/webhook"
+const WenHookPathParam string = "/{gitOrgRef}"
+
 func SetupHTTPClient() {
 	if config.Config.DisableSSLCertificateValidation {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -18,6 +21,8 @@ func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ct
 	setupPingRouter(router)
 	setupGetOrganizationsRouter(router.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
 	setupCreateOrganizationEndpoint(router.PathPrefix("/saveorganization").Subrouter(), ctrlOrganization)
+
+	setupWebHookEndpoint(router.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
 }
 
 func setupPingRouter(router *mux.Router) {
@@ -32,4 +37,8 @@ func setupGetOrganizationsRouter(router *mux.Router, ctrl OrganizationController
 
 func setupCreateOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.HandleFunc("", ctrl.CreateOrganization).Methods("POST")
+}
+
+func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
+	router.HandleFunc(WenHookPathParam, ctrl.WebHookOrganization).Methods("POST")
 }

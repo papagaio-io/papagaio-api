@@ -33,8 +33,11 @@ func Init() {
 func serve(cmd *cobra.Command, args []string) {
 	//Insert only for test
 	config.Config.Server.Port = "8080"
+	config.Config.Server.LocalHostAddress = "http://79.51.133.93:8080"
 	config.Config.Agola.AgolaAddr = "https://agola.sorintdev.it"
 	config.Config.Agola.AdminToken = "token admintoken"
+
+	testSomeAPI()
 
 	//config.SetupConfig()
 	db := repository.NewAppDb(config.Config)
@@ -80,8 +83,8 @@ func testSomeAPI() {
 	fmt.Println("token created for test user: ", token, err)*/
 
 	gitSource := model.GitSource{GitType: "gitea", GitAPIURL: "https://try.gitea.io", GitToken: "20b93c349872f2bdb3a77b0bd898a3be424c6cbd"}
-	id, _ := gitApi.CreateWebHook(&gitSource, "papagaiotest")
-	fmt.Println("webhook id: ", id)
+	webHookId, _ := gitApi.CreateWebHook(&gitSource, "papagaiotest", "*")
+	fmt.Println("webhook id: ", webHookId)
 
 	idOrganization, err := agolaApi.CreateOrganization("DC-Comics", "public")
 	fmt.Println("Create Organization: id ", idOrganization, err)

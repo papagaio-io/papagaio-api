@@ -50,7 +50,8 @@ type DbConfig struct {
 // Server contains all informations required to setup our config
 type Server struct {
 	// Port on which our config must listen and serve
-	Port string
+	Port             string
+	LocalHostAddress string
 }
 
 type KeycloakConfig struct {

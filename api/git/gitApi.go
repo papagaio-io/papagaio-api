@@ -8,20 +8,22 @@ import (
 	"net/http"
 	"strings"
 
+	"wecode.sorint.it/opensource/papagaio-be/config"
+	"wecode.sorint.it/opensource/papagaio-be/controller"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
-func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
+func CreateWebHook(gitSource *model.GitSource, gitOrgRef string, branchFilter string) (int, error) {
 	client := &http.Client{}
 
 	URLApi := getCreateWebHookUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
 	fmt.Println("CreateWebHook URLApi: ", URLApi)
 
-	localHost := "http://79.51.133.93:8080"
+	webHookConfigPath := fmt.Sprintf(controller.WebHookPath+controller.WenHookPathParam, gitOrgRef)
 	webHookRequest := CreateWebHookRequestDto{
 		Active:       true,
-		BranchFilter: "*",
-		Config:       WebHookConfigRequestDto{ContentType: "json", URL: localHost + "/org/" + gitOrgRef, HTTPMethod: "post"}, //TODO URL deve essere l'url nel routing della nostra API di WebHookService
+		BranchFilter: branchFilter,
+		Config:       WebHookConfigRequestDto{ContentType: "json", URL: config.Config.Server.LocalHostAddress + webHookConfigPath, HTTPMethod: "post"},
 		Events:       []string{"create", "delete", "repository"},
 		Type:         "gitea",
 	}

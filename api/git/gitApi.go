@@ -54,16 +54,22 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string, branchFilter st
 	return webHookResponse.ID, err
 }
 
-//TODO
-func DeleteWebHook(gitSource *model.GitSource, webHookID int) error {
-	var err error
+func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error {
+	client := &http.Client{}
+
+	URLApi := getDeleteWehHookUrl(gitSource.GitAPIURL, gitOrgRef, string(webHookID), gitSource.GitToken)
+
+	req, _ := http.NewRequest("DELETE", URLApi, nil)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
 	return err
 }
 
 func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]RepositoryDto, error) {
 	client := &http.Client{}
 
-	URLApi := getGetListRepositoryPath(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
+	URLApi := getGetListRepositoryUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
 
 	req, err := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
@@ -87,14 +93,13 @@ func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]Repositor
 func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
 	client := &http.Client{}
 
-	URLApi := getOrganizationPath(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
+	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
 
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, _ := client.Do(req)
 	defer resp.Body.Close()
 
 	return resp.StatusCode == 200
-
 }
 
 //TODO

@@ -6,8 +6,7 @@ type Organization struct {
 	UserEmailOwner    string `json:"userEmailOwner"`
 	AgolaUserRefOwner string `json:"agolaUserRefOwner"`
 	Visibility        string `json:"visibility"`
-	//Token string `json:"token"`
-	RemoteSourceName string `json:"remoteSourceName"`
+	RemoteSourceName  string `json:"remoteSourceName"`
 
 	GitSourceID int    `json:"gitSourceId"`
 	GitOrgRef   string `json:"gitOrgRef"`

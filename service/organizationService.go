@@ -60,9 +60,6 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	//
-
-	//check AgolaUserRefOwner correct
 	if !contains(user.AgolaUsersRef, org.AgolaUserRefOwner) {
 		UnprocessableEntityResponse(w, "AgolaUserRef not valid for user "+emailUserLogged)
 		return

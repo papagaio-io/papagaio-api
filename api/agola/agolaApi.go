@@ -12,8 +12,6 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
-//var agolaHost string = "https://agola.sorintdev.it" //TODO inserire nel config
-
 //TODO
 func CreateOrganization(name string, visibility string) (string, error) {
 	client := &http.Client{}

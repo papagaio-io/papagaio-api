@@ -61,6 +61,8 @@ func serve(cmd *cobra.Command, args []string) {
 
 	logRouter := http.Handler(router)
 
+	testSomeAPI()
+
 	if config.Config.LogHTTPRequest {
 		logRouter = handlers.LoggingHandler(os.Stdout, router)
 	} else {
@@ -75,10 +77,16 @@ func serve(cmd *cobra.Command, args []string) {
 }
 
 func testSomeAPI() {
-	/*gitSource := model.GitSource{GitType: "gitea", GitAPIURL: "https://try.gitea.io", GitToken: "20b93c349872f2bdb3a77b0bd898a3be424c6cbd"}
-	webHookId, _ := gitApi.CreateWebHook(&gitSource, "papagaiotest", "*")
-	fmt.Println("webhook id: ", webHookId)*/
+	// gitSource := model.GitSource{GitType: "gitea", GitAPIURL: "https://try.gitea.io", GitToken: "20b93c349872f2bdb3a77b0bd898a3be424c6cbd"}
+	// id, _ := gitApi.CreateWebHook(&gitSource, "papagaiotest")
+	// fmt.Println("webhook id: ", id)
 
-	/*idOrganization, err := agolaApi.CreateOrganization("DC-Comics", "public")
-	fmt.Println("Create Organization: id ", idOrganization, err)*/
+	// idOrganization, err := agolaApi.CreateOrganization("DC-Comics", "public")
+	// fmt.Println("Create Organization: id ", idOrganization, err)
+
+	// err1 := agolaApi.AddOrganizationMember("TullioOrg2", "tullio", "member")
+	// fmt.Println("Add org member Error ", err1)
+
+	// err1 := agolaApi.RemoveOrganizationMember("TullioOrg2", "tullio")
+	// fmt.Println("Add org member Error ", err1)
 }

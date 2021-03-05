@@ -3,6 +3,7 @@ package agola
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -64,14 +65,82 @@ func GetRemoteSources() []string {
 	return remoteSources
 }
 
+<<<<<<< HEAD
 //TODO
+=======
+func CreateUserToken(agolaUserRef string, tokenName string) (string, error) {
+	client := &http.Client{}
+
+	URLApi := getCreateTokenUrl(agolaUserRef)
+
+	reqBody := strings.NewReader(`{"token_name": "` + tokenName + `"}`)
+	req, err := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode == 400 {
+		return "", errors.New(resp.Status)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var jsonResponse AgolaCreateTokenDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return jsonResponse.Token, err
+}
+
+//TODO
+func DeleteUserToken(agolaUserRef string, tokenName string) error {
+	var err error
+	return err
+}
+
+>>>>>>> 6b12f58475f5b30016eb25800accba6a8fe4fcdc
 func AddOrganizationMember(agolaOrganizationRef string, agolaUserRef string, role string) error {
 	var err error
+	client := &http.Client{}
+	URLApi := getAddOrgMemberUrl(agolaOrganizationRef, agolaUserRef)
+	reqBody := strings.NewReader(`{"role": "` + role + `"}`)
+	req, err := http.NewRequest("PUT", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 400 {
+		return errors.New(resp.Status)
+	}
+
 	return err
 }
 
 //TODO
 func RemoveOrganizationMember(agolaOrganizationRef string, agolaUserRef string) error {
 	var err error
+	client := &http.Client{}
+	URLApi := getAddOrgMemberUrl(agolaOrganizationRef, agolaUserRef)
+	fmt.Println("url ", URLApi)
+	reqBody := strings.NewReader(`{}`)
+	req, err := http.NewRequest("DELETE", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 400 {
+		return errors.New(resp.Status)
+	}
+
 	return err
 }

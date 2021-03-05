@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,8 +10,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
+	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
 	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/controller"
+	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
 	"wecode.sorint.it/opensource/papagaio-be/service"
 )
@@ -33,7 +36,7 @@ func serve(cmd *cobra.Command, args []string) {
 	config.Config.Agola.AgolaAddr = "https://agola.sorintdev.it"
 	config.Config.Agola.AdminToken = "token admintoken"
 
-	//testSomeAPI()
+	testSomeAPI()
 
 	//config.SetupConfig()
 	db := repository.NewAppDb(config.Config)
@@ -61,8 +64,6 @@ func serve(cmd *cobra.Command, args []string) {
 
 	logRouter := http.Handler(router)
 
-	testSomeAPI()
-
 	if config.Config.LogHTTPRequest {
 		logRouter = handlers.LoggingHandler(os.Stdout, router)
 	} else {
@@ -77,9 +78,14 @@ func serve(cmd *cobra.Command, args []string) {
 }
 
 func testSomeAPI() {
-	// gitSource := model.GitSource{GitType: "gitea", GitAPIURL: "https://try.gitea.io", GitToken: "20b93c349872f2bdb3a77b0bd898a3be424c6cbd"}
-	// id, _ := gitApi.CreateWebHook(&gitSource, "papagaiotest")
-	// fmt.Println("webhook id: ", id)
+	gitSource := model.GitSource{GitType: "gitea", GitAPIURL: "https://try.gitea.io", GitToken: "20b93c349872f2bdb3a77b0bd898a3be424c6cbd"}
+
+	/*id, _ := gitApi.CreateWebHook(&gitSource, "papagaiotest", "*")
+	fmt.Println("webhook id: ", id)*/
+
+	gitRepositoryes, err := gitApi.GetRepositories(&gitSource, "papagaiotest")
+	fmt.Println("gitRepositoryes: ", gitRepositoryes)
+	fmt.Println("err: ", err)
 
 	// idOrganization, err := agolaApi.CreateOrganization("DC-Comics", "public")
 	// fmt.Println("Create Organization: id ", idOrganization, err)

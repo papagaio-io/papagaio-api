@@ -28,3 +28,8 @@ type WebHookConfigResponseDto struct {
 	ContentType string `json:"content_type"`
 	URL         string `json:"url"`
 }
+
+type RepositoryDto struct {
+	Name          string `json:"name"`
+	DefaultBranch string `json:"default_branch"`
+}

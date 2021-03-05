@@ -60,17 +60,33 @@ func DeleteWebHook(gitSource *model.GitSource, webHookID int) error {
 	return err
 }
 
-//TODO
-func GetRepositories(gitSource *model.GitSource, gitOrgRef string) ([]string, error) {
-	var gitRepositoryRef []string
-	var err error
+func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]RepositoryDto, error) {
+	client := &http.Client{}
 
-	return gitRepositoryRef, err
+	URLApi := getGetListRepositoryPath(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
+
+	req, err := http.NewRequest("GET", URLApi, nil)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 400 {
+		return nil, errors.New(resp.Status)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var repositoryesResponse []RepositoryDto
+	json.Unmarshal(body, &repositoryesResponse)
+
+	return &repositoryesResponse, err
 }
 
 //TODO
-func GetGitOrganizations(gitSource *model.GitSource) ([]string, error) {
+/*func GetGitOrganizations(gitSource *model.GitSource) ([]string, error) {
 	var organizations []string
 	var err error
 	return organizations, err
-}
+}*/

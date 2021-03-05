@@ -40,3 +40,8 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	JSONokResponse(w, org)
 }
+
+//TODO
+func (service *OrganizationService) GetGitOrganizations(w http.ResponseWriter, r *http.Request) {
+
+}

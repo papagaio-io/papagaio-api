@@ -7,6 +7,7 @@ import (
 type OrganizationController interface {
 	GetOrganizations(w http.ResponseWriter, r *http.Request)
 	CreateOrganization(w http.ResponseWriter, r *http.Request)
+	GetGitOrganizations(w http.ResponseWriter, r *http.Request)
 }
 
 type WebHookController interface {

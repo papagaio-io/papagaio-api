@@ -2,7 +2,7 @@ package model
 
 type Organization struct {
 	ID                string `json:"id"`
-	Name              string `json:"name"`
+	Name              string `json:"name"` //TODO remove?
 	UserEmail         string `json:"userEmail"`
 	AgolaUserRefOwner string `json:"agolaUserRefOwner"`
 	Visibility        string `json:"visibility"`

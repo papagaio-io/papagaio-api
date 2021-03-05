@@ -1,13 +1,55 @@
 package git
 
-import "wecode.sorint.it/opensource/papagaio-be/model"
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 
-//TODO
+	"wecode.sorint.it/opensource/papagaio-be/model"
+)
+
 func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
-	var webHookID int
-	var err error
+	client := &http.Client{}
 
-	return webHookID, err
+	URLApi := getCreateWebHookUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
+	fmt.Println("CreateWebHook URLApi: ", URLApi)
+
+	localHost := "http://79.51.133.93:8080"
+	webHookRequest := CreateWebHookRequestDto{
+		Active:       true,
+		BranchFilter: "*",
+		Config:       WebHookConfigRequestDto{ContentType: "json", URL: localHost + "/org/" + gitOrgRef, HTTPMethod: "post"}, //TODO URL deve essere l'url nel routing della nostra API di WebHookService
+		Events:       []string{"create", "delete", "repository"},
+		Type:         "gitea",
+	}
+	data, _ := json.Marshal(webHookRequest)
+	fmt.Println("json data: ", string(data))
+
+	reqBody := strings.NewReader(string(data))
+	req, err := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("content-type", "application/json")
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	fmt.Println("CreateWebHook status response: ", resp.StatusCode, resp.Status)
+
+	if err != nil {
+		return -1, err
+	}
+	if resp.StatusCode == 400 {
+		return -1, errors.New(resp.Status)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var webHookResponse CreateWebHookResponseDto
+	json.Unmarshal(body, &webHookResponse)
+	fmt.Println("webHookResponse: ", webHookResponse)
+
+	return webHookResponse.ID, err
 }
 
 //TODO

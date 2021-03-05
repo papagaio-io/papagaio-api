@@ -3,6 +3,7 @@ package agola
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -96,14 +97,46 @@ func DeleteUserToken(agolaUserRef string, tokenName string) error {
 	return err
 }
 
-//TODO
 func AddOrganizationMember(agolaOrganizationRef string, agolaUserRef string, role string) error {
 	var err error
+	client := &http.Client{}
+	URLApi := getAddOrgMemberUrl(agolaOrganizationRef, agolaUserRef)
+	reqBody := strings.NewReader(`{"role": "` + role + `"}`)
+	req, err := http.NewRequest("PUT", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 400 {
+		return errors.New(resp.Status)
+	}
+
 	return err
 }
 
 //TODO
 func RemoveOrganizationMember(agolaOrganizationRef string, agolaUserRef string) error {
 	var err error
+	client := &http.Client{}
+	URLApi := getAddOrgMemberUrl(agolaOrganizationRef, agolaUserRef)
+	fmt.Println("url ", URLApi)
+	reqBody := strings.NewReader(`{}`)
+	req, err := http.NewRequest("DELETE", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 400 {
+		return errors.New(resp.Status)
+	}
+
 	return err
 }

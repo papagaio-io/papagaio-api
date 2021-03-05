@@ -34,8 +34,11 @@ func serve(cmd *cobra.Command, args []string) {
 	config.Config.Agola.AgolaAddr = "https://agola.sorintdev.it"
 	config.Config.Agola.AdminToken = "token admintoken"
 
-	token, err := agolaApi.CreateUserToken("test", "rrrrrr")
-	fmt.Println("token created for test user: ", token, err)
+	id, err := agolaApi.CreateOrganization("DC Comics", "public")
+	fmt.Println("Create Organization: id ", id, err)
+
+	// token, err := agolaApi.CreateUserToken("test", "rrrrrr")
+	// fmt.Println("token created for test user: ", token, err)
 
 	//config.SetupConfig()
 	db := repository.NewAppDb(config.Config)

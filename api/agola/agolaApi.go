@@ -15,10 +15,27 @@ import (
 
 //TODO
 func CreateOrganization(name string, visibility string) (string, error) {
-	var agolaOrganizationID string
-	var err error
+	client := &http.Client{}
+	URLApi := getCreateORGUrl()
+	reqBody := strings.NewReader(`{"name": "` + name + `", "visibility": "` + visibility + `"}`)
+	req, err := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
 
-	return agolaOrganizationID, err
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode == 400 {
+		return "", errors.New(resp.Status)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var jsonResponse AgolaCreateORGDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return jsonResponse.ID, err
 }
 
 //TODO

@@ -6,6 +6,7 @@ import (
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
+	"wecode.sorint.it/opensource/papagaio-be/dto"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
 )
@@ -39,8 +40,16 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	var org *model.Organization
-	json.NewDecoder(r.Body).Decode(&org)
+	var req *dto.CreateOrganizationDto
+	json.NewDecoder(r.Body).Decode(&req)
+
+	org := &model.Organization{}
+	org.Name = req.Name
+	org.AgolaUserRefOwner = req.AgolaUserRefOwner
+	org.RemoteSourceName = req.RemoteSourceName
+	org.GitOrgRef = req.GitOrgRef
+	org.GitSourceName = req.GitSourceName
+	org.Visibility = req.Visibility
 
 	//Some checks
 	gitSource, err := service.Db.GetGitSourceByName(org.GitSourceName)
@@ -69,8 +78,6 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	org.ID, err = agolaApi.CreateOrganization(org.GitOrgRef, org.Visibility)
 	agolaApi.AddOrganizationMember(org.GitOrgRef, org.AgolaUserRefOwner, "owner")
 	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.GitOrgRef, "*")
-
-	//Save to db
 
 	err = service.Db.SaveOrganization(org)
 	if err != nil {

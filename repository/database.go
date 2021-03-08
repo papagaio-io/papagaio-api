@@ -18,7 +18,7 @@ type Database interface {
 
 	GetGitSources() (*[]model.GitSource, error)
 	SaveGitSource(gitSource *model.GitSource) error
-	GetGitSourceByID(id int) (*model.GitSource, error)
+	GetGitSourceByName(name string) (*model.GitSource, error)
 	DeleteGitSource(id string) error
 
 	SaveUser(user *model.User) error
@@ -68,15 +68,15 @@ func databaseDataTest(db *AppDb) {
 
 	//////////
 
-	db.SaveGitSource(&model.GitSource{ID: 1, Name: "Test1"})
-	db.SaveGitSource(&model.GitSource{ID: 2, Name: "Test2"})
-	db.SaveGitSource(&model.GitSource{ID: 3, Name: "Test3"})
+	db.SaveGitSource(&model.GitSource{Name: "Test1"})
+	db.SaveGitSource(&model.GitSource{Name: "Test2"})
+	db.SaveGitSource(&model.GitSource{Name: "Test3"})
 
 	gs, _ := db.GetGitSources()
 	for _, g := range *gs {
 		fmt.Println("gitSource :", g)
 	}
 
-	mygs, _ := db.GetGitSourceByID(1)
+	mygs, _ := db.GetGitSourceByName("Test1")
 	fmt.Println("mygs: ", mygs)
 }

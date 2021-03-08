@@ -43,7 +43,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	json.NewDecoder(r.Body).Decode(&org)
 
 	//Some checks
-	gitSource, err := service.Db.GetGitSourceByID(org.GitSourceID)
+	gitSource, err := service.Db.GetGitSourceByName(org.GitSourceName)
 	if gitSource == nil || err != nil {
 		UnprocessableEntityResponse(w, "Gitsource non found")
 		return

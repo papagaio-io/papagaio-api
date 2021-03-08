@@ -27,10 +27,8 @@ func (db *AppDb) SaveUser(user *model.User) error {
 	return err
 }
 
-//TODO
 func (db *AppDb) DeleteUser(email string) error {
-	var err error
-	return err
+	return db.DB.DropPrefix([]byte("user/" + email))
 }
 
 func (db *AppDb) GetUserByEmail(email string) (*model.User, error) {

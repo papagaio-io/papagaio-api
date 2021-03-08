@@ -88,7 +88,6 @@ func (db *AppDb) GetOrganizationByName(name string) (*model.Organization, error)
 	return organization, err
 }
 
-//TODO
 func (db *AppDb) GetOrganizationById(organizationID string) (*model.Organization, error) {
 	var organization model.Organization
 
@@ -120,8 +119,6 @@ func (db *AppDb) GetOrganizationById(organizationID string) (*model.Organization
 	return &organization, err
 }
 
-//TODO
 func (db *AppDb) DeleteOrganization(organizationID string) error {
-	var err error
-	return err
+	return db.DB.DropPrefix([]byte("org/" + organizationID))
 }

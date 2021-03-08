@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
-	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
+	giteaApi "wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
 	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/controller"
 	"wecode.sorint.it/opensource/papagaio-be/model"
@@ -83,13 +83,13 @@ func testSomeAPI() {
 	/*id, _ := gitApi.CreateWebHook(&gitSource, "papagaiotest", "*")
 	fmt.Println("webhook id: ", id)*/
 
-	gitRepositoryes, err := gitApi.GetRepositories(&gitSource, "papagaiotest")
+	gitRepositoryes, err := giteaApi.GetRepositories(&gitSource, "papagaiotest")
 	fmt.Println("gitRepositoryes: ", gitRepositoryes)
 	fmt.Println("err: ", err)
 
-	exists := gitApi.CheckOrganizationExists(&gitSource, "papagaiotest")
+	exists := giteaApi.CheckOrganizationExists(&gitSource, "papagaiotest")
 	fmt.Println("exists: ", exists)
-	exists = gitApi.CheckOrganizationExists(&gitSource, "kkklll")
+	exists = giteaApi.CheckOrganizationExists(&gitSource, "kkklll")
 	fmt.Println("exists: ", exists)
 
 	// idOrganization, err := agolaApi.CreateOrganization("DC-Comics", "public")

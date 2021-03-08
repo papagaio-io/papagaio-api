@@ -102,11 +102,6 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	JSONokResponse(w, org.ID)
 }
 
-//TODO
-func (service *OrganizationService) GetGitOrganizations(w http.ResponseWriter, r *http.Request) {
-
-}
-
 func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

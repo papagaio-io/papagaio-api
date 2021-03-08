@@ -7,7 +7,6 @@ import (
 type OrganizationController interface {
 	GetOrganizations(w http.ResponseWriter, r *http.Request)
 	CreateOrganization(w http.ResponseWriter, r *http.Request)
-	GetGitOrganizations(w http.ResponseWriter, r *http.Request)
 	GetRemoteSources(w http.ResponseWriter, r *http.Request)
 }
 
@@ -16,8 +15,8 @@ type WebHookController interface {
 }
 
 type MemberController interface {
-	AddMember(w http.ResponseWriter, r *http.Request)
-	RemoveMember(w http.ResponseWriter, r *http.Request)
+	AddOrganizationMember(w http.ResponseWriter, r *http.Request)
+	RemoveOrganizationMember(w http.ResponseWriter, r *http.Request)
 }
 
 type GitSourceController interface {

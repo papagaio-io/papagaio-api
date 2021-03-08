@@ -81,9 +81,14 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 	org.UserEmailOwner = emailUserLogged
 
+	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.GitOrgRef, "*")
+	if err != nil {
+		UnprocessableEntityResponse(w, err.Error())
+		return
+	}
+
 	org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
 	agolaApi.AddOrganizationMember(org.Name, org.AgolaUserRefOwner, "owner")
-	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.GitOrgRef, "*")
 
 	log.Println("Organization created: ", org.ID)
 	log.Println("WebHook created: ", org.WebHookID)

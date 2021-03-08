@@ -45,8 +45,9 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string, branchFilter st
 	if err != nil {
 		return -1, err
 	}
-	if resp.StatusCode == 400 {
-		return -1, errors.New(resp.Status)
+	if resp.StatusCode != 201 {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return -1, errors.New(string(respMessage))
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)

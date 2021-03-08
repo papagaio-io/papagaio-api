@@ -36,7 +36,7 @@ func serve(cmd *cobra.Command, args []string) {
 	config.Config.Agola.AgolaAddr = "https://agola.sorintdev.it"
 	config.Config.Agola.AdminToken = "token admintoken"
 
-	testSomeAPI()
+	//testSomeAPI()
 
 	//config.SetupConfig()
 	db := repository.NewAppDb(config.Config)

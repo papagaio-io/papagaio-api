@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/dgraph-io/badger"
@@ -34,7 +33,7 @@ func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
 
-	//databaseDataTest(&db) //TODO remove only for test
+	databaseDataTest(&db) //TODO remove only for test
 
 	return db
 }
@@ -48,35 +47,6 @@ func (db *AppDb) Init(config config.Configuration) {
 }
 
 func databaseDataTest(db *AppDb) {
-	db.SaveOrganization(&model.Organization{ID: "123", Name: "Sorint", UserEmailOwner: "Ale"})
-	db.SaveOrganization(&model.Organization{ID: "abc", Name: "SorintDeb", UserEmailOwner: "Simone"})
-	db.SaveOrganization(&model.Organization{ID: "ddd", Name: "UatProjects", UserEmailOwner: "Usernameexample"})
-
-	organizations, err := db.GetOrganizations()
-	if err != nil {
-		fmt.Println("GetOrganizations error:", err)
-	} else {
-		for _, o := range *organizations {
-			fmt.Println("organization :", o)
-		}
-	}
-
-	myOrg, _ := db.GetOrganizationByName("Sorint")
-	if myOrg != nil {
-		fmt.Println("myOrg name:", myOrg)
-	}
-
-	//////////
-
-	db.SaveGitSource(&model.GitSource{Name: "Test1"})
-	db.SaveGitSource(&model.GitSource{Name: "Test2"})
-	db.SaveGitSource(&model.GitSource{Name: "Test3"})
-
-	gs, _ := db.GetGitSources()
-	for _, g := range *gs {
-		fmt.Println("gitSource :", g)
-	}
-
-	mygs, _ := db.GetGitSourceByName("Test1")
-	fmt.Println("mygs: ", mygs)
+	db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "d5e630f316de7132d4f840c305853865b2470cf2"})
+	db.SaveUser(&model.User{Email: "test@sorint.it", AgolaUsersRef: []string{"test"}, AgolaUserToken: "d8fe9258aab60bb3dd192a7726cbf128747cfb0e"})
 }

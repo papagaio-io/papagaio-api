@@ -14,12 +14,16 @@ import (
 )
 
 func CreateWebHook(gitSource *model.GitSource, gitOrgRef string, branchFilter string) (int, error) {
+	fmt.Println("CreateWebHook gitOrgRef branchFilter:", gitOrgRef, branchFilter)
+
 	client := &http.Client{}
 
 	URLApi := getCreateWebHookUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
 	fmt.Println("CreateWebHook URLApi: ", URLApi)
 
-	webHookConfigPath := fmt.Sprintf(controller.WebHookPath+controller.WenHookPathParam, gitOrgRef)
+	webHookConfigPath := controller.WebHookPath + "/" + gitOrgRef
+	fmt.Println("webHookConfigPath: ", webHookConfigPath)
+
 	webHookRequest := CreateWebHookRequestDto{
 		Active:       true,
 		BranchFilter: branchFilter,
@@ -94,10 +98,13 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 	client := &http.Client{}
 
 	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
+	fmt.Println("CheckOrganizationExists URLApi: ", URLApi)
 
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, _ := client.Do(req)
 	defer resp.Body.Close()
+
+	fmt.Println("CheckOrganizationExists resp.StatusCode: ", resp.StatusCode)
 
 	return resp.StatusCode == 200
 }

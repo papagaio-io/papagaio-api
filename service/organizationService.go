@@ -2,6 +2,8 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
@@ -32,9 +34,10 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	emailUserLogged := "pippo@sorint.it" //ONLY FOR TEST
+	emailUserLogged := "test@sorint.it" //ONLY FOR TEST
 
 	user, err := service.Db.GetUserByEmail(emailUserLogged)
+	fmt.Println("user: ", user)
 	if user == nil || err != nil {
 		UnprocessableEntityResponse(w, "User not authorized!")
 		return
@@ -42,6 +45,8 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	var req *dto.CreateOrganizationDto
 	json.NewDecoder(r.Body).Decode(&req)
+
+	log.Println("Req CreateOrganizationDto: ", req)
 
 	org := &model.Organization{}
 	org.Name = req.Name
@@ -61,9 +66,10 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	gitOrgExists := gitApi.CheckOrganizationExists(gitSource, org.GitOrgRef)
 	if gitOrgExists == false {
 		UnprocessableEntityResponse(w, "Organization not found")
+		return
 	}
 
-	agolaOrg, err := service.Db.GetOrganizationByName(org.GitOrgRef)
+	agolaOrg, err := service.Db.GetOrganizationByName(org.Name)
 	if agolaOrg != nil {
 		UnprocessableEntityResponse(w, "Organization just present in Agola")
 		return
@@ -75,9 +81,12 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 	org.UserEmailOwner = emailUserLogged
 
-	org.ID, err = agolaApi.CreateOrganization(org.GitOrgRef, org.Visibility)
-	agolaApi.AddOrganizationMember(org.GitOrgRef, org.AgolaUserRefOwner, "owner")
+	org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
+	agolaApi.AddOrganizationMember(org.Name, org.AgolaUserRefOwner, "owner")
 	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.GitOrgRef, "*")
+
+	log.Println("Organization created: ", org.ID)
+	log.Println("WebHook created: ", org.WebHookID)
 
 	err = service.Db.SaveOrganization(org)
 	if err != nil {
@@ -85,7 +94,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	JSONokResponse(w, org.ID) //TO VERIFY
+	JSONokResponse(w, org.ID)
 }
 
 //TODO

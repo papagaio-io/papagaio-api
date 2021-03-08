@@ -21,6 +21,7 @@ func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ct
 	setupPingRouter(router)
 	setupGetOrganizationsRouter(router.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
 	setupCreateOrganizationEndpoint(router.PathPrefix("/createorganization").Subrouter(), ctrlOrganization)
+	setupGetRemoteSourcesEndpoint(router.PathPrefix("/remotesources").Subrouter(), ctrlOrganization)
 
 	setupGetGitSourcesEndpoint(router.PathPrefix("/gitsources").Subrouter(), ctrlGitSource)
 
@@ -39,6 +40,10 @@ func setupGetOrganizationsRouter(router *mux.Router, ctrl OrganizationController
 
 func setupCreateOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.HandleFunc("", ctrl.CreateOrganization).Methods("POST")
+}
+
+func setupGetRemoteSourcesEndpoint(router *mux.Router, ctrl OrganizationController) {
+	router.HandleFunc("", ctrl.GetRemoteSources).Methods("GET")
 }
 
 func setupGetGitSourcesEndpoint(router *mux.Router, ctrl GitSourceController) {

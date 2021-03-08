@@ -102,6 +102,15 @@ func (service *OrganizationService) GetGitOrganizations(w http.ResponseWriter, r
 
 }
 
+func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	remoteSources := agolaApi.GetRemoteSources()
+
+	JSONokResponse(w, remoteSources)
+}
+
 func contains(slice []string, item string) bool {
 	set := make(map[string]struct{}, len(slice))
 	for _, s := range slice {

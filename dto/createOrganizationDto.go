@@ -5,6 +5,6 @@ type CreateOrganizationDto struct {
 	AgolaUserRefOwner string `json:"agolaUserRefOwner"`
 	Visibility        string `json:"visibility"`
 	RemoteSourceName  string `json:"remoteSourceName"`
-	GitSourceName     string `json:"gitSourceName"`
+	GitSourceId       string `json:"gitSourceId"`
 	GitOrgRef         string `json:"gitOrgRef"`
 }

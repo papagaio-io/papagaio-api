@@ -53,11 +53,11 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	org.AgolaUserRefOwner = req.AgolaUserRefOwner
 	org.RemoteSourceName = req.RemoteSourceName
 	org.GitOrgRef = req.GitOrgRef
-	org.GitSourceName = req.GitSourceName
+	org.GitSourceId = req.GitSourceId
 	org.Visibility = req.Visibility
 
 	//Some checks
-	gitSource, err := service.Db.GetGitSourceByName(org.GitSourceName)
+	gitSource, err := service.Db.GetGitSourceById(org.GitSourceId)
 	if gitSource == nil || err != nil {
 		UnprocessableEntityResponse(w, "Gitsource non found")
 		return

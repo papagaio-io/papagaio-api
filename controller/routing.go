@@ -24,6 +24,9 @@ func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ct
 	setupGetRemoteSourcesEndpoint(router.PathPrefix("/remotesources").Subrouter(), ctrlOrganization)
 
 	setupGetGitSourcesEndpoint(router.PathPrefix("/gitsources").Subrouter(), ctrlGitSource)
+	setupAddGitSourceEndpoint(router.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
+	setupUpdateGitSourceEndpoint(router.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
+	setupDeleteGitSourceEndpoint(router.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
 
 	setupWebHookEndpoint(router.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
 }
@@ -48,6 +51,18 @@ func setupGetRemoteSourcesEndpoint(router *mux.Router, ctrl OrganizationControll
 
 func setupGetGitSourcesEndpoint(router *mux.Router, ctrl GitSourceController) {
 	router.HandleFunc("", ctrl.GetGitSources).Methods("GET")
+}
+
+func setupAddGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {
+	router.HandleFunc("", ctrl.AddGitSource).Methods("POST")
+}
+
+func setupUpdateGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {
+	router.HandleFunc("", ctrl.AddGitSource).Methods("PUT")
+}
+
+func setupDeleteGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {
+	router.HandleFunc("{id}", ctrl.AddGitSource).Methods("DELETE")
 }
 
 func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {

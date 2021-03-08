@@ -8,7 +8,7 @@ type Organization struct {
 	Visibility        string `json:"visibility"`
 	RemoteSourceName  string `json:"remoteSourceName"`
 
-	GitSourceName string `json:"gitSourceName"`
-	GitOrgRef     string `json:"gitOrgRef"`
-	WebHookID     int    `json:"webHookId"`
+	GitSourceId string `json:"gitSourceId"`
+	GitOrgRef   string `json:"gitOrgRef"`
+	WebHookID   int    `json:"webHookId"`
 }

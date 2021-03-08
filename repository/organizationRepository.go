@@ -89,7 +89,7 @@ func (db *AppDb) GetOrganizationByName(name string) (*model.Organization, error)
 }
 
 //TODO
-func (db *AppDb) GetOrganizationByID(organizationID string) (*model.Organization, error) {
+func (db *AppDb) GetOrganizationById(organizationID string) (*model.Organization, error) {
 	var organization model.Organization
 
 	dst := make([]byte, 0)

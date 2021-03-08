@@ -40,7 +40,9 @@ func (db *AppDb) GetGitSources() (*[]model.GitSource, error) {
 }
 
 func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
-	key := "gs/" + string(gitSource.Name)
+	gitSource.ID = getNewUid()
+
+	key := "gs/" + string(gitSource.ID)
 	value, err := json.Marshal(gitSource)
 	if err != nil {
 		log.Println("SaveGitSource error in json marshal", err)
@@ -57,12 +59,12 @@ func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
 	return err
 }
 
-func (db *AppDb) GetGitSourceByName(name string) (*model.GitSource, error) {
+func (db *AppDb) GetGitSourceById(id string) (*model.GitSource, error) {
 	var gitSource model.GitSource
 
 	dst := make([]byte, 0)
 	err := db.DB.View(func(txn *badger.Txn) error {
-		prefix := "gs/" + string(name)
+		prefix := "gs/" + string(id)
 
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false
@@ -94,8 +96,6 @@ func (db *AppDb) GetGitSourceByName(name string) (*model.GitSource, error) {
 	return &gitSource, err
 }
 
-//TODO
 func (db *AppDb) DeleteGitSource(id string) error {
-	var err error
-	return err
+	return db.DB.DropPrefix([]byte("gs/" + id))
 }

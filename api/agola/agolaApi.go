@@ -43,11 +43,38 @@ func GetOrganizations() (*[]model.Organization, error) {
 	return organizations, err
 }
 
-//TODO
-func CreateProject(projectName string, organization *model.Organization) (string, error) {
-	var err error
-	var agolaProjectRef string
-	return agolaProjectRef, err
+func CreateProject(projectName string, organization *model.Organization, remoteSourceName string) (string, error) {
+	client := &http.Client{}
+	URLApi := getCreateProjectPath()
+
+	projectRequest := &CreateProjectRequestDto{
+		Name:             projectName,
+		ParentRef:        "org/" + organization.Name,
+		Visibility:       organization.Visibility,
+		RemoteSourceName: remoteSourceName,
+		RepoPath:         organization.Name + "/" + projectName,
+	}
+	data, _ := json.Marshal(projectRequest)
+	reqBody := strings.NewReader(string(data))
+
+	req, err := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode == 400 {
+		return "", errors.New(resp.Status)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var jsonResponse CreateProjectResponseDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return jsonResponse.ID, err
 }
 
 //TODO
@@ -97,7 +124,6 @@ func AddOrganizationMember(agolaOrganizationRef string, agolaUserRef string, rol
 	return err
 }
 
-//TODO
 func RemoveOrganizationMember(agolaOrganizationRef string, agolaUserRef string) error {
 	var err error
 	client := &http.Client{}

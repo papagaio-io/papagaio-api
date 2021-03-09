@@ -2,7 +2,6 @@ package repository
 
 import (
 	"encoding/base64"
-	"fmt"
 	"log"
 
 	"github.com/dgraph-io/badger"
@@ -50,7 +49,6 @@ func (db *AppDb) Init(config config.Configuration) {
 }
 
 func databaseDataTest(db *AppDb) {
-
 	//db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "9d600ae52773076680e5d14ba9a7ec8f6c2a5374"})
 	db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "d5e630f316de7132d4f840c305853865b2470cf2"})
 	db.SaveUser(&model.User{Email: "test@sorint.it", AgolaUsersRef: []string{"test"}, AgolaUserToken: "d8fe9258aab60bb3dd192a7726cbf128747cfb0e"})
@@ -59,7 +57,7 @@ func databaseDataTest(db *AppDb) {
 func getNewUid() string {
 	uid := uuid.New()
 	base64Uid := base64.RawURLEncoding.EncodeToString([]byte(uid.String()))
-	uidResult := fmt.Sprintf("%s%s", "Stroodle", base64Uid[8:])
+	uidResult := base64Uid[8:]
 
 	return uidResult
 }

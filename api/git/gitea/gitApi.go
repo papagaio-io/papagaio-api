@@ -111,6 +111,18 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 }
 
 //TODO
+func GetOrganizationTeams(gitSource *model.GitSource) ([]int, error) {
+	teamsId := make([]int, 0)
+
+	return teamsId, nil
+}
+
+//TODO
+func GetTeamMembers(gitSource *model.GitSource, teamId int) {
+
+}
+
+//TODO
 /*func GetGitOrganizations(gitSource *model.GitSource) ([]string, error) {
 	var organizations []string
 	var err error

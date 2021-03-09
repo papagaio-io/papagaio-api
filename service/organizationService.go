@@ -79,7 +79,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		UnprocessableEntityResponse(w, "AgolaUserRef not valid for user "+emailUserLogged)
 		return
 	}
-	org.UserEmailOwner = emailUserLogged
+	org.UserEmailCreator = emailUserLogged
 
 	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.GitOrgRef, "*")
 	if err != nil {

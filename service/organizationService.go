@@ -50,9 +50,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org := &model.Organization{}
 	org.Name = req.Name
-	org.AgolaUserRefOwner = req.AgolaUserRefOwner
-	org.RemoteSourceName = req.RemoteSourceName
-	org.GitOrgRef = req.GitOrgRef
+	//org.RemoteSourceName = req.RemoteSourceName
 	org.GitSourceId = req.GitSourceId
 	org.Visibility = req.Visibility
 
@@ -63,7 +61,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	gitOrgExists := gitApi.CheckOrganizationExists(gitSource, org.GitOrgRef)
+	gitOrgExists := gitApi.CheckOrganizationExists(gitSource, org.Name)
 	if gitOrgExists == false {
 		UnprocessableEntityResponse(w, "Organization not found")
 		return
@@ -75,20 +73,15 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	if !contains(user.AgolaUsersRef, org.AgolaUserRefOwner) {
-		UnprocessableEntityResponse(w, "AgolaUserRef not valid for user "+emailUserLogged)
-		return
-	}
 	org.UserEmailCreator = emailUserLogged
 
-	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.GitOrgRef, "*")
+	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.Name, "*")
 	if err != nil {
 		UnprocessableEntityResponse(w, err.Error())
 		return
 	}
 
 	org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
-	agolaApi.AddOrganizationMember(org.Name, org.AgolaUserRefOwner, "owner")
 
 	log.Println("Organization created: ", org.ID)
 	log.Println("WebHook created: ", org.WebHookID)

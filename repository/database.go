@@ -35,7 +35,7 @@ func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
 
-	databaseDataTest(&db) //TODO remove only for test
+	databaseDataInit(&db) //TODO remove only for test
 
 	return db
 }
@@ -48,10 +48,10 @@ func (db *AppDb) Init(config config.Configuration) {
 	}
 }
 
-func databaseDataTest(db *AppDb) {
+func databaseDataInit(db *AppDb) {
 	//db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "9d600ae52773076680e5d14ba9a7ec8f6c2a5374"})
 	db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "d5e630f316de7132d4f840c305853865b2470cf2"})
-	db.SaveUser(&model.User{Email: "test@sorint.it", AgolaUsersRef: []string{"test"}, AgolaUserToken: "d8fe9258aab60bb3dd192a7726cbf128747cfb0e"})
+	db.SaveUser(&model.User{Email: "test@sorint.it", AgolaUserToken: "d8fe9258aab60bb3dd192a7726cbf128747cfb0e"})
 }
 
 func getNewUid() string {

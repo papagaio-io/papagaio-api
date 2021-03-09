@@ -33,3 +33,15 @@ type RepositoryDto struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
 }
+
+type TeamResponseDto struct {
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	Permission string `json:"permission"`
+}
+
+type UserTeamResponseDto struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}

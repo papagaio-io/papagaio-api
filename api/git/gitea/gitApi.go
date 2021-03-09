@@ -110,16 +110,52 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 	return resp.StatusCode == 200
 }
 
-//TODO
-func GetOrganizationTeams(gitSource *model.GitSource) ([]int, error) {
-	teamsId := make([]int, 0)
+func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]TeamResponseDto, error) {
+	client := &http.Client{}
 
-	return teamsId, nil
+	URLApi := getOrganizationTeamsListUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
+
+	req, err := http.NewRequest("GET", URLApi, nil)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 400 {
+		return nil, errors.New(resp.Status)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var teamsResponse []TeamResponseDto
+	json.Unmarshal(body, &teamsResponse)
+
+	return &teamsResponse, err
 }
 
-//TODO
-func GetTeamMembers(gitSource *model.GitSource, teamId int) {
+func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]UserTeamResponseDto, error) {
+	client := &http.Client{}
 
+	URLApi := getOrganizationTeamsListUrl(gitSource.GitAPIURL, fmt.Sprint(teamId), gitSource.GitToken)
+
+	req, err := http.NewRequest("GET", URLApi, nil)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 400 {
+		return nil, errors.New(resp.Status)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var usersResponse []UserTeamResponseDto
+	json.Unmarshal(body, &usersResponse)
+
+	return &usersResponse, err
 }
 
 //TODO

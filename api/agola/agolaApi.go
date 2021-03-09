@@ -43,9 +43,9 @@ func GetOrganizations() (*[]model.Organization, error) {
 	return organizations, err
 }
 
-func CreateProject(projectName string, organization *model.Organization, remoteSourceName string) (string, error) {
+func CreateProject(projectName string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error) {
 	client := &http.Client{}
-	URLApi := getCreateProjectPath()
+	URLApi := getCreateProjectUrl()
 
 	projectRequest := &CreateProjectRequestDto{
 		Name:             projectName,
@@ -58,7 +58,7 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 	reqBody := strings.NewReader(string(data))
 
 	req, err := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
@@ -77,9 +77,18 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 	return jsonResponse.ID, err
 }
 
-//TODO
-func DeleteProject(agolaProjectRef string, organization *model.Organization) error {
-	var err error
+func DeleteProject(organizationName string, projectname string, agolaUserToken string) error {
+	client := &http.Client{}
+	URLApi := getDeleteProjectUrl(organizationName, projectname)
+	req, err := http.NewRequest("DELETE", URLApi, nil)
+	req.Header.Add("Authorization", "token "+agolaUserToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 400 {
+		return errors.New(resp.Status)
+	}
+
 	return err
 }
 

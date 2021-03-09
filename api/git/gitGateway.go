@@ -39,3 +39,19 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 
 	return false
 }
+
+func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]gitea.TeamResponseDto, error) {
+	if strings.Compare(gitSource.GitType, "gitea") == 0 {
+		return gitea.GetOrganizationTeams(gitSource, gitOrgRef)
+	}
+
+	return nil, nil
+}
+
+func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]gitea.UserTeamResponseDto, error) {
+	if strings.Compare(gitSource.GitType, "gitea") == 0 {
+		return gitea.GetTeamMembers(gitSource, teamId)
+	}
+
+	return nil, nil
+}

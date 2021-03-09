@@ -29,6 +29,6 @@ func getOrganizationTeamsListUrl(gitApiUrl string, gitOrgRef string, gitToken st
 	return fmt.Sprintf(organizationTeamsListPath, gitApiUrl, gitOrgRef, gitToken)
 }
 
-func getTeamUsersListUrl(gitApiUrl string, gitToken string) string {
-	return fmt.Sprintf(teamUsersListPath, gitApiUrl, gitToken)
+func getTeamUsersListUrl(gitApiUrl string, teamId string, gitToken string) string {
+	return fmt.Sprintf(teamUsersListPath, gitApiUrl, teamId, gitToken)
 }

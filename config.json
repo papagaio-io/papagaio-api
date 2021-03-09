@@ -1,27 +1,18 @@
 {
     "Server": {
-      "Port": "8080"
-    },
-    "_Database_": {
-      "DbType" : "postgres",
-      "DbAddr": "localhost",
-      "DbPort": "5432",
-      "DbName": "stroodle",
-      "DbUser": "postgres",
-      "DbPass": "admin",
-      "Dbsslmode": "disable"
+      "Port": "8080",
+      "LocalHostAddress": "http://79.51.133.93"
     },
     "Database": {
-      "DbType" : "postgres",
-      "DbAddr": "10.100.132.162",
-      "DbPort": "30432",
-      "DbName": "stroodle",
-      "DbUser": "stolon",
-      "DbPass": "stolon",
-      "Dbsslmode": "disable"
+      "DbPath": "/badger",
+      "DbName": "papagaio-be"
+    },
+    "Agola": {
+      "AgolaAddr": "https://agola.sorintdev.it",
+      "AdminToken": "token admintoken"
     },
     "LogHttpRequest": true,
     "DisableKeycloakAuthentication": false,
     "DisableSSLCertificateValidation": true,
     "TokenTolerance": 3600
-  }
+}

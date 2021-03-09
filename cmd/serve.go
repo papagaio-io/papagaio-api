@@ -31,14 +31,14 @@ func Init() {
 
 func serve(cmd *cobra.Command, args []string) {
 	//Insert only for test
-	config.Config.Server.Port = "8080"
+	/*config.Config.Server.Port = "8080"
 	config.Config.Server.LocalHostAddress = "http://79.51.133.93:8080"
 	config.Config.Agola.AgolaAddr = "https://agola.sorintdev.it"
-	config.Config.Agola.AdminToken = "token admintoken"
+	config.Config.Agola.AdminToken = "token admintoken"*/
 
 	//testSomeAPI()
 
-	//config.SetupConfig()
+	config.SetupConfig()
 	db := repository.NewAppDb(config.Config)
 
 	ctrlOrganization := service.OrganizationService{
@@ -78,26 +78,12 @@ func serve(cmd *cobra.Command, args []string) {
 }
 
 func testSomeAPI() {
-	gitSource := model.GitSource{GitType: "gitea", GitAPIURL: "https://try.gitea.io", GitToken: "20b93c349872f2bdb3a77b0bd898a3be424c6cbd"}
+	gitSource := &model.GitSource{ID: "MTctOTIyZS00ZjFmLWFlODctMDA0N2Q0YTY2MWJk", Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "d5e630f316de7132d4f840c305853865b2470cf2"}
+	teams, _ := giteaApi.GetOrganizationTeams(gitSource, "Sorint")
+	fmt.Println("teams: ", teams)
 
-	/*id, _ := gitApi.CreateWebHook(&gitSource, "papagaiotest", "*")
-	fmt.Println("webhook id: ", id)*/
-
-	gitRepositoryes, err := giteaApi.GetRepositories(&gitSource, "papagaiotest")
-	fmt.Println("gitRepositoryes: ", gitRepositoryes)
-	fmt.Println("err: ", err)
-
-	exists := giteaApi.CheckOrganizationExists(&gitSource, "papagaiotest")
-	fmt.Println("exists: ", exists)
-	exists = giteaApi.CheckOrganizationExists(&gitSource, "kkklll")
-	fmt.Println("exists: ", exists)
-
-	// idOrganization, err := agolaApi.CreateOrganization("DC-Comics", "public")
-	// fmt.Println("Create Organization: id ", idOrganization, err)
-
-	// err1 := agolaApi.AddOrganizationMember("TullioOrg2", "tullio", "member")
-	// fmt.Println("Add org member Error ", err1)
-
-	// err1 := agolaApi.RemoveOrganizationMember("TullioOrg2", "tullio")
-	// fmt.Println("Add org member Error ", err1)
+	for _, team := range *teams {
+		users, _ := giteaApi.GetTeamMembers(gitSource, team.ID)
+		fmt.Println("Users team: ", users)
+	}
 }

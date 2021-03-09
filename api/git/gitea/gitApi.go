@@ -137,7 +137,7 @@ func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]Team
 func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]UserTeamResponseDto, error) {
 	client := &http.Client{}
 
-	URLApi := getOrganizationTeamsListUrl(gitSource.GitAPIURL, fmt.Sprint(teamId), gitSource.GitToken)
+	URLApi := getTeamUsersListUrl(gitSource.GitAPIURL, fmt.Sprint(teamId), gitSource.GitToken)
 
 	req, err := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)

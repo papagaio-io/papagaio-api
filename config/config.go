@@ -29,22 +29,9 @@ type AgolaConfig struct {
 	AdminToken string
 }
 
-// DbConfig contains all informations required to connect to repository
 type DbConfig struct {
-	// Type of the repository to use. Actually, only postgres is supported
-	DbType string
-	// Address(or hostname) of the repository
-	DbAddr string
-	// Port of the repository
-	DbPort string
-	// Name of the repository
+	DbPath string
 	DbName string
-	// User of the repository
-	DbUser string
-	// Password of the repository
-	DbPass string
-	// SSL of the
-	Dbsslmode string
 }
 
 // Server contains all informations required to setup our config
@@ -85,7 +72,7 @@ func readConfig() {
 // SetupConfig load the configuration from config.json and set config.Config to it
 func SetupConfig() {
 	readConfig()
-	readKeycloakConfig()
+	//readKeycloakConfig()
 }
 
 // parsePubKey parsing the public key generated from keycloak

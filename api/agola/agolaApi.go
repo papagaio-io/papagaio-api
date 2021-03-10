@@ -36,13 +36,6 @@ func CreateOrganization(name string, visibility string) (string, error) {
 	return jsonResponse.ID, err
 }
 
-//TODO
-func GetOrganizations() (*[]model.Organization, error) {
-	var organizations *[]model.Organization
-	var err error
-	return organizations, err
-}
-
 func CreateProject(projectName string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error) {
 	client := &http.Client{}
 	URLApi := getCreateProjectUrl()

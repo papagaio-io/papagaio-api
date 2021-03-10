@@ -7,4 +7,5 @@ type GitSource struct {
 	GitAPIURL         string `json:"gitApiUrl"`
 	GitToken          string `json:"gitToken"`
 	AgolaRemoteSource string `json:"agolaRemoteSource"`
+	AgolaToken        string `json:"agolaToken"`
 }

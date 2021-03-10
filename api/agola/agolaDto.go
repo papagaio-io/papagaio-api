@@ -26,3 +26,13 @@ type CreateProjectResponseDto struct {
 	Visibility       string `json:"visibility"`
 	GlobalVisibility string `json:"global_visibility"`
 }
+
+type OrganizationMembersResponseDto struct {
+	Members []MemberDto `json:"members"`
+}
+
+type MemberDto struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
+}

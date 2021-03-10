@@ -99,7 +99,7 @@ func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *h
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	remoteSources := agolaApi.GetRemoteSources()
+	remoteSources, _ := agolaApi.GetRemoteSources()
 
 	JSONokResponse(w, remoteSources)
 }

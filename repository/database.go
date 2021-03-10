@@ -51,8 +51,8 @@ func (db *AppDb) Init(config config.Configuration) {
 
 func databaseDataInit(db *AppDb) {
 	db.DB.DropAll()
-	db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "d5e630f316de7132d4f840c305853865b2470cf2"})
-	db.SaveUser(&model.User{Email: "test@sorint.it", AgolaUserToken: "d8fe9258aab60bb3dd192a7726cbf128747cfb0e"})
+	db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "d5e630f316de7132d4f840c305853865b2470cf2", AgolaToken: "d8fe9258aab60bb3dd192a7726cbf128747cfb0e"})
+	db.SaveUser(&model.User{Email: "test@sorint.it"})
 }
 
 func getNewUid() string {

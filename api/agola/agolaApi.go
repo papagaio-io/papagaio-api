@@ -21,9 +21,6 @@ func CreateOrganization(name string, visibility string) (string, error) {
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if err != nil {
-		return "", err
-	}
 	if resp.StatusCode == 400 {
 		return "", errors.New(resp.Status)
 	}
@@ -55,9 +52,6 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if err != nil {
-		return "", err
-	}
 	if resp.StatusCode == 400 {
 		return "", errors.New(resp.Status)
 	}
@@ -85,7 +79,7 @@ func DeleteProject(organizationName string, projectname string, agolaUserToken s
 	return err
 }
 
-func GetRemoteSources() *[]RemoteSourcesDto {
+func GetRemoteSources() (*[]RemoteSourcesDto, error) {
 	client := &http.Client{}
 	URLApi := getRemoteSourcesUrl()
 	req, err := http.NewRequest("GET", URLApi, nil)
@@ -93,16 +87,12 @@ func GetRemoteSources() *[]RemoteSourcesDto {
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if err != nil {
-		return nil
-	}
-
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var jsonResponse []RemoteSourcesDto
 	json.Unmarshal(body, &jsonResponse)
 
-	return &jsonResponse
+	return &jsonResponse, err
 }
 
 func AddOrganizationMember(agolaOrganizationRef string, agolaUserRef string, role string) error {
@@ -114,10 +104,6 @@ func AddOrganizationMember(agolaOrganizationRef string, agolaUserRef string, rol
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
-
-	if err != nil {
-		return err
-	}
 
 	if resp.StatusCode == 400 {
 		return errors.New(resp.Status)
@@ -137,13 +123,25 @@ func RemoveOrganizationMember(agolaOrganizationRef string, agolaUserRef string) 
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if err != nil {
-		return err
-	}
-
 	if resp.StatusCode == 400 {
 		return errors.New(resp.Status)
 	}
 
 	return err
+}
+
+func GetOrganizationMembers(agolaOrganizationRef string) (*[]OrganizationMembersResponseDto, error) {
+	client := &http.Client{}
+	URLApi := getOrganizationMembersUrl(agolaOrganizationRef)
+	req, err := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var jsonResponse []OrganizationMembersResponseDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse, err
 }

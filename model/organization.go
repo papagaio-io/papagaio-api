@@ -8,4 +8,8 @@ type Organization struct {
 
 	GitSourceID string `json:"gitSourceId"`
 	WebHookID   int    `json:"webHookId"`
+
+	BehaviourInclude string `json:"behaviourInclude"`
+	BehaviourExclude string `json:"behaviourExclude"`
+	BehaviourType    string `json:"behaviourType"` // wildcard, regex
 }

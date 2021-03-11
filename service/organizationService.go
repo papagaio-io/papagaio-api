@@ -51,11 +51,11 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	org := &model.Organization{}
 	org.Name = req.Name
 	//org.RemoteSourceName = req.RemoteSourceName
-	org.GitSourceId = req.GitSourceId
+	org.GitSourceID = req.GitSourceId
 	org.Visibility = req.Visibility
 
 	//Some checks
-	gitSource, err := service.Db.GetGitSourceById(org.GitSourceId)
+	gitSource, err := service.Db.GetGitSourceById(org.GitSourceID)
 	if gitSource == nil || err != nil {
 		UnprocessableEntityResponse(w, "Gitsource non found")
 		return

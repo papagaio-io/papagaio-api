@@ -8,9 +8,9 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
-func CreateWebHook(gitSource *model.GitSource, gitOrgRef string, branchFilter string) (int, error) {
+func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	if strings.Compare(gitSource.GitType, "gitea") == 0 {
-		return gitea.CreateWebHook(gitSource, gitOrgRef, branchFilter)
+		return gitea.CreateWebHook(gitSource, gitOrgRef)
 	}
 
 	return -1, errors.New("Git type not found")

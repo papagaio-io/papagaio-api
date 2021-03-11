@@ -3,7 +3,7 @@ package manager
 import (
 	"strings"
 
-	agolatApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
+	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
 	giteaApi "wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
@@ -34,7 +34,7 @@ func SyncMembers(db repository.Database, organizationID string) {
 		}
 	}
 
-	agolaMembers, _ := agolatApi.GetOrganizationMembers(organization.Name)
+	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization.Name)
 	agolaMembersMap := toMapMembers(&agolaMembers.Members)
 
 	for _, gitMember := range gitTeamOwners {
@@ -42,9 +42,9 @@ func SyncMembers(db repository.Database, organizationID string) {
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
-			agolatApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
+			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
 		} else if strings.Compare(agolaUserRole, "owner") != 0 {
-			agolatApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
+			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
 		}
 	}
 
@@ -53,9 +53,9 @@ func SyncMembers(db repository.Database, organizationID string) {
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
-			agolatApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
+			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
 		} else if strings.Compare(agolaUserRole, "owner") == 0 {
-			agolatApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
+			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
 		}
 	}
 
@@ -63,7 +63,7 @@ func SyncMembers(db repository.Database, organizationID string) {
 
 	for _, agolaMember := range agolaMembers.Members {
 		if findGitMemberByAgolaUserRef(gitTeamOwners, agolaMember.Username) == nil || findGitMemberByAgolaUserRef(gitTeamMembers, agolaMember.Username) == nil {
-			agolatApi.RemoveOrganizationMember(organization.Name, agolaMember.Username)
+			agolaApi.RemoveOrganizationMember(organization.Name, agolaMember.Username)
 		}
 	}
 
@@ -79,8 +79,8 @@ func findGitMemberByAgolaUserRef(gitMembers map[int]giteaApi.UserTeamResponseDto
 	return nil
 }
 
-func toMapMembers(members *[]agolatApi.MemberDto) *map[string]agolatApi.MemberDto {
-	membersMap := make(map[string]agolatApi.MemberDto)
+func toMapMembers(members *[]agolaApi.MemberDto) *map[string]agolaApi.MemberDto {
+	membersMap := make(map[string]agolaApi.MemberDto)
 	for _, member := range *members {
 		membersMap[member.Username] = member
 	}

@@ -75,7 +75,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org.UserEmailCreator = emailUserLogged
 
-	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.Name, "*")
+	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.Name)
 	if err != nil {
 		UnprocessableEntityResponse(w, err.Error())
 		return

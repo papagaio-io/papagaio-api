@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"regexp"
 	"strings"
 
 	"wecode.sorint.it/opensource/papagaio-be/model"
@@ -19,6 +20,12 @@ func evaluateBehaviour(organization *model.Organization, repositoryName string) 
 
 //TODO
 func validateBehaviour(organization *model.Organization) bool {
+	if strings.Compare(organization.BehaviourType, "regex") == 0 {
+		_, err := regexp.Compile("*")
+		return err == nil
+	} else {
 
-	return true
+	}
+
+	return false
 }

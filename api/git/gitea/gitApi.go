@@ -13,8 +13,8 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
-func CreateWebHook(gitSource *model.GitSource, gitOrgRef string, branchFilter string) (int, error) {
-	fmt.Println("CreateWebHook gitOrgRef branchFilter:", gitOrgRef, branchFilter)
+func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
+	fmt.Println("CreateWebHook gitOrgRef branchFilter:", gitOrgRef)
 
 	client := &http.Client{}
 
@@ -26,9 +26,9 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string, branchFilter st
 
 	webHookRequest := CreateWebHookRequestDto{
 		Active:       true,
-		BranchFilter: branchFilter,
+		BranchFilter: "*",
 		Config:       WebHookConfigRequestDto{ContentType: "json", URL: config.Config.Server.LocalHostAddress + webHookConfigPath, HTTPMethod: "post"},
-		Events:       []string{"create", "delete", "repository"},
+		Events:       []string{"repository"},
 		Type:         "gitea",
 	}
 	data, _ := json.Marshal(webHookRequest)

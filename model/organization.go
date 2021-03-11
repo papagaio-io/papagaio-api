@@ -12,4 +12,6 @@ type Organization struct {
 	BehaviourInclude string `json:"behaviourInclude"`
 	BehaviourExclude string `json:"behaviourExclude"`
 	BehaviourType    string `json:"behaviourType"` // wildcard, regex
+
+	Projects []Project `json:"projects"`
 }

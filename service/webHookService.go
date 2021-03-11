@@ -9,7 +9,9 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
 	"wecode.sorint.it/opensource/papagaio-be/dto"
+	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
 )
 
@@ -17,7 +19,6 @@ type WebHookService struct {
 	Db repository.Database
 }
 
-//TODO
 func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("WebHookOrganization start...")
 
@@ -33,11 +34,12 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	if organization == nil {
 		return
 	}
-	//gitSource, _ := service.Db.GetGitSourceById(organization.GitSourceId)
-	//user, _ := service.Db.GetUserByEmail(organization.UserEmailCreator)
+	gitSource, _ := service.Db.GetGitSourceById(organization.GitSourceID)
 
 	if strings.Compare(webHookMessage.Action, "created") == 0 {
-		//projectId, _ := agolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, user.AgolaUserToken)
-		//TODO save project to db
+		projectID, _ := agolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+		project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectRef: projectID}
+		organization.Projects = append(organization.Projects, project)
+		service.Db.SaveOrganization(organization)
 	}
 }

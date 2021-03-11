@@ -7,6 +7,7 @@ import (
 	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
 	giteaApi "wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
+	"wecode.sorint.it/opensource/papagaio-be/utils"
 )
 
 //Sincronizzo i membri della organization tra git e agola
@@ -37,7 +38,7 @@ func SyncMembers(db repository.Database, organizationID string) {
 	agolaMembersMap := toMapMembers(&agolaMembers.Members)
 
 	for _, gitMember := range gitTeamOwners {
-		agolaUserRef := ConvertGitToAgolaUsername(gitMember.Username)
+		agolaUserRef := utils.ConvertGitToAgolaUsername(gitMember.Username)
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
@@ -48,7 +49,7 @@ func SyncMembers(db repository.Database, organizationID string) {
 	}
 
 	for _, gitMember := range gitTeamMembers {
-		agolaUserRef := ConvertGitToAgolaUsername(gitMember.Username)
+		agolaUserRef := utils.ConvertGitToAgolaUsername(gitMember.Username)
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
@@ -70,7 +71,7 @@ func SyncMembers(db repository.Database, organizationID string) {
 
 func findGitMemberByAgolaUserRef(gitMembers map[int]giteaApi.UserTeamResponseDto, agolaUserRef string) *giteaApi.UserTeamResponseDto {
 	for _, gitMember := range gitMembers {
-		if strings.Compare(agolaUserRef, ConvertGitToAgolaUsername(gitMember.Username)) == 0 {
+		if strings.Compare(agolaUserRef, utils.ConvertGitToAgolaUsername(gitMember.Username)) == 0 {
 			return &gitMember
 		}
 	}

@@ -95,7 +95,7 @@ func GetRemoteSources() (*[]RemoteSourcesDto, error) {
 	return &jsonResponse, err
 }
 
-func AddOrganizationMember(agolaOrganizationRef string, agolaUserRef string, role string) error {
+func AddOrUpdateOrganizationMember(agolaOrganizationRef string, agolaUserRef string, role string) error {
 	var err error
 	client := &http.Client{}
 	URLApi := getAddOrgMemberUrl(agolaOrganizationRef, agolaUserRef)
@@ -130,7 +130,7 @@ func RemoveOrganizationMember(agolaOrganizationRef string, agolaUserRef string) 
 	return err
 }
 
-func GetOrganizationMembers(agolaOrganizationRef string) (*[]OrganizationMembersResponseDto, error) {
+func GetOrganizationMembers(agolaOrganizationRef string) (*OrganizationMembersResponseDto, error) {
 	client := &http.Client{}
 	URLApi := getOrganizationMembersUrl(agolaOrganizationRef)
 	req, err := http.NewRequest("GET", URLApi, nil)
@@ -140,7 +140,7 @@ func GetOrganizationMembers(agolaOrganizationRef string) (*[]OrganizationMembers
 
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	var jsonResponse []OrganizationMembersResponseDto
+	var jsonResponse OrganizationMembersResponseDto
 	json.Unmarshal(body, &jsonResponse)
 
 	return &jsonResponse, err

@@ -50,9 +50,14 @@ func (db *AppDb) Init(config config.Configuration) {
 }
 
 func databaseDataInit(db *AppDb) {
-	db.DB.DropAll()
-	db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "d5e630f316de7132d4f840c305853865b2470cf2", AgolaToken: "d8fe9258aab60bb3dd192a7726cbf128747cfb0e"})
-	db.SaveUser(&model.User{Email: "test@sorint.it"})
+	//db.DB.DropAll()
+	//db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: "gitea", GitAPIURL: "https://wecode.sorintdev.it", GitToken: "d5e630f316de7132d4f840c305853865b2470cf2", AgolaToken: "d8fe9258aab60bb3dd192a7726cbf128747cfb0e", Type: "gitea"})
+	//db.SaveUser(&model.User{Email: "test@sorint.it"})
+
+	/*gitSource, _ := db.GetGitSourceById("N2ItNWUwNy00YzMyLWI0YzQtMzI3YTcwZjIwNmE4")
+	gitSource.AgolaRemoteSource = "gitea"
+	gitSource.AgolaToken = "aad79c015e46597a443d9018b7517c1c4b73c2d1" //token prova di tullio
+	db.SaveGitSource(gitSource)*/
 }
 
 func getNewUid() string {

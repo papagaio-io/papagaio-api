@@ -40,7 +40,10 @@ func (db *AppDb) GetGitSources() (*[]model.GitSource, error) {
 }
 
 func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
-	gitSource.ID = getNewUid()
+	gs, _ := db.GetGitSourceById(gitSource.ID)
+	if gs == nil {
+		gitSource.ID = getNewUid()
+	}
 
 	key := "gs/" + string(gitSource.ID)
 	value, err := json.Marshal(gitSource)

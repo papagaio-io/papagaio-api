@@ -15,7 +15,7 @@ func EvaluateBehaviour(organization *model.Organization, repositoryName string) 
 
 	}
 
-	return false
+	return true
 }
 
 //TODO
@@ -27,5 +27,5 @@ func ValidateBehaviour(organization *model.Organization) bool {
 
 	}
 
-	return false
+	return true
 }

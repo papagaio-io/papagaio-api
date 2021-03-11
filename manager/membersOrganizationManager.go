@@ -6,15 +6,25 @@ import (
 	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
 	giteaApi "wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
+	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
 	"wecode.sorint.it/opensource/papagaio-be/utils"
 )
 
-//Sincronizzo i membri della organization tra git e agola
-func SyncMembers(db repository.Database, organizationID string) {
-	organization, _ := db.GetOrganizationById(organizationID)
-	gitSource, _ := db.GetGitSourceById(organization.ID)
+func StartDyncMembers(db repository.Database) {
+	go syncMembersRun(db)
+}
 
+func syncMembersRun(db repository.Database) {
+	organizations, _ := db.GetOrganizations()
+	for _, org := range *organizations {
+		gitSource, _ := db.GetGitSourceById(org.ID)
+		syncMembers(&org, gitSource)
+	}
+}
+
+//Sincronizzo i membri della organization tra git e agola
+func syncMembers(organization *model.Organization, gitSource *model.GitSource) {
 	gitTeams, _ := gitApi.GetOrganizationTeams(gitSource, organization.Name)
 	gitTeamOwners := make(map[int]giteaApi.UserTeamResponseDto)
 	gitTeamMembers := make(map[int]giteaApi.UserTeamResponseDto)

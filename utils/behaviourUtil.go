@@ -8,7 +8,7 @@ import (
 )
 
 //TODO
-func evaluateBehaviour(organization *model.Organization, repositoryName string) bool {
+func EvaluateBehaviour(organization *model.Organization, repositoryName string) bool {
 	if strings.Compare(organization.BehaviourType, "regex") == 0 {
 
 	} else {
@@ -19,7 +19,7 @@ func evaluateBehaviour(organization *model.Organization, repositoryName string) 
 }
 
 //TODO
-func validateBehaviour(organization *model.Organization) bool {
+func ValidateBehaviour(organization *model.Organization) bool {
 	if strings.Compare(organization.BehaviourType, "regex") == 0 {
 		_, err := regexp.Compile("*")
 		return err == nil

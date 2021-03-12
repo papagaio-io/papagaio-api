@@ -11,7 +11,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/utils"
 )
 
-func StartDyncMembers(db repository.Database) {
+func StartSyncMembers(db repository.Database) {
 	go syncMembersRun(db)
 }
 
@@ -19,12 +19,12 @@ func syncMembersRun(db repository.Database) {
 	organizations, _ := db.GetOrganizations()
 	for _, org := range *organizations {
 		gitSource, _ := db.GetGitSourceById(org.ID)
-		syncMembers(&org, gitSource)
+		SyncMembers(&org, gitSource)
 	}
 }
 
 //Sincronizzo i membri della organization tra git e agola
-func syncMembers(organization *model.Organization, gitSource *model.GitSource) {
+func SyncMembers(organization *model.Organization, gitSource *model.GitSource) {
 	gitTeams, _ := gitApi.GetOrganizationTeams(gitSource, organization.Name)
 	gitTeamOwners := make(map[int]giteaApi.UserTeamResponseDto)
 	gitTeamMembers := make(map[int]giteaApi.UserTeamResponseDto)

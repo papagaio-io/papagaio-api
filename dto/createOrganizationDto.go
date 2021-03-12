@@ -1,8 +1,10 @@
 package dto
 
+import "wecode.sorint.it/opensource/papagaio-be/model"
+
 type CreateOrganizationDto struct {
-	Name       string `json:"name"`
-	Visibility string `json:"visibility"`
+	Name       string               `json:"name"`
+	Visibility model.VisibilityType `json:"visibility"`
 
 	GitSourceId string `json:"gitSourceId"`
 

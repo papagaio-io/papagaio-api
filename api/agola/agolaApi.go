@@ -12,10 +12,10 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
-func CreateOrganization(name string, visibility string) (string, error) {
+func CreateOrganization(name string, visibility model.VisibilityType) (string, error) {
 	client := &http.Client{}
 	URLApi := getCreateORGUrl()
-	reqBody := strings.NewReader(`{"name": "` + name + `", "visibility": "` + visibility + `"}`)
+	reqBody := strings.NewReader(`{"name": "` + name + `", "visibility": "` + string(visibility) + `"}`)
 	req, err := http.NewRequest("POST", URLApi, reqBody)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)

@@ -53,7 +53,7 @@ func SyncMembers(organization *model.Organization, gitSource *model.GitSource) {
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
 			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
-		} else if strings.Compare(agolaUserRole, "owner") != 0 {
+		} else if agolaUserRole == agolaApi.Owner {
 			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
 		}
 	}
@@ -64,7 +64,7 @@ func SyncMembers(organization *model.Organization, gitSource *model.GitSource) {
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
 			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
-		} else if strings.Compare(agolaUserRole, "owner") == 0 {
+		} else if agolaUserRole == agolaApi.Member {
 			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
 		}
 	}

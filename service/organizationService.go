@@ -11,6 +11,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/dto"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
+	"wecode.sorint.it/opensource/papagaio-be/utils"
 )
 
 type OrganizationService struct {
@@ -50,7 +51,6 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org := &model.Organization{}
 	org.Name = req.Name
-	//org.RemoteSourceName = req.RemoteSourceName
 	org.GitSourceID = req.GitSourceId
 	org.Visibility = req.Visibility
 
@@ -70,6 +70,11 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	agolaOrg, err := service.Db.GetOrganizationByName(org.Name)
 	if agolaOrg != nil {
 		UnprocessableEntityResponse(w, "Organization just present in Agola")
+		return
+	}
+
+	if !utils.ValidateBehaviour(org) {
+		UnprocessableEntityResponse(w, "Behaviour fields not valid")
 		return
 	}
 

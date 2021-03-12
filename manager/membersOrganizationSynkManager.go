@@ -2,6 +2,7 @@ package manager
 
 import (
 	"strings"
+	"time"
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
@@ -16,10 +17,15 @@ func StartSyncMembers(db repository.Database) {
 }
 
 func syncMembersRun(db repository.Database) {
-	organizations, _ := db.GetOrganizations()
-	for _, org := range *organizations {
-		gitSource, _ := db.GetGitSourceById(org.ID)
-		SyncMembers(&org, gitSource)
+	for {
+
+		organizations, _ := db.GetOrganizations()
+		for _, org := range *organizations {
+			gitSource, _ := db.GetGitSourceById(org.ID)
+			SyncMembers(&org, gitSource)
+		}
+
+		time.Sleep(time.Hour)
 	}
 }
 

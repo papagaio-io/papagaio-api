@@ -56,7 +56,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			return
 		}
 
-		project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectRef: projectID}
+		project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID}
 		organization.Projects[webHookMessage.Repository.Name] = project
 		service.Db.SaveOrganization(organization)
 

@@ -31,7 +31,7 @@ func AddAllGitRepository(db repository.Database, organization *model.Organizatio
 			return
 		}
 
-		project := model.Project{OrganizationID: organization.ID, GitRepoPath: repo.Name, AgolaProjectRef: projectID}
+		project := model.Project{OrganizationID: organization.ID, GitRepoPath: repo.Name, AgolaProjectID: projectID}
 		organization.Projects[repo.Name] = project
 		db.SaveOrganization(organization)
 	}

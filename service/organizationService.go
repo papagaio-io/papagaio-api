@@ -53,6 +53,9 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	org.Name = req.Name
 	org.GitSourceID = req.GitSourceId
 	org.Visibility = req.Visibility
+	org.BehaviourType = req.BehaviourType
+	org.BehaviourInclude = req.BehaviourInclude
+	org.BehaviourExclude = req.BehaviourExclude
 
 	//Some checks
 	gitSource, err := service.Db.GetGitSourceById(org.GitSourceID)

@@ -8,7 +8,7 @@ type CreateOrganizationDto struct {
 
 	GitSourceId string `json:"gitSourceId"`
 
-	BehaviourInclude string `json:"behaviourInclude"`
-	BehaviourExclude string `json:"behaviourExclude"`
-	BehaviourType    string `json:"behaviourType"` // wildcard, regex
+	BehaviourInclude string              `json:"behaviourInclude"`
+	BehaviourExclude string              `json:"behaviourExclude"`
+	BehaviourType    model.BehaviourType `json:"behaviourType"` // wildcard, regex
 }

@@ -31,9 +31,13 @@ func Init() {
 }
 
 func serve(cmd *cobra.Command, args []string) {
-	//testSomeAPI()
-
 	config.SetupConfig()
+
+	if _, err := os.Stat(config.Config.Database.DbPath); os.IsNotExist(err) {
+		log.Println("Filder", config.Config.Database.DbPath, "not found")
+		panic("Filder" + config.Config.Database.DbPath + "not found")
+	}
+
 	db := repository.NewAppDb(config.Config)
 
 	ctrlOrganization := service.OrganizationService{

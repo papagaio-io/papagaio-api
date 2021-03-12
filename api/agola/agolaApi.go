@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"wecode.sorint.it/opensource/papagaio-be/api"
 	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
@@ -21,8 +22,9 @@ func CreateOrganization(name string, visibility model.VisibilityType) (string, e
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 400 {
-		return "", errors.New(resp.Status)
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return "", errors.New(string(respMessage))
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -52,8 +54,9 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 400 {
-		return "", errors.New(resp.Status)
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return "", errors.New(string(respMessage))
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -72,8 +75,9 @@ func DeleteProject(organizationName string, projectname string, agolaUserToken s
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 400 {
-		return errors.New(resp.Status)
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
 	}
 
 	return err
@@ -86,6 +90,11 @@ func GetRemoteSources() (*[]RemoteSourcesDto, error) {
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
 
@@ -105,8 +114,9 @@ func AddOrUpdateOrganizationMember(agolaOrganizationRef string, agolaUserRef str
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 400 {
-		return errors.New(resp.Status)
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
 	}
 
 	return err
@@ -123,8 +133,9 @@ func RemoveOrganizationMember(agolaOrganizationRef string, agolaUserRef string) 
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 400 {
-		return errors.New(resp.Status)
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
 	}
 
 	return err
@@ -137,6 +148,11 @@ func GetOrganizationMembers(agolaOrganizationRef string) (*OrganizationMembersRe
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
 

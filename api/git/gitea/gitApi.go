@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"wecode.sorint.it/opensource/papagaio-be/api"
 	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/controller"
 	"wecode.sorint.it/opensource/papagaio-be/model"
@@ -45,7 +46,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	if resp.StatusCode != 201 {
+	if !api.IsResponseOK(resp.StatusCode) {
 		respMessage, _ := ioutil.ReadAll(resp.Body)
 		return -1, errors.New(string(respMessage))
 	}
@@ -68,6 +69,11 @@ func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) 
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
+	}
+
 	return err
 }
 
@@ -80,11 +86,9 @@ func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]Repositor
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode == 400 {
-		return nil, errors.New(resp.Status)
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -107,7 +111,7 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 
 	fmt.Println("CheckOrganizationExists resp.StatusCode: ", resp.StatusCode)
 
-	return resp.StatusCode == 200
+	return api.IsResponseOK(resp.StatusCode)
 }
 
 func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]TeamResponseDto, error) {
@@ -119,11 +123,9 @@ func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]Team
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode == 400 {
-		return nil, errors.New(resp.Status)
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -143,11 +145,9 @@ func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]UserTeamResponse
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode == 400 {
-		return nil, errors.New(resp.Status)
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -157,10 +157,3 @@ func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]UserTeamResponse
 
 	return &usersResponse, err
 }
-
-//TODO
-/*func GetGitOrganizations(gitSource *model.GitSource) ([]string, error) {
-	var organizations []string
-	var err error
-	return organizations, err
-}*/

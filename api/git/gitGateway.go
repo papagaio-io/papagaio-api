@@ -2,14 +2,13 @@ package git
 
 import (
 	"errors"
-	"strings"
 
 	"wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
 func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
-	if strings.Compare(gitSource.GitType, "gitea") == 0 {
+	if gitSource.GitType == model.Gitea {
 		return gitea.CreateWebHook(gitSource, gitOrgRef)
 	}
 
@@ -17,7 +16,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 }
 
 func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error {
-	if strings.Compare(gitSource.GitType, "gitea") == 0 {
+	if gitSource.GitType == model.Gitea {
 		return gitea.DeleteWebHook(gitSource, gitOrgRef, webHookID)
 	}
 
@@ -25,7 +24,7 @@ func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) 
 }
 
 func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]gitea.RepositoryDto, error) {
-	if strings.Compare(gitSource.GitType, "gitea") == 0 {
+	if gitSource.GitType == model.Gitea {
 		return gitea.GetRepositories(gitSource, gitOrgRef)
 	}
 
@@ -33,7 +32,7 @@ func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]gitea.Rep
 }
 
 func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
-	if strings.Compare(gitSource.GitType, "gitea") == 0 {
+	if gitSource.GitType == model.Gitea {
 		return gitea.CheckOrganizationExists(gitSource, gitOrgRef)
 	}
 
@@ -41,7 +40,7 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 }
 
 func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]gitea.TeamResponseDto, error) {
-	if strings.Compare(gitSource.GitType, "gitea") == 0 {
+	if gitSource.GitType == model.Gitea {
 		return gitea.GetOrganizationTeams(gitSource, gitOrgRef)
 	}
 
@@ -49,7 +48,7 @@ func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]gite
 }
 
 func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]gitea.UserTeamResponseDto, error) {
-	if strings.Compare(gitSource.GitType, "gitea") == 0 {
+	if gitSource.GitType == model.Gitea {
 		return gitea.GetTeamMembers(gitSource, teamId)
 	}
 

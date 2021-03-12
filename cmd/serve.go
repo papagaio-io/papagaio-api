@@ -13,6 +13,7 @@ import (
 	giteaApi "wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
 	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/controller"
+	"wecode.sorint.it/opensource/papagaio-be/manager"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
 	"wecode.sorint.it/opensource/papagaio-be/service"
@@ -63,6 +64,8 @@ func serve(cmd *cobra.Command, args []string) {
 	} else {
 		logRouter = router
 	}
+
+	manager.StartSyncMembers(&db)
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

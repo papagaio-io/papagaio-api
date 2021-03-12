@@ -2,14 +2,13 @@ package utils
 
 import (
 	"regexp"
-	"strings"
 
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
 //TODO
 func EvaluateBehaviour(organization *model.Organization, repositoryName string) bool {
-	if strings.Compare(organization.BehaviourType, "regex") == 0 {
+	if organization.BehaviourType == model.Regex {
 
 	} else {
 
@@ -20,9 +19,14 @@ func EvaluateBehaviour(organization *model.Organization, repositoryName string) 
 
 //TODO
 func ValidateBehaviour(organization *model.Organization) bool {
-	if strings.Compare(organization.BehaviourType, "regex") == 0 {
-		_, err := regexp.Compile("*")
-		return err == nil
+	if organization.BehaviourType == model.Regex {
+		_, err := regexp.Compile(organization.BehaviourInclude)
+		if err != nil {
+			_, err := regexp.Compile(organization.BehaviourExclude)
+			return err == nil
+		}
+
+		return true
 	} else {
 
 	}

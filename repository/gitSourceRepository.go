@@ -41,7 +41,7 @@ func (db *AppDb) GetGitSources() (*[]model.GitSource, error) {
 
 func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
 	gs, _ := db.GetGitSourceById(gitSource.ID)
-	if gs == nil {
+	if strings.Compare(gs.ID, "") == 0 {
 		gitSource.ID = getNewUid()
 	}
 

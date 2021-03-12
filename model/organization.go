@@ -21,6 +21,7 @@ type BehaviourType string
 const (
 	Wildcard BehaviourType = "wildcard"
 	Regex    BehaviourType = "regex"
+	None     BehaviourType = "none"
 )
 
 type VisibilityType string

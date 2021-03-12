@@ -11,7 +11,6 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/dto"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
-	"wecode.sorint.it/opensource/papagaio-be/utils"
 )
 
 type OrganizationService struct {
@@ -47,6 +46,11 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	var req *dto.CreateOrganizationDto
 	json.NewDecoder(r.Body).Decode(&req)
 
+	if req.IsValid() != nil {
+		UnprocessableEntityResponse(w, "Parameters have no correct values")
+		return
+	}
+
 	log.Println("Req CreateOrganizationDto: ", req)
 
 	org := &model.Organization{}
@@ -73,11 +77,6 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	agolaOrg, err := service.Db.GetOrganizationByName(org.Name)
 	if agolaOrg != nil {
 		UnprocessableEntityResponse(w, "Organization just present in Agola")
-		return
-	}
-
-	if !utils.ValidateBehaviour(org) {
-		UnprocessableEntityResponse(w, "Behaviour fields not valid")
 		return
 	}
 

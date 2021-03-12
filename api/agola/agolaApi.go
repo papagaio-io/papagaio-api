@@ -10,10 +10,11 @@ import (
 
 	"wecode.sorint.it/opensource/papagaio-be/api"
 	"wecode.sorint.it/opensource/papagaio-be/config"
+	"wecode.sorint.it/opensource/papagaio-be/dto"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
-func CreateOrganization(name string, visibility model.VisibilityType) (string, error) {
+func CreateOrganization(name string, visibility dto.VisibilityType) (string, error) {
 	client := &http.Client{}
 	URLApi := getCreateORGUrl()
 	reqBody := strings.NewReader(`{"name": "` + name + `", "visibility": "` + string(visibility) + `"}`)

@@ -4,14 +4,15 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"wecode.sorint.it/opensource/papagaio-be/dto"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 )
 
 func EvaluateBehaviour(organization *model.Organization, repositoryName string) bool {
-	if organization.BehaviourType == model.None {
+	if organization.BehaviourType == dto.None {
 		return true
 	}
-	if organization.BehaviourType == model.Regex {
+	if organization.BehaviourType == dto.Regex {
 
 		if len(organization.BehaviourExclude) > 0 {
 			isMatch := regexp.MustCompile(organization.BehaviourExclude).MatchString(repositoryName)
@@ -34,9 +35,9 @@ func EvaluateBehaviour(organization *model.Organization, repositoryName string) 
 }
 
 func ValidateBehaviour(organization *model.Organization) bool {
-	if organization.BehaviourType == model.None {
+	if organization.BehaviourType == dto.None {
 		return true
-	} else if organization.BehaviourType == model.Regex {
+	} else if organization.BehaviourType == dto.Regex {
 		_, err := regexp.Compile(organization.BehaviourInclude)
 		if err != nil {
 			if len(organization.BehaviourExclude) > 0 {

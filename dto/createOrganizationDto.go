@@ -1,14 +1,86 @@
 package dto
 
-import "wecode.sorint.it/opensource/papagaio-be/model"
+import (
+	"errors"
+	"path/filepath"
+	"regexp"
+)
 
 type CreateOrganizationDto struct {
-	Name       string               `json:"name"`
-	Visibility model.VisibilityType `json:"visibility"`
+	Name       string         `json:"name"`
+	Visibility VisibilityType `json:"visibility"`
 
 	GitSourceId string `json:"gitSourceId"`
 
-	BehaviourInclude string              `json:"behaviourInclude"`
-	BehaviourExclude string              `json:"behaviourExclude"`
-	BehaviourType    model.BehaviourType `json:"behaviourType"` // wildcard, regex
+	BehaviourInclude string        `json:"behaviourInclude"`
+	BehaviourExclude string        `json:"behaviourExclude"`
+	BehaviourType    BehaviourType `json:"behaviourType"`
+}
+
+func (org CreateOrganizationDto) IsValid() error {
+	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.GitSourceId) > 0 {
+		return nil
+	}
+	return errors.New("Invalid visibility type")
+}
+
+type BehaviourType string
+
+const (
+	Wildcard BehaviourType = "wildcard"
+	Regex    BehaviourType = "regex"
+	None     BehaviourType = "none"
+)
+
+func (bt BehaviourType) IsValid() error {
+	switch bt {
+	case Wildcard, Regex, None:
+		return nil
+	}
+	return errors.New("Invalid visibility type")
+}
+
+type VisibilityType string
+
+const (
+	Public  VisibilityType = "public"
+	Private VisibilityType = "private"
+)
+
+func (vt VisibilityType) IsValid() error {
+	switch vt {
+	case Public, Private:
+		return nil
+	}
+	return errors.New("Invalid visibility type")
+}
+
+func (org CreateOrganizationDto) IsBehaviourValid() bool {
+	if org.BehaviourType.IsValid() != nil {
+		return false
+	}
+
+	if org.BehaviourType == None {
+		return true
+	} else if org.BehaviourType == Regex {
+		_, err := regexp.Compile(org.BehaviourInclude)
+		if err != nil {
+			if len(org.BehaviourExclude) > 0 {
+				_, err := regexp.Compile(org.BehaviourExclude)
+				return err == nil
+			}
+		}
+
+		return true
+	} else {
+		_, err := filepath.Match(org.BehaviourInclude, "validate")
+		if err != nil {
+			if len(org.BehaviourExclude) > 0 {
+				_, err := filepath.Match(org.BehaviourExclude, "validate")
+				return err == nil
+			}
+		}
+
+		return true
+	}
 }

@@ -39,13 +39,22 @@ func ValidateBehaviour(organization *model.Organization) bool {
 	} else if organization.BehaviourType == model.Regex {
 		_, err := regexp.Compile(organization.BehaviourInclude)
 		if err != nil {
-			_, err := regexp.Compile(organization.BehaviourExclude)
-			return err == nil
+			if len(organization.BehaviourExclude) > 0 {
+				_, err := regexp.Compile(organization.BehaviourExclude)
+				return err == nil
+			}
 		}
 
 		return true
 	} else {
+		_, err := filepath.Match(organization.BehaviourInclude, "validate")
+		if err != nil {
+			if len(organization.BehaviourExclude) > 0 {
+				_, err := filepath.Match(organization.BehaviourExclude, "validate")
+				return err == nil
+			}
+		}
 
+		return true
 	}
-	return true
 }

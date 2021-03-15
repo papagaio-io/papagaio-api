@@ -1,6 +1,10 @@
 package manager
 
 import (
+	"time"
+
+	"wecode.sorint.it/opensource/papagaio-be/manager/membersManager"
+	"wecode.sorint.it/opensource/papagaio-be/manager/repositoryManager"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
 )
@@ -10,10 +14,31 @@ func StartSynkOrganization(db repository.Database, organization *model.Organizat
 }
 
 func synkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {
-	AddAllGitRepository(db, organization, gitSource)
+	repositoryManager.AddAllGitRepository(db, organization, gitSource)
 	if gitSource.GitType == model.Gitea {
-		SyncMembersForGitea(organization, gitSource)
+		membersManager.SyncMembersForGitea(organization, gitSource)
 	} else {
-		SyncMembersForGithub(organization, gitSource)
+		membersManager.SyncMembersForGithub(organization, gitSource)
+	}
+}
+
+func StartSyncMembers(db repository.Database) {
+	go syncMembersRun(db)
+}
+
+func syncMembersRun(db repository.Database) {
+	for {
+
+		organizations, _ := db.GetOrganizations()
+		for _, org := range *organizations {
+			gitSource, _ := db.GetGitSourceById(org.ID)
+			if gitSource.GitType == model.Gitea {
+				membersManager.SyncMembersForGitea(&org, gitSource)
+			} else {
+				membersManager.SyncMembersForGithub(&org, gitSource)
+			}
+		}
+
+		time.Sleep(time.Hour)
 	}
 }

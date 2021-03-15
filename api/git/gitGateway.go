@@ -22,7 +22,7 @@ func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) 
 	}
 }
 
-func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error) { //*[]gitea.RepositoryDto
+func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error) {
 	if gitSource.GitType == model.Gitea {
 		return gitea.GetRepositories(gitSource, gitOrgRef)
 	} else {
@@ -44,8 +44,6 @@ func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]gite
 	} else {
 		return github.GetOrganizationTeams(gitSource, gitOrgRef)
 	}
-
-	return nil, nil
 }
 
 func GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId int) (*[]gitea.UserTeamResponseDto, error) {
@@ -54,6 +52,4 @@ func GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId 
 	} else {
 		return github.GetTeamMembers(gitSource, organizationName, teamId)
 	}
-
-	return nil, nil
 }

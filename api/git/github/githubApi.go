@@ -80,15 +80,7 @@ func GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId 
 
 	retVal := make([]gitea.UserTeamResponseDto, 0)
 	for _, user := range users {
-		//userMembership, _, err := client.Organizations.GetOrgMembership(context.Background(), *user.Name, organizationName)
 		if err == nil {
-			/*var role string
-			if strings.Compare(*userMembership.Role, "admin") == 0 {
-				role = "owner"
-			} else {
-				role = "member"
-			}*/
-
 			retVal = append(retVal, gitea.UserTeamResponseDto{ID: int(*user.ID), Username: *user.Name})
 		}
 	}
@@ -103,7 +95,7 @@ func GetOrganizationMembers(gitSource *model.GitSource, organizationName string)
 	retVal := make([]GitHubUser, 0)
 
 	for _, user := range users {
-		userMembership, _, err := client.Organizations.GetOrgMembership(context.Background(), *user.Name, organizationName)
+		userMembership, _, err := client.Organizations.GetOrgMembership(context.Background(), *user.Login, organizationName)
 		if err == nil {
 			var role string
 			if strings.Compare(*userMembership.Role, "admin") == 0 {
@@ -112,7 +104,7 @@ func GetOrganizationMembers(gitSource *model.GitSource, organizationName string)
 				role = "member"
 			}
 
-			retVal = append(retVal, GitHubUser{ID: int(*user.ID), Username: *user.Name, Role: role})
+			retVal = append(retVal, GitHubUser{ID: int(*user.ID), Username: *user.Login, Role: role})
 		}
 	}
 

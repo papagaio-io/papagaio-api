@@ -11,6 +11,7 @@ import (
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 	giteaApi "wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
+	"wecode.sorint.it/opensource/papagaio-be/api/git/github"
 	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/controller"
 	"wecode.sorint.it/opensource/papagaio-be/manager"
@@ -26,7 +27,7 @@ var serveCmd = &cobra.Command{
 	Run:   serve,
 }
 
-func Init() {
+func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
@@ -39,6 +40,8 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	db := repository.NewAppDb(config.Config)
+
+	//testGitHub()
 
 	ctrlOrganization := service.OrganizationService{
 		Db: &db,
@@ -87,4 +90,27 @@ func testSomeAPI() {
 		users, _ := giteaApi.GetTeamMembers(gitSource, team.ID)
 		fmt.Println("Users team: ", users)
 	}
+}
+
+func testGitHub() {
+	githubSource := &model.GitSource{GitToken: "b5433ca882222e373d1cdf37a3406f2ee0423e87"}
+
+	/*list, _ := github.GetRepositories(githubSource, "Sorinttest")
+	fmt.Println("list:", list)
+
+	hookID, _ := github.CreateWebHook(githubSource, "Sorinttest")
+	fmt.Println("hookID:", hookID)*/
+
+	/*exists := github.CheckOrganizationExists(githubSource, "Sorinttest")
+	fmt.Println("organization exists:", exists)*/
+
+	/*teams, err := github.GetOrganizationTeams(githubSource, "Sorinttest")
+	fmt.Println("err:", err)
+	fmt.Println("teams:", teams)*/
+
+	/*users, _ := github.GetTeamMembers(githubSource, 0)
+	fmt.Println("users:", users)*/
+
+	users, _ := github.GetOrganizationMembers(githubSource, "Sorinttest")
+	fmt.Println("users:", users)
 }

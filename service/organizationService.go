@@ -9,6 +9,7 @@ import (
 	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
 	"wecode.sorint.it/opensource/papagaio-be/dto"
+	"wecode.sorint.it/opensource/papagaio-be/manager"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
 )
@@ -98,6 +99,8 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		InternalServerError(w)
 		return
 	}
+
+	manager.StartSynkOrganization(service.Db, org, gitSource)
 
 	JSONokResponse(w, org.ID)
 }

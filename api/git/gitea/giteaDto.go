@@ -30,8 +30,7 @@ type WebHookConfigResponseDto struct {
 }
 
 type RepositoryDto struct {
-	Name          string `json:"name"`
-	DefaultBranch string `json:"default_branch"`
+	Name string `json:"name"`
 }
 
 type TeamResponseDto struct {

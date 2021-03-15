@@ -28,7 +28,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	webHookRequest := CreateWebHookRequestDto{
 		Active:       true,
 		BranchFilter: "*",
-		Config:       WebHookConfigRequestDto{ContentType: "json", URL: config.Config.Server.LocalHostAddress + webHookConfigPath, HTTPMethod: "post"},
+		Config:       WebHookConfigRequestDto{ContentType: "json", URL: config.Config.Server.LocalHostAddress + ":" + config.Config.Server.Port + webHookConfigPath, HTTPMethod: "post"},
 		Events:       []string{"repository"},
 		Type:         "gitea",
 	}
@@ -77,7 +77,7 @@ func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) 
 	return err
 }
 
-func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]RepositoryDto, error) {
+func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error) {
 	client := &http.Client{}
 
 	URLApi := getGetListRepositoryUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
@@ -96,7 +96,12 @@ func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]Repositor
 	var repositoryesResponse []RepositoryDto
 	json.Unmarshal(body, &repositoryesResponse)
 
-	return &repositoryesResponse, err
+	retVal := make([]string, 0)
+	for _, repo := range repositoryesResponse {
+		retVal = append(retVal, repo.Name)
+	}
+
+	return &retVal, err
 }
 
 func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
@@ -108,8 +113,6 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, _ := client.Do(req)
 	defer resp.Body.Close()
-
-	fmt.Println("CheckOrganizationExists resp.StatusCode: ", resp.StatusCode)
 
 	return api.IsResponseOK(resp.StatusCode)
 }

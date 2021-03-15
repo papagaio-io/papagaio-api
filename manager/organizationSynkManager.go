@@ -12,5 +12,9 @@ func StartSynkOrganization(db repository.Database, organization *model.Organizat
 //TODO sincronizzazione membri e repository dopo prima creazione
 func synkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {
 	AddAllGitRepository(db, organization, gitSource)
-	SyncMembers(organization, gitSource)
+	if gitSource.GitType == model.Gitea {
+		SyncMembersForGitea(organization, gitSource)
+	} else {
+
+	}
 }

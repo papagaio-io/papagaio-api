@@ -19,20 +19,20 @@ func AddAllGitRepository(db repository.Database, organization *model.Organizatio
 	}
 
 	for _, repo := range *repository {
-		if !utils.EvaluateBehaviour(organization, repo.Name) {
+		if !utils.EvaluateBehaviour(organization, repo) {
 			continue
 		}
 
 		gitSource, _ := db.GetGitSourceById(organization.GitSourceID)
-		projectID, err := agolaApi.CreateProject(repo.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+		projectID, err := agolaApi.CreateProject(repo, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 
 		if err != nil {
 			fmt.Println("Warning!!! Agola CreateProject API error!")
 			return
 		}
 
-		project := model.Project{OrganizationID: organization.ID, GitRepoPath: repo.Name, AgolaProjectID: projectID}
-		organization.Projects[repo.Name] = project
+		project := model.Project{OrganizationID: organization.ID, GitRepoPath: repo, AgolaProjectID: projectID}
+		organization.Projects[repo] = project
 		db.SaveOrganization(organization)
 	}
 }

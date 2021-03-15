@@ -2,6 +2,10 @@ package utils
 
 import "strings"
 
-func ConvertGitToAgolaUsername(gitUserName string) string {
+func ConvertGiteaToAgolaUsername(gitUserName string) string {
 	return strings.ReplaceAll(".", gitUserName, "")
+}
+
+func ConvertGithubToAgolaUsername(gitUserName string) string {
+	return gitUserName
 }

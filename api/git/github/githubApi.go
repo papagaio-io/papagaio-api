@@ -96,12 +96,6 @@ func GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId 
 	return &retVal, err
 }
 
-type GitHubUser struct {
-	ID       int
-	Username string
-	Role     string
-}
-
 func GetOrganizationMembers(gitSource *model.GitSource, organizationName string) (*[]GitHubUser, error) {
 	client := getClient(gitSource)
 	users, _, err := client.Organizations.ListMembers(context.Background(), organizationName, nil)

@@ -26,7 +26,7 @@ func syncMembersRun(db repository.Database) {
 			if gitSource.GitType == model.Gitea {
 				SyncMembersForGitea(&org, gitSource)
 			} else {
-
+				SyncMembersForGithub(&org, gitSource)
 			}
 		}
 

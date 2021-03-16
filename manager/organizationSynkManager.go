@@ -39,6 +39,6 @@ func syncMembersRun(db repository.Database) {
 			}
 		}
 
-		time.Sleep(time.Hour)
+		time.Sleep(30 * time.Minute)
 	}
 }

@@ -35,8 +35,10 @@ func serve(cmd *cobra.Command, args []string) {
 	config.SetupConfig()
 
 	if _, err := os.Stat(config.Config.Database.DbPath); os.IsNotExist(err) {
-		log.Println("Filder", config.Config.Database.DbPath, "not found")
-		panic("Filder" + config.Config.Database.DbPath + "not found")
+		err := os.Mkdir(config.Config.Database.DbPath, os.ModeDir)
+		if err != err {
+			panic("Error during mkdir" + config.Config.Database.DbPath)
+		}
 	}
 
 	db := repository.NewAppDb(config.Config)

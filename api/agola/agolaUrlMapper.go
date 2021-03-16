@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"wecode.sorint.it/opensource/papagaio-be/config"
+	"wecode.sorint.it/opensource/papagaio-api/config"
 )
 
 const createOrgPath string = "%s/api/v1alpha/orgs"

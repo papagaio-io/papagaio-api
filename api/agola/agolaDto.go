@@ -1,7 +1,7 @@
 package agola
 
 import (
-	"wecode.sorint.it/opensource/papagaio-be/dto"
+	"wecode.sorint.it/opensource/papagaio-api/dto"
 )
 
 type AgolaCreateORGDto struct {

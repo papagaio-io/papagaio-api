@@ -6,9 +6,9 @@ import (
 	"regexp"
 
 	"github.com/spf13/cobra"
-	"wecode.sorint.it/opensource/papagaio-be/config"
-	"wecode.sorint.it/opensource/papagaio-be/model"
-	"wecode.sorint.it/opensource/papagaio-be/repository"
+	"wecode.sorint.it/opensource/papagaio-api/config"
+	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
 
 var userCmd = &cobra.Command{

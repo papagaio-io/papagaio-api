@@ -5,7 +5,7 @@
     },
     "Database": {
       "DbPath": "/badger",
-      "DbName": "papagaio-be"
+      "DbName": "papagaio-api"
     },
     "Agola": {
       "AgolaAddr": "https://agola.sorintdev.it",

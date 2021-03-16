@@ -3,11 +3,11 @@ package membersManager
 import (
 	"strings"
 
-	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
-	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
-	giteaApi "wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
-	"wecode.sorint.it/opensource/papagaio-be/model"
-	"wecode.sorint.it/opensource/papagaio-be/utils"
+	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
+	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
+	giteaApi "wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
+	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 //Sincronizzo i membri della organization tra gitea e agola

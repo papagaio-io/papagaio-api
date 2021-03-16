@@ -1,9 +1,9 @@
 package git
 
 import (
-	"wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
-	"wecode.sorint.it/opensource/papagaio-be/api/git/github"
-	"wecode.sorint.it/opensource/papagaio-be/model"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
+	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
 func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {

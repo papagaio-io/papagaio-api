@@ -3,11 +3,11 @@ package repositoryManager
 import (
 	"fmt"
 
-	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
-	gitApi "wecode.sorint.it/opensource/papagaio-be/api/git"
-	"wecode.sorint.it/opensource/papagaio-be/model"
-	"wecode.sorint.it/opensource/papagaio-be/repository"
-	"wecode.sorint.it/opensource/papagaio-be/utils"
+	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
+	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 //Inserisco tutti i repository di git su agola

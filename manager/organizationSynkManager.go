@@ -3,10 +3,10 @@ package manager
 import (
 	"time"
 
-	"wecode.sorint.it/opensource/papagaio-be/manager/membersManager"
-	"wecode.sorint.it/opensource/papagaio-be/manager/repositoryManager"
-	"wecode.sorint.it/opensource/papagaio-be/model"
-	"wecode.sorint.it/opensource/papagaio-be/repository"
+	"wecode.sorint.it/opensource/papagaio-api/manager/membersManager"
+	"wecode.sorint.it/opensource/papagaio-api/manager/repositoryManager"
+	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
 
 func StartSynkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {

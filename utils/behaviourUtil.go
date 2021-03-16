@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"wecode.sorint.it/opensource/papagaio-be/dto"
-	"wecode.sorint.it/opensource/papagaio-be/model"
+	"wecode.sorint.it/opensource/papagaio-api/dto"
+	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
 func EvaluateBehaviour(organization *model.Organization, repositoryName string) bool {

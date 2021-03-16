@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"wecode.sorint.it/opensource/papagaio-be/config"
+	"wecode.sorint.it/opensource/papagaio-api/config"
 )
 
 const WebHookPath string = "/webhook"

@@ -10,13 +10,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
-	giteaApi "wecode.sorint.it/opensource/papagaio-be/api/git/gitea"
-	"wecode.sorint.it/opensource/papagaio-be/api/git/github"
-	"wecode.sorint.it/opensource/papagaio-be/config"
-	"wecode.sorint.it/opensource/papagaio-be/controller"
-	"wecode.sorint.it/opensource/papagaio-be/model"
-	"wecode.sorint.it/opensource/papagaio-be/repository"
-	"wecode.sorint.it/opensource/papagaio-be/service"
+	giteaApi "wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
+	"wecode.sorint.it/opensource/papagaio-api/config"
+	"wecode.sorint.it/opensource/papagaio-api/controller"
+	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/service"
 )
 
 var serveCmd = &cobra.Command{

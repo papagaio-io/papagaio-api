@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"strings"
 
-	"wecode.sorint.it/opensource/papagaio-be/api"
-	"wecode.sorint.it/opensource/papagaio-be/config"
-	"wecode.sorint.it/opensource/papagaio-be/controller"
-	"wecode.sorint.it/opensource/papagaio-be/model"
+	"wecode.sorint.it/opensource/papagaio-api/api"
+	"wecode.sorint.it/opensource/papagaio-api/config"
+	"wecode.sorint.it/opensource/papagaio-api/controller"
+	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
 func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {

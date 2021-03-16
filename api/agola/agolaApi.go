@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"strings"
 
-	"wecode.sorint.it/opensource/papagaio-be/api"
-	"wecode.sorint.it/opensource/papagaio-be/config"
-	"wecode.sorint.it/opensource/papagaio-be/dto"
-	"wecode.sorint.it/opensource/papagaio-be/model"
+	"wecode.sorint.it/opensource/papagaio-api/api"
+	"wecode.sorint.it/opensource/papagaio-api/config"
+	"wecode.sorint.it/opensource/papagaio-api/dto"
+	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
 func CreateOrganization(name string, visibility dto.VisibilityType) (string, error) {

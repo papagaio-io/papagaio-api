@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"wecode.sorint.it/opensource/papagaio-be/model"
-	"wecode.sorint.it/opensource/papagaio-be/repository"
+	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
 
 type GitSourceService struct {

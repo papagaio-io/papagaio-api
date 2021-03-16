@@ -9,12 +9,12 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	agolaApi "wecode.sorint.it/opensource/papagaio-be/api/agola"
-	"wecode.sorint.it/opensource/papagaio-be/dto"
-	"wecode.sorint.it/opensource/papagaio-be/manager"
-	"wecode.sorint.it/opensource/papagaio-be/model"
-	"wecode.sorint.it/opensource/papagaio-be/repository"
-	"wecode.sorint.it/opensource/papagaio-be/utils"
+	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/dto"
+	"wecode.sorint.it/opensource/papagaio-api/manager"
+	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 type WebHookService struct {

@@ -1,4 +1,4 @@
-module wecode.sorint.it/opensource/papagaio-be
+module wecode.sorint.it/opensource/papagaio-api
 
 go 1.15
 

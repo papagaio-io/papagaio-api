@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/dgraph-io/badger"
-	"wecode.sorint.it/opensource/papagaio-be/model"
+	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
 func (db *AppDb) GetGitSources() (*[]model.GitSource, error) {

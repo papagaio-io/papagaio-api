@@ -1,6 +1,6 @@
 package model
 
-import "wecode.sorint.it/opensource/papagaio-be/dto"
+import "wecode.sorint.it/opensource/papagaio-api/dto"
 
 type Organization struct {
 	ID               string             `json:"id"`

@@ -6,8 +6,8 @@ import (
 
 	"github.com/dgraph-io/badger"
 	"github.com/google/uuid"
-	"wecode.sorint.it/opensource/papagaio-be/config"
-	"wecode.sorint.it/opensource/papagaio-be/model"
+	"wecode.sorint.it/opensource/papagaio-api/config"
+	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
 type Database interface {

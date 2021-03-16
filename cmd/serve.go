@@ -14,7 +14,6 @@ import (
 	"wecode.sorint.it/opensource/papagaio-be/api/git/github"
 	"wecode.sorint.it/opensource/papagaio-be/config"
 	"wecode.sorint.it/opensource/papagaio-be/controller"
-	"wecode.sorint.it/opensource/papagaio-be/manager"
 	"wecode.sorint.it/opensource/papagaio-be/model"
 	"wecode.sorint.it/opensource/papagaio-be/repository"
 	"wecode.sorint.it/opensource/papagaio-be/service"
@@ -72,7 +71,7 @@ func serve(cmd *cobra.Command, args []string) {
 		logRouter = router
 	}
 
-	manager.StartSyncMembers(&db)
+	//manager.StartSyncMembers(&db)
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

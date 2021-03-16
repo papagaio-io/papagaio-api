@@ -18,17 +18,20 @@ func SetupHTTPClient() {
 }
 
 func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlMember MemberController, ctrlWebHook WebHookController) {
-	setupPingRouter(router)
-	setupGetOrganizationsRouter(router.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
-	setupCreateOrganizationEndpoint(router.PathPrefix("/createorganization").Subrouter(), ctrlOrganization)
-	setupGetRemoteSourcesEndpoint(router.PathPrefix("/remotesources").Subrouter(), ctrlOrganization)
+	apirouter := mux.NewRouter().PathPrefix("/api").Subrouter().UseEncodedPath()
+	router.PathPrefix("/api").Handler(apirouter)
 
-	setupGetGitSourcesEndpoint(router.PathPrefix("/gitsources").Subrouter(), ctrlGitSource)
-	setupAddGitSourceEndpoint(router.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
-	setupUpdateGitSourceEndpoint(router.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
-	setupDeleteGitSourceEndpoint(router.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
+	setupPingRouter(apirouter)
+	setupGetOrganizationsRouter(apirouter.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
+	setupCreateOrganizationEndpoint(apirouter.PathPrefix("/createorganization").Subrouter(), ctrlOrganization)
+	setupGetRemoteSourcesEndpoint(apirouter.PathPrefix("/remotesources").Subrouter(), ctrlOrganization)
 
-	setupWebHookEndpoint(router.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
+	setupGetGitSourcesEndpoint(apirouter.PathPrefix("/gitsources").Subrouter(), ctrlGitSource)
+	setupAddGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
+	setupUpdateGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
+	setupDeleteGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
+
+	setupWebHookEndpoint(apirouter.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
 }
 
 func setupPingRouter(router *mux.Router) {

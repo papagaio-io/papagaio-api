@@ -99,6 +99,40 @@ func (db *AppDb) GetGitSourceById(id string) (*model.GitSource, error) {
 	return &gitSource, err
 }
 
+func (db *AppDb) GetGitSourceByName(name string) (*model.GitSource, error) {
+	var gitSource *model.GitSource
+
+	dst := make([]byte, 0)
+	err := db.DB.View(func(txn *badger.Txn) error {
+		prefix := "gs/"
+
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = []byte(prefix)
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+
+			var localGitSource model.GitSource
+			dst, _ = item.ValueCopy(dst)
+			json.Unmarshal(dst, &localGitSource)
+
+			if strings.Compare(localGitSource.Name, name) != 0 {
+				continue
+			}
+
+			gitSource = &localGitSource
+
+			break
+		}
+
+		return nil
+	})
+
+	return gitSource, err
+}
+
 func (db *AppDb) DeleteGitSource(id string) error {
 	return db.DB.DropPrefix([]byte("gs/" + id))
 }

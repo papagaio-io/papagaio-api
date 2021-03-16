@@ -25,7 +25,7 @@ var removeUserCmd = &cobra.Command{
 	Run: removeUser,
 }
 
-var cfg configUserCmd
+var cfgUser configUserCmd
 var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 type configUserCmd struct {
@@ -37,34 +37,34 @@ func init() {
 	userCmd.AddCommand(addUserCmd)
 	userCmd.AddCommand(removeUserCmd)
 
-	userCmd.PersistentFlags().StringVar(&cfg.email, "email", "", "user email")
+	userCmd.PersistentFlags().StringVar(&cfgUser.email, "email", "", "user email")
 }
 
 func addUser(cmd *cobra.Command, args []string) {
-	db := begin(cmd)
-	user, _ := db.GetUserByEmail(cfg.email)
+	db := beginUser(cmd)
+	user, _ := db.GetUserByEmail(cfgUser.email)
 	if user == nil {
-		db.SaveUser(&model.User{Email: cfg.email})
-		cmd.Println("User ", cfg.email, "saved")
+		db.SaveUser(&model.User{Email: cfgUser.email})
+		cmd.Println("User ", cfgUser.email, "saved")
 	} else {
-		cmd.PrintErrln("User", cfg.email, "just present in db")
+		cmd.PrintErrln("User", cfgUser.email, "just present in db")
 	}
 }
 
 func removeUser(cmd *cobra.Command, args []string) {
-	db := begin(cmd)
+	db := beginUser(cmd)
 
-	user, _ := db.GetUserByEmail(cfg.email)
+	user, _ := db.GetUserByEmail(cfgUser.email)
 	if user != nil {
-		db.DeleteUser(cfg.email)
-		cmd.Println("User ", cfg.email, "removed")
+		db.DeleteUser(cfgUser.email)
+		cmd.Println("User ", cfgUser.email, "removed")
 	} else {
-		cmd.PrintErrln("User", cfg.email, "not found")
+		cmd.PrintErrln("User", cfgUser.email, "not found")
 	}
 }
 
-func begin(cmd *cobra.Command) repository.AppDb {
-	if !emailRegex.MatchString(cfg.email) {
+func beginUser(cmd *cobra.Command) repository.AppDb {
+	if !emailRegex.MatchString(cfgUser.email) {
 		cmd.PrintErrln("email is empty or not valid")
 	}
 

@@ -72,7 +72,7 @@ func readConfig() {
 // SetupConfig load the configuration from config.json and set config.Config to it
 func SetupConfig() {
 	readConfig()
-	//readKeycloakConfig()
+	readKeycloakConfig()
 }
 
 // parsePubKey parsing the public key generated from keycloak

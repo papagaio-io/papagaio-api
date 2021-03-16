@@ -101,7 +101,7 @@ podTemplate(
             stage('Deploy su Nexus') {
               if (branch == 'master' || branch == 'stable' || branch == 'va') {
                 withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                  sh "curl -v -k -u ${USERNAME}:${PASSWORD} --upload-file ${tarball} https://nexus.sorintdev.it/repository/binaries/it.sorintdev.stroodle/papagaio-api-${version}.tar.gz"
+                  sh "curl -v -k -u ${USERNAME}:${PASSWORD} --upload-file ${tarball} https://nexus.sorintdev.it/repository/binaries/it.sorintdev.papagaio/papagaio-api-${version}.tar.gz"
                 }
               }
 

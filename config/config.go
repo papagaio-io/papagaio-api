@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-// Configuration contains all informations required to run stroodle
+// Configuration contains all informations required to run papagaio
 type Configuration struct {
 	// Server configuration
 	Server Server

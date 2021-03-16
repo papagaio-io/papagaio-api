@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"log"
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/manager/membersManager"
@@ -28,6 +29,7 @@ func StartSyncMembers(db repository.Database) {
 
 func syncMembersRun(db repository.Database) {
 	for {
+		log.Println("start members synk")
 
 		organizations, _ := db.GetOrganizations()
 		for _, org := range *organizations {

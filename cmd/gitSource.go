@@ -1,6 +1,15 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"log"
+	"os"
+	"regexp"
+	"strings"
+
+	"github.com/spf13/cobra"
+	"wecode.sorint.it/opensource/papagaio-api/config"
+	"wecode.sorint.it/opensource/papagaio-api/repository"
+)
 
 var gitSourceCmd = &cobra.Command{
 	Use: "gitsource",
@@ -28,9 +37,9 @@ type configGitSourceCmd struct {
 }
 
 func init() {
-	rootCmd.AddCommand(userCmd)
-	userCmd.AddCommand(addUserCmd)
-	userCmd.AddCommand(removeUserCmd)
+	rootCmd.AddCommand(gitSourceCmd)
+	userCmd.AddCommand(addUGitSourceCmd)
+	userCmd.AddCommand(removeGitSourceCmd)
 
 	userCmd.PersistentFlags().StringVar(&cfgGitSource.name, "name", "", "gitSource name")
 	userCmd.PersistentFlags().StringVar(&cfgGitSource.gitType, "type", "", "git type")
@@ -41,16 +50,26 @@ func init() {
 }
 
 func addGitSource(cmd *cobra.Command, args []string) {
-
+	beginGitSource(cmd)
 }
 
 func removeGitSource(cmd *cobra.Command, args []string) {
-
+	beginGitSource(cmd)
 }
 
-/*func beginGitSource(cmd *cobra.Command) repository.AppDb {
-	if !emailRegex.MatchString(cfgUser.email) {
-		cmd.PrintErrln("email is empty or not valid")
+var regexUrl = regexp.MustCompile(`/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/`)
+
+func beginGitSource(cmd *cobra.Command) repository.AppDb {
+	if len(cfgGitSource.name) == 0 {
+		cmd.PrintErrln("name is empty or not valid")
+	}
+
+	if strings.Compare(cfgGitSource.gitType, "gitea") != 0 || strings.Compare(cfgGitSource.gitType, "github") != 0 {
+		cmd.PrintErrln("type must be gitea or github")
+	}
+
+	if !emailRegex.MatchString(cfgGitSource.gitAPIURL) {
+		cmd.PrintErrln("egit-api-url is not valid")
 	}
 
 	config.SetupConfig()
@@ -61,4 +80,4 @@ func removeGitSource(cmd *cobra.Command, args []string) {
 	}
 
 	return repository.NewAppDb(config.Config)
-}*/
+}

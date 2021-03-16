@@ -20,6 +20,7 @@ type Database interface {
 	GetGitSources() (*[]model.GitSource, error)
 	SaveGitSource(gitSource *model.GitSource) error
 	GetGitSourceById(id string) (*model.GitSource, error)
+	GetGitSourceByName(name string) (*model.GitSource, error)
 	DeleteGitSource(id string) error
 
 	SaveUser(user *model.User) error

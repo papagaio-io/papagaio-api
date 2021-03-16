@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"log"
 	"os"
 	"regexp"
 
@@ -66,13 +65,14 @@ func removeUser(cmd *cobra.Command, args []string) {
 func beginUser(cmd *cobra.Command) repository.AppDb {
 	if !emailRegex.MatchString(cfgUser.email) {
 		cmd.PrintErrln("email is empty or not valid")
+		os.Exit(1)
 	}
 
 	config.SetupConfig()
 
 	if _, err := os.Stat(config.Config.Database.DbPath); os.IsNotExist(err) {
-		log.Println("Filder", config.Config.Database.DbPath, "not found")
-		panic("Filder" + config.Config.Database.DbPath + "not found")
+		cmd.PrintErrln("Filder", config.Config.Database.DbPath, "not found")
+		os.Exit(1)
 	}
 
 	return repository.NewAppDb(config.Config)

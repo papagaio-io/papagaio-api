@@ -42,6 +42,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 	}
 
 	service.Db.SaveGitSource(&gitGitSource)
+	JSONokResponse(w, gitGitSource.ID)
 }
 
 func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.Request) {

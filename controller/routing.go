@@ -8,7 +8,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/config"
 )
 
-const WebHookPath string = "/webhook"
+const WebHookPath string = "/api/webhook"
 const WenHookPathParam string = "/{gitOrgRef}"
 
 func SetupHTTPClient() {

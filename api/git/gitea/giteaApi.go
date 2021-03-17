@@ -18,12 +18,8 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	fmt.Println("CreateWebHook gitOrgRef branchFilter:", gitOrgRef)
 
 	client := &http.Client{}
-
 	URLApi := getCreateWebHookUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
-	fmt.Println("CreateWebHook URLApi: ", URLApi)
-
-	webHookConfigPath := controller.WebHookPath + "/" + gitOrgRef
-	fmt.Println("webHookConfigPath: ", webHookConfigPath)
+	webHookConfigPath := controller.GetWebHookPath() + "/" + gitOrgRef
 
 	webHookRequest := CreateWebHookRequestDto{
 		Active:       true,

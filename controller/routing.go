@@ -8,8 +8,13 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/config"
 )
 
-const WebHookPath string = "/api/webhook"
+const apiPath string = "/path"
+const WebHookPath string = "/webhook"
 const WenHookPathParam string = "/{gitOrgRef}"
+
+func GetWebHookPath() string {
+	return apiPath + WebHookPath
+}
 
 func SetupHTTPClient() {
 	if config.Config.DisableSSLCertificateValidation {
@@ -69,5 +74,5 @@ func setupDeleteGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) 
 }
 
 func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
-	router.HandleFunc(WenHookPathParam, ctrl.WebHookOrganization).Methods("POST")
+	router.HandleFunc("/{gitOrgRef}", ctrl.WebHookOrganization).Methods("POST")
 }

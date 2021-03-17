@@ -1,6 +1,7 @@
 package membersManager
 
 import (
+	"log"
 	"strings"
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -12,6 +13,8 @@ import (
 
 //Sincronizzo i membri della organization tra gitea e agola
 func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource) {
+	log.Println("SyncMembersForGitea start")
+
 	gitTeams, _ := gitApi.GetOrganizationTeams(gitSource, organization.Name)
 	gitTeamOwners := make(map[int]giteaApi.UserTeamResponseDto)
 	gitTeamMembers := make(map[int]giteaApi.UserTeamResponseDto)
@@ -64,6 +67,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		}
 	}
 
+	log.Println("SyncMembersForGitea end")
 }
 
 func findGiteaMemberByAgolaUserRef(gitMembers map[int]giteaApi.UserTeamResponseDto, agolaUserRef string) *giteaApi.UserTeamResponseDto {

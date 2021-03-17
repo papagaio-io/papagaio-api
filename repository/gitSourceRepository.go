@@ -2,6 +2,7 @@ package repository
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"strings"
 
@@ -40,8 +41,12 @@ func (db *AppDb) GetGitSources() (*[]model.GitSource, error) {
 }
 
 func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
-	gs, _ := db.GetGitSourceById(gitSource.ID)
-	if strings.Compare(gs.ID, "") == 0 {
+	gs, _ := db.GetGitSourceByName(gitSource.Name)
+	if gs != nil {
+		return errors.New("Gitsource just present on db")
+	}
+
+	if len(gitSource.ID) == 0 {
 		gitSource.ID = getNewUid()
 	}
 
@@ -63,7 +68,7 @@ func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
 }
 
 func (db *AppDb) GetGitSourceById(id string) (*model.GitSource, error) {
-	var gitSource model.GitSource
+	var retVal *model.GitSource
 
 	dst := make([]byte, 0)
 	err := db.DB.View(func(txn *badger.Txn) error {
@@ -88,7 +93,10 @@ func (db *AppDb) GetGitSourceById(id string) (*model.GitSource, error) {
 				return err
 			}
 
+			var gitSource model.GitSource
 			json.Unmarshal(dst, &gitSource)
+
+			retVal = &gitSource
 
 			break
 		}
@@ -96,7 +104,7 @@ func (db *AppDb) GetGitSourceById(id string) (*model.GitSource, error) {
 		return nil
 	})
 
-	return &gitSource, err
+	return retVal, err
 }
 
 func (db *AppDb) GetGitSourceByName(name string) (*model.GitSource, error) {

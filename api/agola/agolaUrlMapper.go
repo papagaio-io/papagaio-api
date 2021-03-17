@@ -36,5 +36,5 @@ func getDeleteProjectUrl(organizationName string, projectName string) string {
 }
 
 func getOrganizationMembersUrl(organizationName string) string {
-	return fmt.Sprintf(createProjectPath, config.Config.Agola.AgolaAddr, organizationName)
+	return fmt.Sprintf(organizationMembersPath, config.Config.Agola.AgolaAddr, organizationName)
 }

@@ -1,7 +1,8 @@
 package repositoryManager
 
 import (
-	"fmt"
+	"errors"
+	"log"
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
@@ -11,7 +12,7 @@ import (
 )
 
 //Inserisco tutti i repository di git su agola
-func AddAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {
+func AddAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
 	repository, _ := gitApi.GetRepositories(gitSource, organization.Name)
 
 	if organization.Projects == nil {
@@ -19,20 +20,23 @@ func AddAllGitRepository(db repository.Database, organization *model.Organizatio
 	}
 
 	for _, repo := range *repository {
+		log.Println("Start add repository:", repo)
+
 		if !utils.EvaluateBehaviour(organization, repo) {
 			continue
 		}
 
-		gitSource, _ := db.GetGitSourceById(organization.GitSourceID)
 		projectID, err := agolaApi.CreateProject(repo, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 
 		if err != nil {
-			fmt.Println("Warning!!! Agola CreateProject API error!")
-			return
+			log.Println("Warning!!! Agola CreateProject API error:", err.Error())
+			return errors.New(err.Error())
 		}
 
 		project := model.Project{OrganizationID: organization.ID, GitRepoPath: repo, AgolaProjectID: projectID}
 		organization.Projects[repo] = project
 		db.SaveOrganization(organization)
 	}
+
+	return nil
 }

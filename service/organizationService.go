@@ -90,6 +90,11 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
+	if err != nil {
+		log.Println("Agola CreateOrganization error")
+		InternalServerError(w)
+		return
+	}
 
 	log.Println("Organization created: ", org.ID)
 	log.Println("WebHook created: ", org.WebHookID)
@@ -100,9 +105,14 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	manager.StartSynkOrganization(service.Db, org, gitSource)
+	err = manager.StartSynkOrganization(service.Db, org, gitSource)
 
-	JSONokResponse(w, org.ID)
+	if err == nil {
+		JSONokResponse(w, org.ID)
+		return
+	} else {
+		InternalServerError(w)
+	}
 }
 
 func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *http.Request) {

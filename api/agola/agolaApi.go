@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -37,6 +38,8 @@ func CreateOrganization(name string, visibility dto.VisibilityType) (string, err
 }
 
 func CreateProject(projectName string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error) {
+	log.Println("CreateProject start")
+
 	client := &http.Client{}
 	URLApi := getCreateProjectUrl()
 
@@ -64,6 +67,8 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 
 	var jsonResponse CreateProjectResponseDto
 	json.Unmarshal(body, &jsonResponse)
+
+	fmt.Println("jsonResponse:", jsonResponse)
 
 	return jsonResponse.ID, err
 }
@@ -106,6 +111,8 @@ func GetRemoteSources() (*[]RemoteSourcesDto, error) {
 }
 
 func AddOrUpdateOrganizationMember(agolaOrganizationRef string, agolaUserRef string, role string) error {
+	log.Println("AddOrUpdateOrganizationMember start")
+
 	var err error
 	client := &http.Client{}
 	URLApi := getAddOrgMemberUrl(agolaOrganizationRef, agolaUserRef)
@@ -119,6 +126,8 @@ func AddOrUpdateOrganizationMember(agolaOrganizationRef string, agolaUserRef str
 		respMessage, _ := ioutil.ReadAll(resp.Body)
 		return errors.New(string(respMessage))
 	}
+
+	log.Println("AddOrUpdateOrganizationMember end")
 
 	return err
 }
@@ -143,6 +152,8 @@ func RemoveOrganizationMember(agolaOrganizationRef string, agolaUserRef string) 
 }
 
 func GetOrganizationMembers(agolaOrganizationRef string) (*OrganizationMembersResponseDto, error) {
+	log.Println("GetOrganizationMembers start")
+
 	client := &http.Client{}
 	URLApi := getOrganizationMembersUrl(agolaOrganizationRef)
 	req, err := http.NewRequest("GET", URLApi, nil)

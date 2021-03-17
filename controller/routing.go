@@ -61,11 +61,11 @@ func setupAddGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {
 }
 
 func setupUpdateGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {
-	router.HandleFunc("", ctrl.AddGitSource).Methods("PUT")
+	router.HandleFunc("", ctrl.UpdateGitSource).Methods("PUT")
 }
 
 func setupDeleteGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {
-	router.HandleFunc("/{name}", ctrl.AddGitSource).Methods("DELETE")
+	router.HandleFunc("/{name}", ctrl.RemoveGitSource).Methods("DELETE")
 }
 
 func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {

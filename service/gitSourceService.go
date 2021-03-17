@@ -49,8 +49,15 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	gitSourceId := vars["id"]
-	error := service.Db.DeleteGitSource(gitSourceId)
+	gitSourceName := vars["name"]
+	gitSource, _ := service.Db.GetGitSourceByName(gitSourceName)
+
+	if gitSource == nil {
+		UnprocessableEntityResponse(w, "Gitsource "+gitSourceName+" not found")
+		return
+	}
+
+	error := service.Db.DeleteGitSource(gitSource.ID)
 
 	if error != nil {
 		UnprocessableEntityResponse(w, error.Error())

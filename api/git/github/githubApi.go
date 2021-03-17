@@ -19,7 +19,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	webHookName := "web"
 	active := true
 	conf := make(map[string]interface{})
-	conf["url"] = config.Config.Server.LocalHostAddress + ":" + config.Config.Server.Port + controller.WebHookPath + "/" + gitOrgRef
+	conf["url"] = config.Config.Server.LocalHostAddress + controller.WebHookPath + "/" + gitOrgRef
 	fmt.Println("url:", conf["url"])
 	conf["content_type"] = "json"
 	hook := &github.Hook{Name: &webHookName, Events: []string{"repository"}, Active: &active, Config: conf}

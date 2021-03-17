@@ -28,7 +28,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	webHookRequest := CreateWebHookRequestDto{
 		Active:       true,
 		BranchFilter: "*",
-		Config:       WebHookConfigRequestDto{ContentType: "json", URL: config.Config.Server.LocalHostAddress + ":" + config.Config.Server.Port + webHookConfigPath, HTTPMethod: "post"},
+		Config:       WebHookConfigRequestDto{ContentType: "json", URL: config.Config.Server.LocalHostAddress + webHookConfigPath, HTTPMethod: "post"},
 		Events:       []string{"repository"},
 		Type:         "gitea",
 	}

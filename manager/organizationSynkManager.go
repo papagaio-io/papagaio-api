@@ -44,7 +44,7 @@ func syncMembersRun(db repository.Database) {
 		for _, org := range *organizations {
 			log.Println("start synk organization", org.Name)
 
-			gitSource, _ := db.GetGitSourceById(org.ID)
+			gitSource, _ := db.GetGitSourceById(org.GitSourceID)
 			fmt.Println("gitSource:", gitSource)
 
 			if gitSource != nil {

@@ -31,9 +31,9 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var gitGitSource *model.GitSource
+	var gitGitSource model.GitSource
 	data, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(data, gitGitSource)
+	json.Unmarshal(data, &gitGitSource)
 
 	oldGitSource, _ := service.Db.GetGitSourceByName(gitGitSource.Name)
 	if oldGitSource != nil {
@@ -41,7 +41,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	service.Db.SaveGitSource(gitGitSource)
+	service.Db.SaveGitSource(&gitGitSource)
 }
 
 func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.Request) {

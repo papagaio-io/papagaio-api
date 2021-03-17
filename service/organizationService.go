@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -37,12 +36,13 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	emailUserLogged := "test@sorint.it" //ONLY FOR TEST
 
-	user, err := service.Db.GetUserByEmail(emailUserLogged)
+	//Uncomment for test
+	/*user, err := service.Db.GetUserByEmail(emailUserLogged)
 	fmt.Println("user: ", user)
 	if user == nil || err != nil {
 		UnprocessableEntityResponse(w, "User not authorized!")
 		return
-	}
+	}*/
 
 	var req *dto.CreateOrganizationDto
 	json.NewDecoder(r.Body).Decode(&req)

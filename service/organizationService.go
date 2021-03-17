@@ -105,14 +105,9 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	err = manager.StartSynkOrganization(service.Db, org, gitSource)
+	manager.StartSynkOrganization(service.Db, org, gitSource)
 
-	if err == nil {
-		JSONokResponse(w, org.ID)
-		return
-	} else {
-		InternalServerError(w)
-	}
+	JSONokResponse(w, org.ID)
 }
 
 func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *http.Request) {

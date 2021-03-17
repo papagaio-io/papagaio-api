@@ -11,9 +11,8 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
 
-func StartSynkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
-	//go synkOrganization(db, organization, gitSource)
-	return synkOrganization(db, organization, gitSource)
+func StartSynkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {
+	go synkOrganization(db, organization, gitSource)
 }
 
 func synkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {

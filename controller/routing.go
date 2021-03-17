@@ -21,7 +21,8 @@ func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ct
 	apirouter := mux.NewRouter().PathPrefix("/api").Subrouter().UseEncodedPath()
 	router.PathPrefix("/api").Handler(apirouter)
 
-	setupPingRouter(apirouter)
+	setupPingRouter(router)
+
 	setupGetOrganizationsRouter(apirouter.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
 	setupCreateOrganizationEndpoint(apirouter.PathPrefix("/createorganization").Subrouter(), ctrlOrganization)
 	setupGetRemoteSourcesEndpoint(apirouter.PathPrefix("/remotesources").Subrouter(), ctrlOrganization)

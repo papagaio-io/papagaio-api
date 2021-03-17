@@ -35,7 +35,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 	data, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(data, gitGitSource)
 
-	oldGitSource, _ := service.Db.GetGitSourceById(gitGitSource.ID)
+	oldGitSource, _ := service.Db.GetGitSourceByName(gitGitSource.Name)
 	if oldGitSource != nil {
 		UnprocessableEntityResponse(w, "Gitsource "+gitGitSource.Name+" already exists")
 		return
@@ -73,7 +73,7 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 	data, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(data, gitGitSource)
 
-	oldGitSource, _ := service.Db.GetGitSourceById(gitGitSource.ID)
+	oldGitSource, _ := service.Db.GetGitSourceByName(gitGitSource.Name)
 	if oldGitSource == nil {
 		NotFoundResponse(w)
 		return

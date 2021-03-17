@@ -36,7 +36,7 @@ func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
 
-	databaseDataInit(&db) //TODO remove only for test
+	//databaseDataInit(&db) //TODO remove only for test
 
 	return db
 }

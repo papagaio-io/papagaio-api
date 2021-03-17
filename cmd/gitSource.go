@@ -50,37 +50,6 @@ func init() {
 }
 
 func addGitSource(cmd *cobra.Command, args []string) {
-	db := beginGitSource(cmd)
-
-	gitSource, _ := db.GetGitSourceByName(cfgGitSource.name)
-	if gitSource == nil {
-		db.SaveGitSource(&model.GitSource{
-			Name:              cfgGitSource.name,
-			GitType:           model.GitType(cfgGitSource.gitType),
-			GitAPIURL:         cfgGitSource.gitAPIURL,
-			GitToken:          cfgGitSource.gitToken,
-			AgolaRemoteSource: cfgGitSource.agolaRemoteSource,
-			AgolaToken:        cfgGitSource.agolaToken,
-		})
-		cmd.Println("GitSource ", cfgGitSource.name, "saved")
-	} else {
-		cmd.PrintErrln("GitSource", cfgGitSource.name, "just present in db")
-	}
-}
-
-func removeGitSource(cmd *cobra.Command, args []string) {
-	db := beginGitSource(cmd)
-
-	gitSource, _ := db.GetGitSourceByName(cfgGitSource.name)
-	if gitSource != nil {
-		db.DeleteGitSource(gitSource.ID)
-		cmd.Println("GitSource ", cfgGitSource.name, "removed")
-	} else {
-		cmd.PrintErrln("GitSource", cfgGitSource.name, "not found")
-	}
-}
-
-func beginGitSource(cmd *cobra.Command) repository.AppDb {
 	if len(cfgGitSource.name) == 0 {
 		cmd.PrintErrln("name is empty or not valid")
 		os.Exit(1)
@@ -119,6 +88,42 @@ func beginGitSource(cmd *cobra.Command) repository.AppDb {
 		os.Exit(1)
 	}
 
+	db := beginGitSource(cmd)
+
+	gitSource, _ := db.GetGitSourceByName(cfgGitSource.name)
+	if gitSource == nil {
+		db.SaveGitSource(&model.GitSource{
+			Name:              cfgGitSource.name,
+			GitType:           model.GitType(cfgGitSource.gitType),
+			GitAPIURL:         cfgGitSource.gitAPIURL,
+			GitToken:          cfgGitSource.gitToken,
+			AgolaRemoteSource: cfgGitSource.agolaRemoteSource,
+			AgolaToken:        cfgGitSource.agolaToken,
+		})
+		cmd.Println("GitSource ", cfgGitSource.name, "saved")
+	} else {
+		cmd.PrintErrln("GitSource", cfgGitSource.name, "just present in db")
+	}
+}
+
+func removeGitSource(cmd *cobra.Command, args []string) {
+	if len(cfgGitSource.name) == 0 {
+		cmd.PrintErrln("name is empty or not valid")
+		os.Exit(1)
+	}
+
+	db := beginGitSource(cmd)
+
+	gitSource, _ := db.GetGitSourceByName(cfgGitSource.name)
+	if gitSource != nil {
+		db.DeleteGitSource(gitSource.ID)
+		cmd.Println("GitSource ", cfgGitSource.name, "removed")
+	} else {
+		cmd.PrintErrln("GitSource", cfgGitSource.name, "not found")
+	}
+}
+
+func beginGitSource(cmd *cobra.Command) repository.AppDb {
 	config.SetupConfig()
 
 	if _, err := os.Stat(config.Config.Database.DbPath); os.IsNotExist(err) {

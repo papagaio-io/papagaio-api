@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -10,17 +11,26 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
 
-func StartSynkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {
-	go synkOrganization(db, organization, gitSource)
+func StartSynkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
+	//go synkOrganization(db, organization, gitSource)
+	return synkOrganization(db, organization, gitSource)
 }
 
-func synkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {
-	repositoryManager.AddAllGitRepository(db, organization, gitSource)
+func synkOrganization(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
+	log.Println("Start organization synk")
+
 	if gitSource.GitType == model.Gitea {
 		membersManager.SyncMembersForGitea(organization, gitSource)
 	} else {
 		membersManager.SyncMembersForGithub(organization, gitSource)
 	}
+
+	err := repositoryManager.AddAllGitRepository(db, organization, gitSource)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func StartSyncMembers(db repository.Database) {
@@ -33,11 +43,19 @@ func syncMembersRun(db repository.Database) {
 
 		organizations, _ := db.GetOrganizations()
 		for _, org := range *organizations {
+			log.Println("start synk organization", org.Name)
+
 			gitSource, _ := db.GetGitSourceById(org.ID)
-			if gitSource.GitType == model.Gitea {
-				membersManager.SyncMembersForGitea(&org, gitSource)
+			fmt.Println("gitSource:", gitSource)
+
+			if gitSource != nil {
+				if gitSource.GitType == model.Gitea {
+					membersManager.SyncMembersForGitea(&org, gitSource)
+				} else {
+					membersManager.SyncMembersForGithub(&org, gitSource)
+				}
 			} else {
-				membersManager.SyncMembersForGithub(&org, gitSource)
+				log.Println("Warning!!! Found gitSource null: ", org.ID)
 			}
 		}
 

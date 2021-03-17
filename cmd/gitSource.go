@@ -122,8 +122,10 @@ func beginGitSource(cmd *cobra.Command) repository.AppDb {
 	config.SetupConfig()
 
 	if _, err := os.Stat(config.Config.Database.DbPath); os.IsNotExist(err) {
-		cmd.PrintErrln("Filder", config.Config.Database.DbPath, "not found")
-		os.Exit(1)
+		err := os.Mkdir(config.Config.Database.DbPath, os.ModeDir)
+		if err != err {
+			panic("Error during mkdir" + config.Config.Database.DbPath)
+		}
 	}
 
 	return repository.NewAppDb(config.Config)

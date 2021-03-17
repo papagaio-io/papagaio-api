@@ -1,4 +1,5 @@
-FROM alpine:latest
+#FROM alpine:latest
+FROM debian:buster
 COPY papagaio-api /app/
 
 RUN apk add tzdata

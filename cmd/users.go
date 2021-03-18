@@ -1,13 +1,15 @@
 package cmd
 
 import (
+	"io/ioutil"
+	"net/http"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/config"
-	"wecode.sorint.it/opensource/papagaio-api/model"
-	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
 
 var userCmd = &cobra.Command{
@@ -25,7 +27,10 @@ var removeUserCmd = &cobra.Command{
 }
 
 var cfgUser configUserCmd
-var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+
+const constEmailRegex = "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+
+var emailRegex = regexp.MustCompile(constEmailRegex)
 
 type configUserCmd struct {
 	email string
@@ -40,42 +45,39 @@ func init() {
 }
 
 func addUser(cmd *cobra.Command, args []string) {
-	db := beginUser(cmd)
-	user, _ := db.GetUserByEmail(cfgUser.email)
-	if user == nil {
-		db.SaveUser(&model.User{Email: cfgUser.email})
-		cmd.Println("User ", cfgUser.email, "saved")
-	} else {
-		cmd.PrintErrln("User", cfgUser.email, "just present in db")
+	beginUser(cmd)
+
+	client := &http.Client{}
+	URLApi := config.Config.Server.LocalHostAddress + "/adduser"
+	reqBody := strings.NewReader(`{"email": "` + cfgUser.email + `"}`)
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
+
+	resp, _ := client.Do(req)
+	if !api.IsResponseOK(resp.StatusCode) {
+		body, _ := ioutil.ReadAll(resp.Body)
+		cmd.PrintErrln(string(body))
 	}
 }
 
 func removeUser(cmd *cobra.Command, args []string) {
-	db := beginUser(cmd)
+	beginUser(cmd)
 
-	user, _ := db.GetUserByEmail(cfgUser.email)
-	if user != nil {
-		db.DeleteUser(cfgUser.email)
-		cmd.Println("User ", cfgUser.email, "removed")
-	} else {
-		cmd.PrintErrln("User", cfgUser.email, "not found")
+	client := &http.Client{}
+	URLApi := config.Config.Server.LocalHostAddress + "/removeuser/" + cfgUser.email
+	req, _ := http.NewRequest("DELETE", URLApi, nil)
+
+	resp, _ := client.Do(req)
+	if !api.IsResponseOK(resp.StatusCode) {
+		body, _ := ioutil.ReadAll(resp.Body)
+		cmd.PrintErrln(string(body))
 	}
 }
 
-func beginUser(cmd *cobra.Command) repository.AppDb {
+func beginUser(cmd *cobra.Command) {
 	if !emailRegex.MatchString(cfgUser.email) {
 		cmd.PrintErrln("email is empty or not valid")
 		os.Exit(1)
 	}
 
 	config.SetupConfig()
-
-	if _, err := os.Stat(config.Config.Database.DbPath); os.IsNotExist(err) {
-		err := os.Mkdir(config.Config.Database.DbPath, os.ModeDir)
-		if err != err {
-			panic("Error during mkdir" + config.Config.Database.DbPath)
-		}
-	}
-
-	return repository.NewAppDb(config.Config)
 }

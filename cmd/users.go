@@ -48,14 +48,17 @@ func addUser(cmd *cobra.Command, args []string) {
 	beginUser(cmd)
 
 	client := &http.Client{}
-	URLApi := config.Config.Server.LocalHostAddress + "/adduser"
+	URLApi := config.Config.CmdConfig.DefaultGateway + "/api/adduser"
 	reqBody := strings.NewReader(`{"email": "` + cfgUser.email + `"}`)
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
 
 	resp, _ := client.Do(req)
+
 	if !api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		cmd.PrintErrln(string(body))
+	} else {
+		cmd.Println("user created")
 	}
 }
 
@@ -63,13 +66,15 @@ func removeUser(cmd *cobra.Command, args []string) {
 	beginUser(cmd)
 
 	client := &http.Client{}
-	URLApi := config.Config.Server.LocalHostAddress + "/removeuser/" + cfgUser.email
+	URLApi := config.Config.CmdConfig.DefaultGateway + "/api/removeuser/" + cfgUser.email
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
 
 	resp, _ := client.Do(req)
 	if !api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		cmd.PrintErrln(string(body))
+	} else {
+		cmd.Println("user removed")
 	}
 }
 

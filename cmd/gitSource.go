@@ -1,14 +1,17 @@
 package cmd
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
-	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
 
 var gitSourceCmd = &cobra.Command{
@@ -88,21 +91,27 @@ func addGitSource(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	db := beginGitSource(cmd)
+	config.SetupConfig()
 
-	gitSource, _ := db.GetGitSourceByName(cfgGitSource.name)
-	if gitSource == nil {
-		db.SaveGitSource(&model.GitSource{
-			Name:              cfgGitSource.name,
-			GitType:           model.GitType(cfgGitSource.gitType),
-			GitAPIURL:         cfgGitSource.gitAPIURL,
-			GitToken:          cfgGitSource.gitToken,
-			AgolaRemoteSource: cfgGitSource.agolaRemoteSource,
-			AgolaToken:        cfgGitSource.agolaToken,
-		})
-		cmd.Println("GitSource ", cfgGitSource.name, "saved")
-	} else {
-		cmd.PrintErrln("GitSource", cfgGitSource.name, "just present in db")
+	gitSource := model.GitSource{
+		Name:              cfgGitSource.name,
+		GitType:           model.GitType(cfgGitSource.gitType),
+		GitAPIURL:         cfgGitSource.gitAPIURL,
+		GitToken:          cfgGitSource.gitToken,
+		AgolaRemoteSource: cfgGitSource.agolaRemoteSource,
+		AgolaToken:        cfgGitSource.agolaToken,
+	}
+	data, _ := json.Marshal(gitSource)
+
+	client := &http.Client{}
+	URLApi := config.Config.Server.LocalHostAddress + "/gitsource/" + cfgGitSource.name
+	reqBody := strings.NewReader(string(data))
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
+
+	resp, _ := client.Do(req)
+	if !api.IsResponseOK(resp.StatusCode) {
+		body, _ := ioutil.ReadAll(resp.Body)
+		cmd.PrintErrln(string(body))
 	}
 }
 
@@ -112,26 +121,15 @@ func removeGitSource(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	db := beginGitSource(cmd)
-
-	gitSource, _ := db.GetGitSourceByName(cfgGitSource.name)
-	if gitSource != nil {
-		db.DeleteGitSource(gitSource.ID)
-		cmd.Println("GitSource ", cfgGitSource.name, "removed")
-	} else {
-		cmd.PrintErrln("GitSource", cfgGitSource.name, "not found")
-	}
-}
-
-func beginGitSource(cmd *cobra.Command) repository.AppDb {
 	config.SetupConfig()
 
-	if _, err := os.Stat(config.Config.Database.DbPath); os.IsNotExist(err) {
-		err := os.Mkdir(config.Config.Database.DbPath, os.ModeDir)
-		if err != err {
-			panic("Error during mkdir" + config.Config.Database.DbPath)
-		}
-	}
+	client := &http.Client{}
+	URLApi := config.Config.Server.LocalHostAddress + "/gitsource/" + cfgGitSource.name
+	req, _ := http.NewRequest("DELETE", URLApi, nil)
 
-	return repository.NewAppDb(config.Config)
+	resp, _ := client.Do(req)
+	if !api.IsResponseOK(resp.StatusCode) {
+		body, _ := ioutil.ReadAll(resp.Body)
+		cmd.PrintErrln(string(body))
+	}
 }

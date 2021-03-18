@@ -14,8 +14,8 @@ const constMailRegex = "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-
 
 var emailRegex = regexp.MustCompile(constMailRegex)
 
-func (mail User) IsValid() error {
-	if !emailRegex.MatchString(mail.Email) {
+func (user User) IsValid() error {
+	if !emailRegex.MatchString(user.Email) {
 		return errors.New("invalid email format")
 	}
 	return nil

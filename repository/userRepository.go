@@ -32,7 +32,7 @@ func (db *AppDb) DeleteUser(email string) error {
 }
 
 func (db *AppDb) GetUserByEmail(email string) (*model.User, error) {
-	var user model.User
+	var user *model.User
 
 	dst := make([]byte, 0)
 	err := db.DB.View(func(txn *badger.Txn) error {
@@ -51,7 +51,7 @@ func (db *AppDb) GetUserByEmail(email string) (*model.User, error) {
 				continue
 			}
 
-			user = localUser
+			user = &localUser
 
 			break
 		}
@@ -59,5 +59,5 @@ func (db *AppDb) GetUserByEmail(email string) (*model.User, error) {
 		return nil
 	})
 
-	return &user, err
+	return user, err
 }

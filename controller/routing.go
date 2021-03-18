@@ -22,7 +22,7 @@ func SetupHTTPClient() {
 	}
 }
 
-func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlMember MemberController, ctrlWebHook WebHookController) {
+func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlMember MemberController, ctrlWebHook WebHookController, ctrlUser UserController) {
 	apirouter := mux.NewRouter().PathPrefix("/api").Subrouter().UseEncodedPath()
 	router.PathPrefix("/api").Handler(apirouter)
 
@@ -37,6 +37,8 @@ func SetupRouter(router *mux.Router, ctrlOrganization OrganizationController, ct
 	setupDeleteGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
 
 	setupWebHookEndpoint(apirouter.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
+
+	setupAddUserEndpoint(apirouter.PathPrefix("/adduser").Subrouter(), ctrlUser)
 }
 
 func setupPingRouter(router *mux.Router) {
@@ -75,4 +77,8 @@ func setupDeleteGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) 
 
 func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
 	router.HandleFunc("/{gitOrgRef}", ctrl.WebHookOrganization).Methods("POST")
+}
+
+func setupAddUserEndpoint(router *mux.Router, ctrl UserController) {
+	router.HandleFunc("", ctrl.AddUser).Methods("POST")
 }

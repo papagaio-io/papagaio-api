@@ -11,6 +11,9 @@
       "AgolaAddr": "https://agola.sorintdev.it",
       "AdminToken": "token admintoken"
     },
+    "CmdConfig": {
+       "DefaultGateway": "http://localhost:8080"
+    },
     "LogHttpRequest": true,
     "DisableKeycloakAuthentication": false,
     "DisableSSLCertificateValidation": true,

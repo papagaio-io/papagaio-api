@@ -22,6 +22,9 @@ type Configuration struct {
 	Keycloak KeycloakConfig
 	//Agola address
 	Agola AgolaConfig
+
+	//Cmd conficuration
+	CmdConfig CmdConfig
 }
 
 type AgolaConfig struct {
@@ -32,6 +35,10 @@ type AgolaConfig struct {
 type DbConfig struct {
 	DbPath string
 	DbName string
+}
+
+type CmdConfig struct {
+	DefaultGateway string
 }
 
 // Server contains all informations required to setup our config

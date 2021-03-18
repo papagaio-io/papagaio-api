@@ -19,8 +19,13 @@ func (service *UserService) AddUser(w http.ResponseWriter, r *http.Request) {
 	var req model.User
 	json.NewDecoder(r.Body).Decode(&req)
 
-	email, _ := service.Db.GetUserByEmail(req.Email)
-	if email == nil {
+	if err := req.IsValid(); err != nil {
+		UnprocessableEntityResponse(w, err.Error())
+		return
+	}
+
+	user, _ := service.Db.GetUserByEmail(req.Email)
+	if user == nil {
 		service.Db.SaveUser(&model.User{Email: req.Email})
 	} else {
 		UnprocessableEntityResponse(w, "User already exists")

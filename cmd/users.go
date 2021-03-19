@@ -53,6 +53,7 @@ func addUser(cmd *cobra.Command, args []string) {
 	URLApi := cfgUser.gatewayURL + "/api/adduser"
 	reqBody := strings.NewReader(`{"email": "` + cfgUser.email + `"}`)
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Authorization", "token "+cfgUser.token)
 
 	resp, _ := client.Do(req)
 
@@ -70,6 +71,7 @@ func removeUser(cmd *cobra.Command, args []string) {
 	client := &http.Client{}
 	URLApi := cfgUser.gatewayURL + "/api/removeuser/" + cfgUser.email
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
+	req.Header.Add("Authorization", "token "+cfgUser.token)
 
 	resp, _ := client.Do(req)
 	if !api.IsResponseOK(resp.StatusCode) {

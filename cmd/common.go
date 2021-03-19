@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"wecode.sorint.it/opensource/papagaio-api/config"
@@ -23,8 +22,5 @@ func (common CommonConfig) IsAdminUser() error {
 		return errors.New("token is required")
 	}
 
-	if strings.Compare(common.token, config.Config.CmdConfig.Token) != 0 {
-		return errors.New("token not valit! must be an admin user")
-	}
 	return nil
 }

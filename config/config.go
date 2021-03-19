@@ -26,6 +26,8 @@ type Configuration struct {
 	Keycloak KeycloakConfig
 	//Agola address
 	Agola AgolaConfig
+	//Papagaio admin token
+	AdminToken string
 
 	//Cmd conficuration
 	CmdConfig CmdConfig

@@ -114,6 +114,7 @@ func addGitSource(cmd *cobra.Command, args []string) {
 	URLApi := config.Config.CmdConfig.DefaultGatewayURL + "/api/gitsource"
 	reqBody := strings.NewReader(string(data))
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Authorization", "token "+cfgGitSource.token)
 
 	resp, _ := client.Do(req)
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -139,6 +140,7 @@ func removeGitSource(cmd *cobra.Command, args []string) {
 	client := &http.Client{}
 	URLApi := config.Config.CmdConfig.DefaultGatewayURL + "/api/gitsource/" + cfgGitSource.name
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
+	req.Header.Add("Authorization", "token "+cfgGitSource.token)
 
 	resp, _ := client.Do(req)
 	if !api.IsResponseOK(resp.StatusCode) {

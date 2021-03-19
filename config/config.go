@@ -8,6 +8,10 @@ import (
 	"log"
 )
 
+func init() {
+	SetupConfig()
+}
+
 // Configuration contains all informations required to run papagaio
 type Configuration struct {
 	// Server configuration
@@ -38,7 +42,8 @@ type DbConfig struct {
 }
 
 type CmdConfig struct {
-	DefaultGateway string
+	DefaultGatewayURL string
+	Token             string
 }
 
 // Server contains all informations required to setup our config

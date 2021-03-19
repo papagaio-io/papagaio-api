@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
-	"wecode.sorint.it/opensource/papagaio-api/manager"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
@@ -59,8 +58,6 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID}
 		organization.Projects[webHookMessage.Repository.Name] = project
 		service.Db.SaveOrganization(organization)
-
-		manager.StartSynkOrganization(service.Db, organization, gitSource)
 	} else if strings.Compare(webHookMessage.Action, "deleted") == 0 {
 		if orgProject, ok := organization.Projects[webHookMessage.Repository.Name]; !ok {
 			log.Println("Warning!!! project", orgProject, "not found in db")

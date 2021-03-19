@@ -13,13 +13,16 @@ import (
 
 //Inserisco tutti i repository di git su agola
 func AddAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
-	repository, _ := gitApi.GetRepositories(gitSource, organization.Name)
+	log.Println("Start AddAllGitRepository")
+
+	repositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
+	log.Println("repositoryList:", *repositoryList)
 
 	if organization.Projects == nil {
 		organization.Projects = make(map[string]model.Project)
 	}
 
-	for _, repo := range *repository {
+	for _, repo := range *repositoryList {
 		log.Println("Start add repository:", repo)
 
 		if !utils.EvaluateBehaviour(organization, repo) {
@@ -36,7 +39,11 @@ func AddAllGitRepository(db repository.Database, organization *model.Organizatio
 		project := model.Project{OrganizationID: organization.ID, GitRepoPath: repo, AgolaProjectID: projectID}
 		organization.Projects[repo] = project
 		db.SaveOrganization(organization)
+
+		log.Println("End add repository:", repo)
 	}
+
+	log.Println("End AddAllGitRepository")
 
 	return nil
 }

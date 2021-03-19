@@ -31,6 +31,8 @@ var removeGitSourceCmd = &cobra.Command{
 var cfgGitSource configGitSourceCmd
 
 type configGitSourceCmd struct {
+	CommonConfig
+
 	name              string
 	gitType           string
 	gitAPIURL         string
@@ -44,6 +46,8 @@ func init() {
 	gitSourceCmd.AddCommand(addUGitSourceCmd)
 	gitSourceCmd.AddCommand(removeGitSourceCmd)
 
+	AddCommonFlags(gitSourceCmd, &cfgGitSource.CommonConfig)
+
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.name, "name", "", "gitSource name")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitType, "type", "", "git type")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitAPIURL, "git-api-url", "", "api url")
@@ -53,6 +57,11 @@ func init() {
 }
 
 func addGitSource(cmd *cobra.Command, args []string) {
+	if err := cfgGitSource.IsAdminUser(); err != nil {
+		cmd.PrintErrln(err.Error())
+		os.Exit(1)
+	}
+
 	if len(cfgGitSource.name) == 0 {
 		cmd.PrintErrln("name is empty or not valid")
 		os.Exit(1)
@@ -91,8 +100,6 @@ func addGitSource(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	config.SetupConfig()
-
 	gitSource := model.GitSource{
 		Name:              cfgGitSource.name,
 		GitType:           model.GitType(cfgGitSource.gitType),
@@ -104,32 +111,41 @@ func addGitSource(cmd *cobra.Command, args []string) {
 	data, _ := json.Marshal(gitSource)
 
 	client := &http.Client{}
-	URLApi := config.Config.Server.LocalHostAddress + "/gitsource/" + cfgGitSource.name
+	URLApi := config.Config.CmdConfig.DefaultGatewayURL + "/api/gitsource"
 	reqBody := strings.NewReader(string(data))
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
 
 	resp, _ := client.Do(req)
 	if !api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
-		cmd.PrintErrln(string(body))
+		cmd.PrintErrln("Somefing was wrong! " + string(body))
+		os.Exit(1)
 	}
+
+	cmd.Println("gitsource created")
 }
 
 func removeGitSource(cmd *cobra.Command, args []string) {
+	if err := cfgGitSource.IsAdminUser(); err != nil {
+		cmd.PrintErrln(err.Error())
+		os.Exit(1)
+	}
+
 	if len(cfgGitSource.name) == 0 {
 		cmd.PrintErrln("name is empty or not valid")
 		os.Exit(1)
 	}
 
-	config.SetupConfig()
-
 	client := &http.Client{}
-	URLApi := config.Config.Server.LocalHostAddress + "/gitsource/" + cfgGitSource.name
+	URLApi := config.Config.CmdConfig.DefaultGatewayURL + "/api/gitsource/" + cfgGitSource.name
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
 
 	resp, _ := client.Do(req)
 	if !api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
-		cmd.PrintErrln(string(body))
+		cmd.PrintErrln("Somefing was wrong! " + string(body))
+		os.Exit(1)
 	}
+
+	cmd.Println("gitsource removed")
 }

@@ -12,7 +12,8 @@
       "AdminToken": "token admintoken"
     },
     "CmdConfig": {
-       "DefaultGateway": "http://localhost:8080"
+       "DefaultGatewayURL": "http://localhost:8080",
+       "Token": "admintoken"
     },
     "LogHttpRequest": true,
     "DisableKeycloakAuthentication": false,

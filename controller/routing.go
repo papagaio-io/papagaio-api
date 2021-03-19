@@ -8,7 +8,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/config"
 )
 
-const apiPath string = "/path"
+const apiPath string = "/api"
 const WebHookPath string = "/webhook"
 const WenHookPathParam string = "/{gitOrgRef}"
 

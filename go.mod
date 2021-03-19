@@ -13,6 +13,7 @@ require (
 	github.com/spf13/cobra v1.1.3
 	go.mongodb.org/mongo-driver v1.4.6
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gorm.io/gorm v1.20.12 // indirect
 )

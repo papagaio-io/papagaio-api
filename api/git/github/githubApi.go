@@ -22,7 +22,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	conf["url"] = config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + gitOrgRef
 	fmt.Println("url:", conf["url"])
 	conf["content_type"] = "json"
-	hook := &github.Hook{Name: &webHookName, Events: []string{"repository"}, Active: &active, Config: conf}
+	hook := &github.Hook{Name: &webHookName, Events: []string{"repository", "push"}, Active: &active, Config: conf}
 	hook, resp, err := client.Organizations.CreateHook(context.Background(), gitOrgRef, hook)
 	hookID := -1
 	if err == nil {

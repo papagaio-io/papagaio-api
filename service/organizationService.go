@@ -7,6 +7,7 @@ import (
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/manager"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -33,16 +34,6 @@ func (service *OrganizationService) GetOrganizations(w http.ResponseWriter, r *h
 func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	emailUserLogged := "test@sorint.it" //ONLY FOR TEST
-
-	//Uncomment for test
-	/*user, err := service.Db.GetUserByEmail(emailUserLogged)
-	fmt.Println("user: ", user)
-	if user == nil || err != nil {
-		UnprocessableEntityResponse(w, "User not authorized!")
-		return
-	}*/
 
 	var req *dto.CreateOrganizationDto
 	json.NewDecoder(r.Body).Decode(&req)
@@ -81,7 +72,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	org.UserEmailCreator = emailUserLogged
+	org.UserEmailCreator = r.Header.Get(controller.XAuthEmail)
 
 	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.Name)
 	if err != nil {

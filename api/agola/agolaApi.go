@@ -176,10 +176,14 @@ func GetOrganizationMembers(agolaOrganizationRef string) (*OrganizationMembersRe
 
 //TODO after Agola Issue
 func ArchiveProject(agolaOrganizationRef string, projectName string) error {
+	log.Println("ArchiveProject:", agolaOrganizationRef, projectName)
+
 	return nil
 }
 
 //TODO after Agola Issue
 func UnarchiveProject(agolaOrganizationRef string, projectName string) error {
+	log.Println("UnarchiveProject:", agolaOrganizationRef, projectName)
+
 	return nil
 }

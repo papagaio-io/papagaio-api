@@ -33,14 +33,12 @@ type RepositoryDto struct {
 	Name string `json:"name"`
 }
 
-type TeamResponseDto struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	Permission string `json:"permission"`
+type MetadataResponseDto struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Size int    `json:"size"`
 }
 
-type UserTeamResponseDto struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+type BranchResponseDto struct {
+	Name string `json:"name"`
 }

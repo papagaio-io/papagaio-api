@@ -6,7 +6,7 @@ import (
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
-	giteaApi "wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
@@ -16,13 +16,13 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	log.Println("SyncMembersForGitea start")
 
 	gitTeams, _ := gitApi.GetOrganizationTeams(gitSource, organization.Name)
-	gitTeamOwners := make(map[int]giteaApi.UserTeamResponseDto)
-	gitTeamMembers := make(map[int]giteaApi.UserTeamResponseDto)
+	gitTeamOwners := make(map[int]dto.UserTeamResponseDto)
+	gitTeamMembers := make(map[int]dto.UserTeamResponseDto)
 
 	for _, team := range *gitTeams {
 		teamMembers, _ := gitApi.GetTeamMembers(gitSource, organization.Name, team.ID)
 
-		var teamToCheck *map[int]giteaApi.UserTeamResponseDto
+		var teamToCheck *map[int]dto.UserTeamResponseDto
 		if strings.Compare(team.Permission, "owner") == 0 {
 			teamToCheck = &gitTeamOwners
 		} else {
@@ -70,7 +70,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	log.Println("SyncMembersForGitea end")
 }
 
-func findGiteaMemberByAgolaUserRef(gitMembers map[int]giteaApi.UserTeamResponseDto, agolaUserRef string) *giteaApi.UserTeamResponseDto {
+func findGiteaMemberByAgolaUserRef(gitMembers map[int]dto.UserTeamResponseDto, agolaUserRef string) *dto.UserTeamResponseDto {
 	for _, gitMember := range gitMembers {
 		if strings.Compare(agolaUserRef, utils.ConvertGiteaToAgolaUsername(gitMember.Username)) == 0 {
 			return &gitMember

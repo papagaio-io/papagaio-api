@@ -173,3 +173,13 @@ func GetOrganizationMembers(agolaOrganizationRef string) (*OrganizationMembersRe
 
 	return &jsonResponse, err
 }
+
+//TODO after Agola Issue
+func ArchiveProject(agolaOrganizationRef string, projectName string) error {
+	return nil
+}
+
+//TODO after Agola Issue
+func UnarchiveProject(agolaOrganizationRef string, projectName string) error {
+	return nil
+}

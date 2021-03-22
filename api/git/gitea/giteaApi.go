@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"wecode.sorint.it/opensource/papagaio-api/api"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea/dto"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -113,7 +114,7 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 	return api.IsResponseOK(resp.StatusCode)
 }
 
-func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]TeamResponseDto, error) {
+func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
 	client := &http.Client{}
 
 	URLApi := getOrganizationTeamsListUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
@@ -129,13 +130,13 @@ func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]Team
 
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	var teamsResponse []TeamResponseDto
+	var teamsResponse []dto.TeamResponseDto
 	json.Unmarshal(body, &teamsResponse)
 
 	return &teamsResponse, err
 }
 
-func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]UserTeamResponseDto, error) {
+func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]dto.UserTeamResponseDto, error) {
 	client := &http.Client{}
 
 	URLApi := getTeamUsersListUrl(gitSource.GitAPIURL, fmt.Sprint(teamId), gitSource.GitToken)
@@ -151,8 +152,72 @@ func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]UserTeamResponse
 
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	var usersResponse []UserTeamResponseDto
+	var usersResponse []dto.UserTeamResponseDto
 	json.Unmarshal(body, &usersResponse)
 
 	return &usersResponse, err
+}
+
+func getBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]BranchResponseDto, error) {
+	client := &http.Client{}
+	URLApi := getListBranchPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, gitSource.GitToken)
+
+	req, err := http.NewRequest("GET", URLApi, nil)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var branchesResponse []BranchResponseDto
+	json.Unmarshal(body, &branchesResponse)
+
+	return &branchesResponse, err
+}
+
+func getRepositoryAgolaMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, branchName string) (*[]MetadataResponseDto, error) {
+	client := &http.Client{}
+	URLApi := getListMetadataPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, ".agola", branchName, gitSource.GitToken)
+
+	req, err := http.NewRequest("GET", URLApi, nil)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var metadataResponse []MetadataResponseDto
+	json.Unmarshal(body, &metadataResponse)
+
+	return &metadataResponse, err
+}
+
+func CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error) {
+	branchList, err := getBranches(gitSource, gitOrgRef, repositoryRef)
+	if err != nil {
+		return false, err
+	}
+
+	for _, branch := range *branchList {
+		metadata, err := getRepositoryAgolaMetadata(gitSource, gitOrgRef, repositoryRef, branch.Name)
+		if err != nil {
+			return false, err
+		}
+
+		for _, file := range *metadata {
+			if strings.Compare(file.Type, "file") == 0 && (strings.Compare(file.Name, "config.jsonnet") == 0 || strings.Compare(file.Name, "config.yml") == 0 || strings.Compare(file.Name, "config.json") == 0) {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }

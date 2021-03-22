@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
-	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea/dto"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -62,26 +62,26 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 	return err == nil
 }
 
-func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]gitea.TeamResponseDto, error) {
+func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
 	client := getClient(gitSource)
 	teams, _, err := client.Teams.ListTeams(context.Background(), gitOrgRef, nil)
 
-	retVal := make([]gitea.TeamResponseDto, 0)
+	retVal := make([]dto.TeamResponseDto, 0)
 	for _, team := range teams {
-		retVal = append(retVal, gitea.TeamResponseDto{ID: int(*team.ID), Name: *team.Name, Permission: *team.Permission})
+		retVal = append(retVal, dto.TeamResponseDto{ID: int(*team.ID), Name: *team.Name, Permission: *team.Permission})
 	}
 
 	return &retVal, err
 }
 
-func GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId int) (*[]gitea.UserTeamResponseDto, error) {
+func GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error) {
 	client := getClient(gitSource)
 	users, _, err := client.Teams.ListTeamMembers(context.Background(), int64(teamId), nil)
 
-	retVal := make([]gitea.UserTeamResponseDto, 0)
+	retVal := make([]dto.UserTeamResponseDto, 0)
 	for _, user := range users {
 		if err == nil {
-			retVal = append(retVal, gitea.UserTeamResponseDto{ID: int(*user.ID), Username: *user.Name})
+			retVal = append(retVal, dto.UserTeamResponseDto{ID: int(*user.ID), Username: *user.Name})
 		}
 	}
 
@@ -109,6 +109,34 @@ func GetOrganizationMembers(gitSource *model.GitSource, organizationName string)
 	}
 
 	return &retVal, err
+}
+
+func CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error) {
+	client := getClient(gitSource)
+	branchList, _, err := client.Repositories.ListBranches(context.Background(), gitOrgRef, repositoryRef, nil)
+
+	if err != nil {
+		return false, err
+	}
+
+	for _, branch := range branchList {
+		if err != nil {
+			return false, err
+		}
+
+		tree, _, err := client.Git.GetTree(context.Background(), gitOrgRef, repositoryRef, *branch.Commit.SHA, true)
+		if err != nil {
+			return false, err
+		}
+
+		for _, file := range tree.Entries {
+			if strings.Compare(*file.Type, "blob") == 0 && (strings.Compare(*file.Path, ".agola/config.jsonnet") == 0 || strings.Compare(*file.Path, ".agola/config.yml") == 0 || strings.Compare(*file.Path, ".agola/config.json") == 0) {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
 
 func getClient(gitSource *model.GitSource) *github.Client {

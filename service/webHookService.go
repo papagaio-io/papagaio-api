@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
@@ -49,6 +50,11 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	}
 
 	if strings.Compare(webHookMessage.Action, "created") == 0 {
+		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
+		if !agolaConfExists {
+			return
+		}
+
 		projectID, err := agolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 		if err != nil {
 			fmt.Println("Warning!!! Agola CreateProject API error!")
@@ -66,6 +72,25 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 		agolaApi.DeleteProject(organization.Name, webHookMessage.Repository.Name, gitSource.AgolaToken)
 		delete(organization.Projects, webHookMessage.Repository.Name)
+		service.Db.SaveOrganization(organization)
+	} else if strings.Compare(webHookMessage.Action, "") == 0 {
+		if _, ok := organization.Projects[webHookMessage.Repository.Name]; ok {
+			return
+		}
+
+		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
+		if !agolaConfExists {
+			return
+		}
+
+		projectID, err := agolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+		if err != nil {
+			fmt.Println("Warning!!! Agola CreateProject API error!")
+			return
+		}
+
+		project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID}
+		organization.Projects[webHookMessage.Repository.Name] = project
 		service.Db.SaveOrganization(organization)
 	}
 

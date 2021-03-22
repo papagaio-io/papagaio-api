@@ -5,6 +5,7 @@ import (
 	"log"
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
@@ -23,6 +24,11 @@ func AddAllGitRepository(db repository.Database, organization *model.Organizatio
 	}
 
 	for _, repo := range *repositoryList {
+		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
+		if !agolaConfExists {
+			continue
+		}
+
 		log.Println("Start add repository:", repo)
 
 		if !utils.EvaluateBehaviour(organization, repo) {

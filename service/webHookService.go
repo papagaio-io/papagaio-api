@@ -61,7 +61,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			return
 		}
 
-		project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID}
+		project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID, Archivied: false}
 		organization.Projects[webHookMessage.Repository.Name] = project
 		service.Db.SaveOrganization(organization)
 	} else if strings.Compare(webHookMessage.Action, "deleted") == 0 {
@@ -72,26 +72,44 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 		agolaApi.DeleteProject(organization.Name, webHookMessage.Repository.Name, gitSource.AgolaToken)
 		delete(organization.Projects, webHookMessage.Repository.Name)
+
+		project := organization.Projects[webHookMessage.Repository.Name]
+		project.Archivied = true
+
 		service.Db.SaveOrganization(organization)
 	} else if strings.Compare(webHookMessage.Action, "") == 0 {
-		if _, ok := organization.Projects[webHookMessage.Repository.Name]; ok {
-			return
-		}
-
+		project, projectExist := organization.Projects[webHookMessage.Repository.Name]
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
-		if !agolaConfExists {
-			return
-		}
 
-		projectID, err := agolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
-		if err != nil {
-			fmt.Println("Warning!!! Agola CreateProject API error!")
-			return
-		}
+		if agolaConfExists {
+			if !projectExist {
+				projectID, err := agolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+				if err != nil {
+					fmt.Println("Warning!!! Agola CreateProject API error!")
+					return
+				}
 
-		project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID}
-		organization.Projects[webHookMessage.Repository.Name] = project
-		service.Db.SaveOrganization(organization)
+				project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID}
+				organization.Projects[webHookMessage.Repository.Name] = project
+				service.Db.SaveOrganization(organization)
+			} else if project.Archivied {
+				err := agolaApi.UnarchiveProject(organization.Name, webHookMessage.Repository.Name)
+				if err != nil {
+					InternalServerError(w)
+				}
+				project.Archivied = false
+				service.Db.SaveOrganization(organization)
+			}
+		} else {
+			if projectExist && !project.Archivied {
+				err := agolaApi.ArchiveProject(organization.Name, webHookMessage.Repository.Name)
+				if err != nil {
+					InternalServerError(w)
+				}
+				project.Archivied = true
+				service.Db.SaveOrganization(organization)
+			}
+		}
 	}
 
 	fmt.Println("WebHookOrganization end...")

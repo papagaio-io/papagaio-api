@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
-	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea/dto"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -62,6 +62,18 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 	return err == nil
 }
 
+func GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
+	client := getClient(gitSource)
+	teams, _, err := client.Repositories.ListTeams(context.Background(), gitOrgRef, repositoryRef, nil)
+
+	retVal := make([]dto.TeamResponseDto, 0)
+	for _, team := range teams {
+		retVal = append(retVal, dto.TeamResponseDto{ID: int(*team.ID), Name: *team.Name, Permission: *team.Permission})
+	}
+
+	return &retVal, err
+}
+
 func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
 	client := getClient(gitSource)
 	teams, _, err := client.Teams.ListTeams(context.Background(), gitOrgRef, nil)
@@ -104,7 +116,30 @@ func GetOrganizationMembers(gitSource *model.GitSource, organizationName string)
 				role = "member"
 			}
 
-			retVal = append(retVal, GitHubUser{ID: int(*user.ID), Username: *user.Login, Role: role})
+			retVal = append(retVal, GitHubUser{ID: int(*user.ID), Username: *user.Login, Role: role, Email: *user.Email})
+		}
+	}
+
+	return &retVal, err
+}
+
+func GetRepositoryMembers(gitSource *model.GitSource, organizationName string, repositoryRef string) (*[]GitHubUser, error) {
+	client := getClient(gitSource)
+	users, _, err := client.Repositories.ListCollaborators(context.Background(), organizationName, repositoryRef, nil)
+
+	retVal := make([]GitHubUser, 0)
+
+	for _, user := range users {
+		userMembership, _, err := client.Organizations.GetOrgMembership(context.Background(), *user.Login, organizationName)
+		if err == nil {
+			var role string
+			if strings.Compare(*userMembership.Role, "admin") == 0 {
+				role = "owner"
+			} else {
+				role = "member"
+			}
+
+			retVal = append(retVal, GitHubUser{ID: int(*user.ID), Username: *user.Login, Role: role, Email: *user.Email})
 		}
 	}
 
@@ -137,6 +172,19 @@ func CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string
 	}
 
 	return false, nil
+}
+
+func GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error) {
+	client := getClient(gitSource)
+	commit, _, err := client.Repositories.GetCommit(context.Background(), gitOrgRef, repositoryRef, commitSha)
+	if err != nil {
+		return nil, err
+	}
+
+	author := make(map[string]string)
+	author["email"] = *commit.Author.Email
+	retVal := &dto.CommitMetadataDto{Sha: *commit.SHA, Author: author}
+	return retVal, nil
 }
 
 func getClient(gitSource *model.GitSource) *github.Client {

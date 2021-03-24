@@ -1,6 +1,8 @@
 package agola
 
 import (
+	"time"
+
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 )
 
@@ -46,4 +48,35 @@ type RoleType string
 const (
 	Owner  RoleType = "owner"
 	Member RoleType = "member"
+)
+
+type RunDto struct {
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Counter     uint64            `json:"counter"`
+	Annotations map[string]string `json:"annotations"`
+	Phase       RunPhase          `json:"phase"`
+	Result      RunResult         `json:"result"`
+	StartTime   *time.Time        `json:"start_time"`
+	EndTime     *time.Time        `json:"end_time"`
+	Archived    bool              `json:"archived"`
+}
+
+type RunPhase string
+
+const (
+	RunPhaseSetupError RunPhase = "setuperror"
+	RunPhaseQueued     RunPhase = "queued"
+	RunPhaseCancelled  RunPhase = "cancelled"
+	RunPhaseRunning    RunPhase = "running"
+	RunPhaseFinished   RunPhase = "finished"
+)
+
+type RunResult string
+
+const (
+	RunResultUnknown RunResult = "unknown"
+	RunResultStopped RunResult = "stopped"
+	RunResultSuccess RunResult = "success"
+	RunResultFailed  RunResult = "failed"
 )

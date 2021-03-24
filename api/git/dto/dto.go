@@ -11,3 +11,8 @@ type UserTeamResponseDto struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }
+
+type CommitMetadataDto struct {
+	Sha    string            `json:"sha"`
+	Author map[string]string `json:"author"`
+}

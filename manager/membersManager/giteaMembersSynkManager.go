@@ -6,7 +6,7 @@ import (
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
-	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea/dto"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )

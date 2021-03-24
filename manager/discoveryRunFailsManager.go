@@ -45,11 +45,9 @@ func discoveryRunFails(db repository.Database) {
 				}
 
 				runList, err := agola.GetRuns(project.AgolaProjectID, lastRun, "finished", startRunID, 1, true)
-				if err != nil {
-					continue
-				}
+				runList = takeWebhookTrigger(runList)
 
-				if runList == nil || len(*runList) == 0 {
+				if err != nil || runList == nil || len(*runList) == 0 {
 					continue
 				}
 				//Skip if there are no new runs
@@ -78,6 +76,8 @@ func discoveryRunFails(db repository.Database) {
 								runToSaveOnDb = model.RunInfo{LastRunID: run.ID, LastRunStartDate: *run.StartTime, ISLastRunFailed: false} //todo
 							}
 						} else if run.Result == agolaApi.RunResultFailed && run.StartTime.After(lastRunSaved.LastRunStartDate) { //Se la prima run fallita di agola corrisponde a quella presa dal db suppongo di avere già notificato gli utenti al polling precedente
+							log.Println("Found run failed!")
+
 							runToSaveOnDb = model.RunInfo{LastRunID: run.ID, LastRunStartDate: *run.StartTime, ISLastRunFailed: true}
 
 							//Find all users that commited the failed run and success runs
@@ -117,6 +117,8 @@ func discoveryRunFails(db repository.Database) {
 								}
 							}
 
+							log.Println("send emails to:", emailMap)
+
 							sendConfirmEmail(emailMap, nil, "Run Agola faild subject", "Run Agola faild body")
 						}
 					}
@@ -129,6 +131,7 @@ func discoveryRunFails(db repository.Database) {
 		}
 
 		log.Println("End discoveryRunFails")
+		time.Sleep(15 * time.Minute)
 	}
 }
 
@@ -235,4 +238,17 @@ func getOlderBranchRun(runList *map[string]model.RunInfo) *string {
 	}
 
 	return retVal
+}
+
+//Take only the run by webhook, discard others(for example directrun)
+func takeWebhookTrigger(runs *[]agolaApi.RunDto) *[]agolaApi.RunDto {
+	retVal := make([]agolaApi.RunDto, 0)
+
+	for _, run := range *runs {
+		if strings.Compare(run.Annotations["run_creation_trigger"], "webhook") == 0 {
+			retVal = append(retVal, run)
+		}
+	}
+
+	return &retVal
 }

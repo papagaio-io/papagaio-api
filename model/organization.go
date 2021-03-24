@@ -15,5 +15,6 @@ type Organization struct {
 	BehaviourExclude string            `json:"behaviourExclude"`
 	BehaviourType    dto.BehaviourType `json:"behaviourType"`
 
-	Projects map[string]Project `json:"projects"`
+	Projects          map[string]Project `json:"projects"`
+	OtherUserToNotify []string           `json:"otherUserToNotify"`
 }

@@ -187,3 +187,26 @@ func UnarchiveProject(agolaOrganizationRef string, projectName string) error {
 
 	return nil
 }
+
+func GetRuns(projectRef string, lastRun bool, phase string, startRunID *string, limit uint, asc bool) (*[]RunDto, error) {
+	log.Println("GetOrganizationMembers start")
+
+	client := &http.Client{}
+	URLApi := getRunsListPath(projectRef, lastRun, phase, startRunID, limit, asc)
+	req, err := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var jsonResponse []RunDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse, err
+}

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"wecode.sorint.it/opensource/papagaio-api/api"
-	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea/dto"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -112,6 +112,28 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 	defer resp.Body.Close()
 
 	return api.IsResponseOK(resp.StatusCode)
+}
+
+func GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
+	client := &http.Client{}
+
+	URLApi := getRepositoryTeamsListUrl(gitSource.GitAPIURL, gitOrgRef, repositoryRef, gitSource.GitToken)
+
+	req, err := http.NewRequest("GET", URLApi, nil)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var teamsResponse []dto.TeamResponseDto
+	json.Unmarshal(body, &teamsResponse)
+
+	return &teamsResponse, err
 }
 
 func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
@@ -220,4 +242,30 @@ func CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string
 	}
 
 	return false, nil
+}
+
+func GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error) {
+	client := &http.Client{}
+
+	URLApi := getCommitMetadataPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, commitSha, gitSource.GitToken)
+
+	req, err := http.NewRequest("GET", URLApi, nil)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var commitMetadataResponse []dto.CommitMetadataDto
+	json.Unmarshal(body, &commitMetadataResponse)
+
+	if len(commitMetadataResponse) == 1 {
+		return &commitMetadataResponse[0], err
+	} else {
+		return nil, err
+	}
 }

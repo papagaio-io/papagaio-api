@@ -1,8 +1,8 @@
 package git
 
 import (
+	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
-	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea/dto"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
@@ -60,5 +60,21 @@ func CheckRepositoryAgolaConf(gitSource *model.GitSource, gitOrgRef string, repo
 		return gitea.CheckRepositoryAgolaConfExists(gitSource, gitOrgRef, repositoryRef)
 	} else {
 		return github.CheckRepositoryAgolaConfExists(gitSource, gitOrgRef, repositoryRef)
+	}
+}
+
+func GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error) {
+	if gitSource.GitType == model.Gitea {
+		return gitea.GetCommitMetadata(gitSource, gitOrgRef, repositoryRef, commitSha)
+	} else {
+		return github.GetCommitMetadata(gitSource, gitOrgRef, repositoryRef, commitSha)
+	}
+}
+
+func GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
+	if gitSource.GitType == model.Gitea {
+		return gitea.GetRepositoryTeams(gitSource, gitOrgRef, repositoryRef)
+	} else {
+		return github.GetRepositoryTeams(gitSource, gitOrgRef, repositoryRef)
 	}
 }

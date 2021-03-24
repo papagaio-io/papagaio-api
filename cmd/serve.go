@@ -77,6 +77,7 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	manager.StartSyncMembers(&db)
+	//manager.StartRunFailsDiscovery(&db) //uncomment for running
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

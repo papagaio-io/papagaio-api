@@ -13,6 +13,7 @@ const getRemoteSourcesPath string = "%s/api/v1alpha/remotesources"
 const createProjectPath string = "%s/api/v1alpha/projects"
 const deleteProjectPath string = "%s/api/v1alpha/projects/%s"
 const organizationMembersPath string = "%s/api/v1alpha/orgs/%s/members"
+const runsListPath string = "%s/api/v1alpha/runs%s"
 
 func getCreateORGUrl() string {
 	return fmt.Sprintf(createOrgPath, config.Config.Agola.AgolaAddr)
@@ -37,4 +38,25 @@ func getDeleteProjectUrl(organizationName string, projectName string) string {
 
 func getOrganizationMembersUrl(organizationName string) string {
 	return fmt.Sprintf(organizationMembersPath, config.Config.Agola.AgolaAddr, organizationName)
+}
+
+func getRunsListPath(projectRef string, lastRun bool, phase string, startRunID *string, limit uint, asc bool) string {
+	query := url.QueryEscape("/project/" + projectRef)
+	if lastRun {
+		query += "&lastrun"
+	}
+	if len(phase) > 0 {
+		query += "&phase=" + phase
+	}
+	if startRunID != nil {
+		query += "&start=" + *startRunID
+	}
+	if limit > 0 {
+		query += "&limit=" + string(limit)
+	}
+	if asc {
+		query += "&asc"
+	}
+
+	return fmt.Sprintf(runsListPath, config.Config.Agola.AgolaAddr, query)
 }

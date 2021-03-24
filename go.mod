@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/rs/cors v1.7.0
 	github.com/spf13/cobra v1.1.3
-	github.com/xhit/go-simple-mail v2.2.2+incompatible // indirect
+	github.com/xhit/go-simple-mail v2.2.2+incompatible
 	go.mongodb.org/mongo-driver v1.4.6
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/square/go-jose.v2 v2.5.1

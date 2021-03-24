@@ -8,6 +8,8 @@ import (
 )
 
 func sendConfirmEmail(addressTo map[string]bool, addressCC map[string]bool, subject string, body string) {
+	log.Println("sendConfirmEmail start")
+
 	server := mail.NewSMTPClient()
 
 	// smtpUser := os.Getenv("SMTP_USR")
@@ -58,4 +60,6 @@ func sendConfirmEmail(addressTo map[string]bool, addressCC map[string]bool, subj
 	} else {
 		log.Println("Email Sent")
 	}
+
+	log.Println("sendConfirmEmail end")
 }

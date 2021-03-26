@@ -1,6 +1,7 @@
 package agola
 
 import (
+	"strings"
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/dto"
@@ -80,3 +81,15 @@ const (
 	RunResultSuccess RunResult = "success"
 	RunResultFailed  RunResult = "failed"
 )
+
+func (run *RunDto) IsWebhookCreationTrigger() bool {
+	return strings.Compare(run.Annotations["run_creation_trigger"], "webhook") == 0
+}
+
+func (run *RunDto) GetBranchName() string {
+	return run.Annotations["branch"]
+}
+
+func (run *RunDto) GetCommitSha() string {
+	return run.Annotations["commit_sha"]
+}

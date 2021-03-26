@@ -16,3 +16,7 @@ type CommitMetadataDto struct {
 	Sha    string            `json:"sha"`
 	Author map[string]string `json:"author"`
 }
+
+func (commitMetadata *CommitMetadataDto) GetAuthorEmail() string {
+	return commitMetadata.Author["email"]
+}

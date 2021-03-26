@@ -9,11 +9,11 @@ type Project struct {
 	Archivied      bool   `json:"archivied"`
 
 	//Agola run info. Use branch in key map
-	LastBranchRunMap map[string]RunInfo `json:"lastBranchRunMap"`
+	LastBranchRunFailsMap map[string]RunInfo `json:"lastBranchRunMap"`
+	LastRun               RunInfo            `json:"lastRun"`
 }
 
 type RunInfo struct {
-	LastRunID        string    `json:"lastRunID"`
-	LastRunStartDate time.Time `json:"lastRunStartDate"`
-	ISLastRunFailed  bool      `json:"sSLastRunFailed"`
+	RunID        string    `json:"runID"`
+	RunStartDate time.Time `json:"runStartDate"`
 }

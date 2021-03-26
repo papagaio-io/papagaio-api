@@ -190,11 +190,11 @@ func getEmailByRuns(runs *[]agolaApi.RunDto, gitSource *model.GitSource, organiz
 	retVal := make([]string, 0)
 
 	for _, run := range *runs {
-		commitMetadata, err := git.GetCommitMetadata(gitSource, organizationName, gitRepoPath, run.Annotations["commit_sha"])
+		commitMetadata, err := git.GetCommitMetadata(gitSource, organizationName, gitRepoPath, run.GetCommitSha())
 		if commitMetadata == nil || err != nil {
 			continue
 		}
-		retVal = append(retVal, commitMetadata.Author["email"])
+		retVal = append(retVal, commitMetadata.GetAuthorEmail())
 	}
 
 	return retVal
@@ -219,7 +219,7 @@ func subdivideRunsByBranch(runs *[]agolaApi.RunDto) *map[string][]agolaApi.RunDt
 	retVal := make(map[string][]agolaApi.RunDto)
 
 	for _, run := range *runs {
-		branch := run.Annotations["branch"]
+		branch := run.GetBranchName()
 		if _, ok := retVal[branch]; !ok {
 			retVal[branch] = make([]agolaApi.RunDto, 1)
 			retVal[branch][0] = run
@@ -254,7 +254,7 @@ func takeWebhookTrigger(runs *[]agolaApi.RunDto) *[]agolaApi.RunDto {
 
 	if runs != nil {
 		for _, run := range *runs {
-			if strings.Compare(run.Annotations["run_creation_trigger"], "webhook") == 0 {
+			if run.IsWebhookCreationTrigger() {
 				retVal = append(retVal, run)
 			}
 		}

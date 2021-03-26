@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
-	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
@@ -30,38 +29,18 @@ func discoveryRunFails(db repository.Database) {
 					continue
 				}
 
-				if project.LastBranchRunFailsMap == nil {
-					project.LastBranchRunFailsMap = make(map[string]model.RunInfo)
-				}
-
-				olderDbBranch := getOlderBranchRun(&project.LastBranchRunFailsMap)
-				isLastRun := olderDbBranch != nil
-
-				var startRunID *string = nil
-				var olderDbRunInfo model.RunInfo
-				if olderDbBranch != nil {
-					olderDbRunInfo = project.LastBranchRunFailsMap[*olderDbBranch]
-					startRunID = &olderDbRunInfo.RunID
-				}
-
-				runList, err := agola.GetRuns(project.AgolaProjectID, isLastRun, "finished", startRunID, 1, true)
-
-				if err != nil || runList == nil || len(*runList) == 0 {
-					log.Println("no runs found...")
+				checkNewRuns := CheckIfNewRunsPresent(&project)
+				if !checkNewRuns {
+					log.Println("no new runs found...")
 					continue
 				}
 
-				//Skip if there are no new runs
-				if startRunID != nil { //so olderDbRunInfo is not empty
-					if !(*runList)[len(*runList)-1].StartTime.After(project.LastRun.RunStartDate) {
-						log.Println("no new runs found...")
-						continue
-					}
-				}
-
 				//If there are new runs asks for other runs
-				runList, err = agola.GetRuns(project.AgolaProjectID, false, "finished", startRunID, 0, true)
-				project.LastRun = model.RunInfo{RunID: (*runList)[len(*runList)-1].ID, RunStartDate: *(*runList)[len(*runList)-1].StartTime}
+				runList, _ := agola.GetRuns(project.AgolaProjectID, false, "finished", &project.OlderRunFaild.ID, 0, true)
+				project.LastRun = model.RunInfo{ID: (*runList)[len(*runList)-1].ID, RunStartDate: *(*runList)[len(*runList)-1].StartTime, Branch: (*runList)[len(*runList)-1].GetBranchName()}
+
+				//I use the save the faild runs by branch, next I take the older and save to db for optimize agola.GetRuns
+				runsFaildMap := make(map[string]agola.RunDto)
 
 				runList = takeWebhookTrigger(runList)
 
@@ -74,56 +53,21 @@ func discoveryRunFails(db repository.Database) {
 						branchRunList = deleteOlderRunsBy(&branchRunList, lastFailesRunSaved)
 					}
 
-					runToSaveOnDb := lastFailesRunSaved
-					successRun := make([]agolaApi.RunDto, 0)
+					successRun := make([]agola.RunDto, 0)
 
 					for _, run := range branchRunList {
 						if run.Result == agola.RunResultSuccess {
 							successRun = append(successRun, run)
-						} else if run.Result == agolaApi.RunResultFailed && run.StartTime.After(lastFailesRunSaved.RunStartDate) { //Se la prima run fallita di agola corrisponde a quella presa dal db suppongo di avere già notificato gli utenti al polling precedente
+						} else if run.Result == agola.RunResultFailed && run.StartTime.After(lastFailesRunSaved.RunStartDate) { //Se la prima run fallita di agola corrisponde a quella presa dal db suppongo di avere già notificato gli utenti al polling precedente
 							log.Println("Found run failed!")
 
-							runToSaveOnDb = model.RunInfo{RunID: run.ID, RunStartDate: *run.StartTime}
+							project.LastBranchRunFailsMap[branch] = model.RunInfo{ID: run.ID, RunStartDate: *run.StartTime, Branch: branch}
+							runsFaildMap[branch] = run
 
-							//Find all users that commited the failed run and success runs
-							localRuns := append(successRun, run)
-							emailUsersCommitted := getEmailByRuns(&localRuns, gitSource, org.Name, project.GitRepoPath)
+							emailMap := getUsersEmailMap(gitSource, &org, project.GitRepoPath, run, successRun)
 
 							//After email is sent we empty successRun
-							successRun = make([]agolaApi.RunDto, 0)
-
-							//Users owner of the organization and users owner of the repository
-							var usersRepoOwners *[]string
-							if org.OtherUserToNotify != nil {
-								for _, email := range org.OtherUserToNotify {
-									emailUsersCommitted = append(emailUsersCommitted, email)
-								}
-							}
-
-							if gitSource.GitType == model.Gitea {
-								usersRepoOwners, _ = findGiteaUsersEmailRepositoryOwner(gitSource, org.Name, project.GitRepoPath)
-							} else {
-								usersRepoOwners, _ = findGithubUsersRepositoryOwner(gitSource, org.Name, project.GitRepoPath)
-							}
-
-							//Create map without duplicate email
-							emailMap := make(map[string]bool)
-
-							for _, email := range emailUsersCommitted {
-								emailMap[email] = true
-							}
-
-							if usersRepoOwners != nil {
-								for _, email := range *usersRepoOwners {
-									emailMap[email] = true
-								}
-							}
-
-							if org.OtherUserToNotify != nil {
-								for _, email := range org.OtherUserToNotify {
-									emailMap[email] = true
-								}
-							}
+							successRun = make([]agola.RunDto, 0)
 
 							log.Println("send emails to:", emailMap)
 
@@ -131,7 +75,10 @@ func discoveryRunFails(db repository.Database) {
 						}
 					}
 
-					project.LastBranchRunFailsMap[branch] = runToSaveOnDb
+					olderFailedRun := findOlderRun(&runsFaildMap)
+					if olderFailedRun != nil {
+						project.OlderRunFaild = model.RunInfo{ID: olderFailedRun.ID, RunStartDate: *olderFailedRun.StartTime, Branch: branch}
+					}
 				}
 				org.Projects[projectName] = project
 			}
@@ -141,6 +88,67 @@ func discoveryRunFails(db repository.Database) {
 		log.Println("End discoveryRunFails")
 		time.Sleep(3 * time.Minute)
 	}
+}
+
+func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organization, gitRepoPath string, failedRun agola.RunDto, successRuns []agola.RunDto) map[string]bool {
+	emails := make(map[string]bool, 0)
+
+	//Find all users that commited the failed run and success runs
+	runs := append(successRuns, failedRun)
+	emailUsersCommitted := getEmailByRuns(&runs, gitSource, organization.Name, gitRepoPath)
+
+	//Users owner of the organization and users owner of the repository
+	var usersRepoOwners *[]string
+
+	if gitSource.GitType == model.Gitea {
+		usersRepoOwners, _ = findGiteaUsersEmailRepositoryOwner(gitSource, organization.Name, gitRepoPath)
+	} else {
+		usersRepoOwners, _ = findGithubUsersRepositoryOwner(gitSource, organization.Name, gitRepoPath)
+	}
+
+	for _, email := range emailUsersCommitted {
+		emails[email] = true
+	}
+
+	if usersRepoOwners != nil {
+		for _, email := range *usersRepoOwners {
+			emails[email] = true
+		}
+	}
+
+	if organization.OtherUserToNotify != nil {
+		for _, email := range organization.OtherUserToNotify {
+			emails[email] = true
+		}
+	}
+
+	return emails
+}
+
+func findOlderRun(runs *map[string]agola.RunDto) *agola.RunDto {
+	if runs == nil || len(*runs) == 0 {
+		return nil
+	}
+
+	var retVal *agola.RunDto = nil
+	for _, run := range *runs {
+		if retVal == nil || run.StartTime.Before(*retVal.StartTime) {
+			retVal = &run
+		}
+	}
+
+	return retVal
+}
+
+func CheckIfNewRunsPresent(project *model.Project) bool {
+	if project.LastBranchRunFailsMap == nil {
+		project.LastBranchRunFailsMap = make(map[string]model.RunInfo)
+	}
+
+	isLastRun := !project.LastRun.RunStartDate.IsZero()
+	runList, _ := agola.GetRuns(project.AgolaProjectID, isLastRun, "finished", nil, 1, true)
+
+	return runList != nil && len(*runList) != 0 && (*runList)[0].StartTime.After(project.LastRun.RunStartDate)
 }
 
 func findGiteaUsersEmailRepositoryOwner(gitSource *model.GitSource, organizationName string, gitRepoPath string) (*[]string, error) {
@@ -186,7 +194,7 @@ func findGithubUsersRepositoryOwner(gitSource *model.GitSource, organizationName
 	return &retVal, nil
 }
 
-func getEmailByRuns(runs *[]agolaApi.RunDto, gitSource *model.GitSource, organizationName string, gitRepoPath string) []string {
+func getEmailByRuns(runs *[]agola.RunDto, gitSource *model.GitSource, organizationName string, gitRepoPath string) []string {
 	retVal := make([]string, 0)
 
 	for _, run := range *runs {
@@ -200,12 +208,12 @@ func getEmailByRuns(runs *[]agolaApi.RunDto, gitSource *model.GitSource, organiz
 	return retVal
 }
 
-func deleteOlderRunsBy(runs *[]agolaApi.RunDto, firstRun model.RunInfo) []agolaApi.RunDto {
+func deleteOlderRunsBy(runs *[]agola.RunDto, firstRun model.RunInfo) []agola.RunDto {
 	if runs == nil {
 		return nil
 	}
 
-	retVal := make([]agolaApi.RunDto, 0)
+	retVal := make([]agola.RunDto, 0)
 	for _, run := range *runs {
 		if run.StartTime.Equal(firstRun.RunStartDate) || run.StartTime.After(firstRun.RunStartDate) {
 			retVal = append(retVal, run)
@@ -215,13 +223,13 @@ func deleteOlderRunsBy(runs *[]agolaApi.RunDto, firstRun model.RunInfo) []agolaA
 	return retVal
 }
 
-func subdivideRunsByBranch(runs *[]agolaApi.RunDto) *map[string][]agolaApi.RunDto {
-	retVal := make(map[string][]agolaApi.RunDto)
+func subdivideRunsByBranch(runs *[]agola.RunDto) *map[string][]agola.RunDto {
+	retVal := make(map[string][]agola.RunDto)
 
 	for _, run := range *runs {
 		branch := run.GetBranchName()
 		if _, ok := retVal[branch]; !ok {
-			retVal[branch] = make([]agolaApi.RunDto, 1)
+			retVal[branch] = make([]agola.RunDto, 1)
 			retVal[branch][0] = run
 		} else {
 			retVal[branch] = append(retVal[branch], run)
@@ -231,26 +239,9 @@ func subdivideRunsByBranch(runs *[]agolaApi.RunDto) *map[string][]agolaApi.RunDt
 	return &retVal
 }
 
-func getOlderBranchRun(runList *map[string]model.RunInfo) *string {
-	if runList == nil || len(*runList) == 0 {
-		return nil
-	}
-
-	olderRunTime := time.Now()
-	var retVal *string
-	for branch, run := range *runList {
-		if run.RunStartDate.Before(olderRunTime) {
-			olderRunTime = run.RunStartDate
-			retVal = &branch
-		}
-	}
-
-	return retVal
-}
-
 //Take only the run by webhook, discard others(for example directrun)
-func takeWebhookTrigger(runs *[]agolaApi.RunDto) *[]agolaApi.RunDto {
-	retVal := make([]agolaApi.RunDto, 0)
+func takeWebhookTrigger(runs *[]agola.RunDto) *[]agola.RunDto {
+	retVal := make([]agola.RunDto, 0)
 
 	if runs != nil {
 		for _, run := range *runs {

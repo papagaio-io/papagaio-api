@@ -189,7 +189,7 @@ func UnarchiveProject(agolaOrganizationRef string, projectName string) error {
 }
 
 func GetRuns(projectRef string, lastRun bool, phase string, startRunID *string, limit uint, asc bool) (*[]RunDto, error) {
-	log.Println("GetOrganizationMembers start")
+	log.Println("GetRuns start")
 
 	client := &http.Client{}
 	URLApi := getRunsListPath(projectRef, lastRun, phase, startRunID, limit, asc)

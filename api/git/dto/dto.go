@@ -12,11 +12,19 @@ type UserTeamResponseDto struct {
 	Email    string `json:"email"`
 }
 
+type email string
+
 type CommitMetadataDto struct {
-	Sha    string            `json:"sha"`
-	Author map[string]string `json:"author"`
+	Sha     string            `json:"sha"`
+	Author  map[string]string `json:"author"`
+	Parents []CommitParentDto `json:"parents"`
 }
 
 func (commitMetadata *CommitMetadataDto) GetAuthorEmail() string {
 	return commitMetadata.Author["email"]
+}
+
+type CommitParentDto struct {
+	Url string `json:"url"`
+	Sha string `json:"sha"`
 }

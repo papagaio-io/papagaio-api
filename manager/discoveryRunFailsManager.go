@@ -44,8 +44,8 @@ func discoveryRunFails(db repository.Database) {
 
 				runList = takeWebhookTrigger(runList)
 
-				runListSubdivided := subdivideRunsByBranch(runList)
-				for branch, branchRunList := range *runListSubdivided {
+				branchRunLists := subdivideRunsByBranch(runList)
+				for branch, branchRunList := range *branchRunLists {
 					//Prendo l'ultima run del branch dal db, se c'è
 					//Se c'è tolgo le run precedenti di agola da a questa ultima
 					lastFailesRunSaved, ok := project.LastBranchRunFailsMap[branch]
@@ -53,21 +53,21 @@ func discoveryRunFails(db repository.Database) {
 						branchRunList = deleteOlderRunsBy(&branchRunList, lastFailesRunSaved)
 					}
 
-					successRun := make([]agola.RunDto, 0)
+					successRuns := make([]agola.RunDto, 0)
 
 					for _, run := range branchRunList {
 						if run.Result == agola.RunResultSuccess {
-							successRun = append(successRun, run)
+							successRuns = append(successRuns, run)
 						} else if run.Result == agola.RunResultFailed && run.StartTime.After(lastFailesRunSaved.RunStartDate) { //Se la prima run fallita di agola corrisponde a quella presa dal db suppongo di avere già notificato gli utenti al polling precedente
 							log.Println("Found run failed!")
 
 							project.LastBranchRunFailsMap[branch] = model.RunInfo{ID: run.ID, RunStartDate: *run.StartTime, Branch: branch}
 							runsFaildMap[branch] = run
 
-							emailMap := getUsersEmailMap(gitSource, &org, project.GitRepoPath, run, successRun)
+							emailMap := getUsersEmailMap(gitSource, &org, project.GitRepoPath, run, successRuns)
 
-							//After email is sent we empty successRun
-							successRun = make([]agola.RunDto, 0)
+							//After email is sent we empty successRuns
+							successRuns = make([]agola.RunDto, 0)
 
 							log.Println("send emails to:", emailMap)
 

@@ -108,8 +108,8 @@ func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organizati
 		}
 	}
 
-	if organization.OtherUserToNotify != nil {
-		for _, email := range organization.OtherUserToNotify {
+	if organization.ExternalUsers != nil {
+		for _, email := range organization.ExternalUsers {
 			emails[email] = true
 		}
 	}

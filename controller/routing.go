@@ -48,6 +48,7 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 
 	setupGetOrganizationsRouter(apirouter.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
 	setupCreateOrganizationEndpoint(apirouter.PathPrefix("/createorganization").Subrouter(), ctrlOrganization)
+	setupDeleteOrganizationEndpoint(apirouter.PathPrefix("/deleteorganization").Subrouter(), ctrlOrganization)
 
 	setupGetGitSourcesEndpoint(apirouter.PathPrefix("/gitsources").Subrouter(), ctrlGitSource)
 	setupAddGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
@@ -73,6 +74,11 @@ func setupGetOrganizationsRouter(router *mux.Router, ctrl OrganizationController
 func setupCreateOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.Use(handleRestrictedUserRoutes)
 	router.HandleFunc("", ctrl.CreateOrganization).Methods("POST")
+}
+
+func setupDeleteOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
+	router.Use(handleRestrictedUserRoutes)
+	router.HandleFunc("/{id}", ctrl.DeleteOrganization).Methods("DELETE")
 }
 
 func setupGetRemoteSourcesEndpoint(router *mux.Router, ctrl OrganizationController) {

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
@@ -108,6 +109,49 @@ func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *h
 	remoteSources, _ := agolaApi.GetRemoteSources()
 
 	JSONokResponse(w, remoteSources)
+}
+
+func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	organizationID := vars["id"]
+
+	organization, err := service.Db.GetOrganizationById(organizationID)
+	if err != nil || organization == nil {
+		NotFoundResponse(w)
+	}
+
+	err = service.Db.DeleteOrganization(organizationID)
+	if err != nil {
+		InternalServerError(w)
+	}
+}
+
+//TODO
+func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+}
+
+//TODO
+func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+}
+
+//TODO
+func (service *OrganizationService) GetExternalUsera(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	/*vars := mux.Vars(r)
+	organizationID := vars["organizationID"]
+	organization, err := service.Db.GetOrganizationById(organizationID)
+	if err != nil {
+
+	}*/
 }
 
 func contains(slice []string, item string) bool {

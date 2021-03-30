@@ -100,7 +100,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	manager.StartSynkOrganization(service.Db, org, gitSource)
 
-	JSONokResponse(w, config.Config.Agola.AgolaAddr+"/org"+org.Name)
+	JSONokResponse(w, config.Config.Agola.AgolaAddr+"/org/"+org.Name)
 }
 
 func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *http.Request) {
@@ -165,22 +165,6 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 
 	delete(organization.ExternalUsers, req.Email)
 	service.Db.SaveOrganization(organization)
-}
-
-func (service *OrganizationService) GetExternalUsers(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	vars := mux.Vars(r)
-	organizationID := vars["organizationID"]
-	organization, err := service.Db.GetOrganizationById(organizationID)
-	if err != nil || organization == nil {
-		NotFoundResponse(w)
-	}
-
-	var req *dto.ExternalUserDto
-	json.NewDecoder(r.Body).Decode(&req)
-
 }
 
 func contains(slice []string, item string) bool {

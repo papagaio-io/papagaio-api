@@ -149,7 +149,7 @@ func handleRestrictedUserRoutes(h http.Handler) http.Handler {
 
 		user, err := db.GetUserByEmail(claim.Email)
 		if user == nil {
-			log.Println("User not found")
+			log.Println("User", claim.Email, "not found")
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}

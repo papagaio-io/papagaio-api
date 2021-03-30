@@ -182,8 +182,16 @@ func GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryR
 	}
 
 	author := make(map[string]string)
-	author["email"] = *commit.Author.Email
+	author["email"] = *commit.Commit.Author.Email
 	retVal := &dto.CommitMetadataDto{Sha: *commit.SHA, Author: author}
+
+	if commit.Parents != nil {
+		retVal.Parents = make([]dto.CommitParentDto, 0)
+		for _, parent := range commit.Parents {
+			retVal.Parents = append(retVal.Parents, dto.CommitParentDto{Sha: *parent.SHA})
+		}
+	}
+
 	return retVal, nil
 }
 

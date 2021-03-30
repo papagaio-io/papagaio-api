@@ -89,7 +89,7 @@ func (db *AppDb) GetOrganizationByName(name string) (*model.Organization, error)
 }
 
 func (db *AppDb) GetOrganizationById(organizationID string) (*model.Organization, error) {
-	var organization model.Organization
+	var organization *model.Organization = nil
 
 	dst := make([]byte, 0)
 	err := db.DB.View(func(txn *badger.Txn) error {
@@ -108,7 +108,7 @@ func (db *AppDb) GetOrganizationById(organizationID string) (*model.Organization
 				continue
 			}
 
-			organization = localOrganization
+			organization = &localOrganization
 
 			break
 		}
@@ -116,7 +116,7 @@ func (db *AppDb) GetOrganizationById(organizationID string) (*model.Organization
 		return nil
 	})
 
-	return &organization, err
+	return organization, err
 }
 
 func (db *AppDb) DeleteOrganization(organizationID string) error {

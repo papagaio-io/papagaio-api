@@ -7,6 +7,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/config"
 )
 
+const organizationPath string = "%s/api/v1alpha/orgs/%s"
 const createOrgPath string = "%s/api/v1alpha/orgs"
 const createMemberPath string = "%s/api/v1alpha/orgs/%s/members/%s"
 const getRemoteSourcesPath string = "%s/api/v1alpha/remotesources"
@@ -14,6 +15,10 @@ const createProjectPath string = "%s/api/v1alpha/projects"
 const deleteProjectPath string = "%s/api/v1alpha/projects/%s"
 const organizationMembersPath string = "%s/api/v1alpha/orgs/%s/members"
 const runsListPath string = "%s/api/v1alpha/runs?group=%s"
+
+func getOrganizationPath(agolaOrganizationRef string) string {
+	return fmt.Sprintf(organizationPath, config.Config.Agola.AgolaAddr, agolaOrganizationRef)
+}
 
 func getCreateORGUrl() string {
 	return fmt.Sprintf(createOrgPath, config.Config.Agola.AgolaAddr)

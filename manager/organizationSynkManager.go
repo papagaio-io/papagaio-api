@@ -63,7 +63,7 @@ func syncMembersRun(db repository.Database) {
 			}
 		}
 
-		time.Sleep(30 * time.Minute)
+		time.Sleep(10 * time.Minute)
 	}
 }
 

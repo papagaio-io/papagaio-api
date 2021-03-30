@@ -79,7 +79,7 @@ func discoveryRunFails(db repository.Database) {
 		}
 
 		log.Println("End discoveryRunFails")
-		time.Sleep(3 * time.Minute)
+		time.Sleep(5 * time.Minute)
 	}
 }
 

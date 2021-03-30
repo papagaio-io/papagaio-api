@@ -1,5 +1,5 @@
 package dto
 
-type externalUserDto struct {
-	ExternalUser string `json:"externalUser"`
+type ExternalUserDto struct {
+	Email string `json:"email"`
 }

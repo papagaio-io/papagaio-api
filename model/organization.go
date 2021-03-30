@@ -16,5 +16,5 @@ type Organization struct {
 	BehaviourType    dto.BehaviourType `json:"behaviourType"`
 
 	Projects      map[string]Project `json:"projects"`
-	ExternalUsers []string           `json:"externalUsers"`
+	ExternalUsers map[string]bool    `json:"externalUsers"`
 }

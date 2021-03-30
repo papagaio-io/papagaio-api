@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/manager/membersManager"
 	"wecode.sorint.it/opensource/papagaio-api/manager/repositoryManager"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -42,6 +43,10 @@ func syncMembersRun(db repository.Database) {
 
 		organizations, _ := db.GetOrganizations()
 		for _, org := range *organizations {
+			if !agola.CheckOrganizationExists(org.Name) {
+				continue
+			}
+
 			log.Println("start synk organization", org.Name)
 
 			gitSource, _ := db.GetGitSourceById(org.GitSourceID)

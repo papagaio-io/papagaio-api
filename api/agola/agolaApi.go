@@ -15,6 +15,17 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
+func CheckOrganizationExists(agolaOrganizationRef string) bool {
+	client := &http.Client{}
+	URLApi := getOrganizationPath(agolaOrganizationRef)
+	req, err := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	return err == nil && api.IsResponseOK(resp.StatusCode)
+}
+
 func CreateOrganization(name string, visibility dto.VisibilityType) (string, error) {
 	client := &http.Client{}
 	URLApi := getCreateORGUrl()

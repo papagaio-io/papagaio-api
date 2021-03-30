@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/manager"
@@ -99,7 +100,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	manager.StartSynkOrganization(service.Db, org, gitSource)
 
-	JSONokResponse(w, org.ID)
+	JSONokResponse(w, config.Config.Agola.AgolaAddr+"/org"+org.Name)
 }
 
 func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *http.Request) {
@@ -133,25 +134,53 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	organizationID := vars["organizationID"]
+	organization, err := service.Db.GetOrganizationById(organizationID)
+	if err != nil || organization == nil {
+		NotFoundResponse(w)
+	}
+
+	var req *dto.ExternalUserDto
+	json.NewDecoder(r.Body).Decode(&req)
+
+	organization.ExternalUsers[req.Email] = true
+	service.Db.SaveOrganization(organization)
 }
 
-//TODO
 func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	organizationID := vars["organizationID"]
+	organization, err := service.Db.GetOrganizationById(organizationID)
+	if err != nil || organization == nil {
+		NotFoundResponse(w)
+	}
+
+	var req *dto.ExternalUserDto
+	json.NewDecoder(r.Body).Decode(&req)
+
+	delete(organization.ExternalUsers, req.Email)
+	service.Db.SaveOrganization(organization)
 }
 
-//TODO
-func (service *OrganizationService) GetExternalUsera(w http.ResponseWriter, r *http.Request) {
+func (service *OrganizationService) GetExternalUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	/*vars := mux.Vars(r)
+	vars := mux.Vars(r)
 	organizationID := vars["organizationID"]
 	organization, err := service.Db.GetOrganizationById(organizationID)
-	if err != nil {
+	if err != nil || organization == nil {
+		NotFoundResponse(w)
+	}
 
-	}*/
+	var req *dto.ExternalUserDto
+	json.NewDecoder(r.Body).Decode(&req)
+
 }
 
 func contains(slice []string, item string) bool {

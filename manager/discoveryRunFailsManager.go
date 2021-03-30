@@ -109,7 +109,7 @@ func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organizati
 	}
 
 	if organization.ExternalUsers != nil {
-		for _, email := range organization.ExternalUsers {
+		for email, _ := range organization.ExternalUsers {
 			emails[email] = true
 		}
 	}

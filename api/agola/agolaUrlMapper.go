@@ -8,7 +8,7 @@ import (
 )
 
 const organizationPath string = "%s/api/v1alpha/orgs/%s"
-const createOrgPath string = "%s/api/v1alpha/orgs"
+const orgPath string = "%s/api/v1alpha/orgs"
 const createMemberPath string = "%s/api/v1alpha/orgs/%s/members/%s"
 const getRemoteSourcesPath string = "%s/api/v1alpha/remotesources"
 const createProjectPath string = "%s/api/v1alpha/projects"
@@ -20,8 +20,8 @@ func getOrganizationPath(agolaOrganizationRef string) string {
 	return fmt.Sprintf(organizationPath, config.Config.Agola.AgolaAddr, agolaOrganizationRef)
 }
 
-func getCreateORGUrl() string {
-	return fmt.Sprintf(createOrgPath, config.Config.Agola.AgolaAddr)
+func getOrgUrl() string {
+	return fmt.Sprintf(orgPath, config.Config.Agola.AgolaAddr)
 }
 
 func getAddOrgMemberUrl(agolaOrganizationRef string, agolaUserRef string) string {

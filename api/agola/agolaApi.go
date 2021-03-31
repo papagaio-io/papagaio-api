@@ -28,7 +28,7 @@ func CheckOrganizationExists(agolaOrganizationRef string) bool {
 
 func CreateOrganization(name string, visibility dto.VisibilityType) (string, error) {
 	client := &http.Client{}
-	URLApi := getCreateORGUrl()
+	URLApi := getOrgUrl()
 	reqBody := strings.NewReader(`{"name": "` + name + `", "visibility": "` + string(visibility) + `"}`)
 	req, err := http.NewRequest("POST", URLApi, reqBody)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
@@ -46,6 +46,26 @@ func CreateOrganization(name string, visibility dto.VisibilityType) (string, err
 	json.Unmarshal(body, &jsonResponse)
 
 	return jsonResponse.ID, err
+}
+
+func DeleteOrganization(name string) error {
+	client := &http.Client{}
+	URLApi := getOrgUrl()
+	req, err := http.NewRequest("DELETE", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return err
+	}
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
+	}
+
+	return nil
 }
 
 func CreateProject(projectName string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error) {

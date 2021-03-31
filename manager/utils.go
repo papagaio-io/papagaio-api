@@ -2,6 +2,7 @@ package manager
 
 import (
 	"log"
+	"os"
 	"time"
 
 	mail "github.com/xhit/go-simple-mail"
@@ -12,10 +13,10 @@ func sendConfirmEmail(addressTo map[string]bool, addressCC map[string]bool, subj
 
 	server := mail.NewSMTPClient()
 
-	// smtpUser := os.Getenv("SMTP_USR")
-	// smtpPassword := os.Getenv("SMTP_PWD")
-	smtpUser := "mailuser"
-	smtpPassword := "mailpass"
+	smtpUser := os.Getenv("SMTP_USR")
+	smtpPassword := os.Getenv("SMTP_PWD")
+	//smtpUser := "mailuser"
+	//smtpPassword := "mailpass"
 
 	server.Host = "mail.sorintdev.it"
 	server.Port = 25

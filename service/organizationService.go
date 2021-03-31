@@ -122,11 +122,13 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	organization, err := service.Db.GetOrganizationById(organizationID)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
+		return
 	}
 
 	gitSource, err := service.Db.GetGitSourceById(organization.GitSourceID)
 	if err != nil || gitSource == nil {
 		InternalServerError(w)
+		return
 	}
 
 	gitApi.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)
@@ -147,6 +149,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	organization, err := service.Db.GetOrganizationById(organizationID)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
+		return
 	}
 
 	var req *dto.ExternalUserDto
@@ -165,6 +168,7 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	organization, err := service.Db.GetOrganizationById(organizationID)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
+		return
 	}
 
 	var req *dto.ExternalUserDto

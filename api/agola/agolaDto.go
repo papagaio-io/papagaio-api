@@ -52,15 +52,16 @@ const (
 )
 
 type RunDto struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Counter     uint64            `json:"counter"`
-	Annotations map[string]string `json:"annotations"`
-	Phase       RunPhase          `json:"phase"`
-	Result      RunResult         `json:"result"`
-	StartTime   *time.Time        `json:"start_time"`
-	EndTime     *time.Time        `json:"end_time"`
-	Archived    bool              `json:"archived"`
+	ID          string             `json:"id"`
+	Name        string             `json:"name"`
+	Counter     uint64             `json:"counter"`
+	Annotations map[string]string  `json:"annotations"`
+	Tasks       map[string]TaskDto `json:"tasks"`
+	Phase       RunPhase           `json:"phase"`
+	Result      RunResult          `json:"result"`
+	StartTime   time.Time          `json:"start_time"`
+	EndTime     time.Time          `json:"end_time"`
+	Archived    bool               `json:"archived"`
 }
 
 type RunPhase string
@@ -93,3 +94,52 @@ func (run *RunDto) GetBranchName() string {
 func (run *RunDto) GetCommitSha() string {
 	return run.Annotations["commit_sha"]
 }
+
+type TaskDto struct {
+	ID        string        `json:"id"`
+	Name      string        `json:"name"`
+	Status    RunTaskStatus `json:"status"`
+	Steps     []RunTaskStep `json:"steps"`
+	SetupStep RunTaskStep   `json:"setup_step"`
+	StartTime time.Time     `json:"start_time"`
+	EndTime   time.Time     `json:"end_time"`
+}
+
+type RunTaskStatus string
+
+const (
+	RunTaskStatusNotStarted RunTaskStatus = "notstarted"
+	RunTaskStatusSkipped    RunTaskStatus = "skipped"
+	RunTaskStatusCancelled  RunTaskStatus = "cancelled"
+	RunTaskStatusRunning    RunTaskStatus = "running"
+	RunTaskStatusStopped    RunTaskStatus = "stopped"
+	RunTaskStatusSuccess    RunTaskStatus = "success"
+	RunTaskStatusFailed     RunTaskStatus = "failed"
+)
+
+type RunTaskStep struct {
+	Phase      ExecutorTaskPhase `json:"phase"`
+	Name       string            `json:"name"`
+	LogPhase   RunTaskFetchPhase `json:"log_phase"`
+	ExitStatus int               `json:"exit_status"`
+	StartTime  time.Time         `json:"start_time"`
+	EndTime    time.Time         `json:"end_time"`
+}
+
+type ExecutorTaskPhase string
+
+const (
+	ExecutorTaskPhaseNotStarted ExecutorTaskPhase = "notstarted"
+	ExecutorTaskPhaseCancelled  ExecutorTaskPhase = "cancelled"
+	ExecutorTaskPhaseRunning    ExecutorTaskPhase = "running"
+	ExecutorTaskPhaseStopped    ExecutorTaskPhase = "stopped"
+	ExecutorTaskPhaseSuccess    ExecutorTaskPhase = "success"
+	ExecutorTaskPhaseFailed     ExecutorTaskPhase = "failed"
+)
+
+type RunTaskFetchPhase string
+
+const (
+	RunTaskFetchPhaseNotStarted RunTaskFetchPhase = "notstarted"
+	RunTaskFetchPhaseFinished   RunTaskFetchPhase = "finished"
+)

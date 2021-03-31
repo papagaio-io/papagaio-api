@@ -223,7 +223,7 @@ func GetRuns(projectRef string, lastRun bool, phase string, startRunID *string, 
 	log.Println("GetRuns start")
 
 	client := &http.Client{}
-	URLApi := getRunsListPath(projectRef, lastRun, phase, startRunID, limit, asc)
+	URLApi := getRunsListUrl(projectRef, lastRun, phase, startRunID, limit, asc)
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
@@ -240,4 +240,70 @@ func GetRuns(projectRef string, lastRun bool, phase string, startRunID *string, 
 	json.Unmarshal(body, &jsonResponse)
 
 	return &jsonResponse, err
+}
+
+func GetRun(runID string) (*RunDto, error) {
+	log.Println("GetRuns start")
+
+	client := &http.Client{}
+	URLApi := getRunUrl(runID)
+	req, err := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var jsonResponse RunDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse, err
+}
+
+func GetTask(runID string, taskID string) (*TaskDto, error) {
+	log.Println("GetRuns start")
+
+	client := &http.Client{}
+	URLApi := getTaskUrl(runID, taskID)
+	req, err := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var jsonResponse TaskDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse, err
+}
+
+func GetLogs(runID string, taskID string, step int) (string, error) {
+	log.Println("GetRuns start")
+
+	client := &http.Client{}
+	URLApi := getLogsUrl(runID, taskID, step)
+	req, err := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return "", errors.New(string(respMessage))
+	}
+
+	logs, _ := ioutil.ReadAll(resp.Body)
+
+	return string(logs), err
 }

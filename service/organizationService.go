@@ -131,8 +131,8 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
+	agolaApi.DeleteOrganization(organization.Name, gitSource.AgolaToken)
 	gitApi.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)
-	agolaApi.DeleteOrganization(organization.Name)
 	err = service.Db.DeleteOrganization(organizationID)
 
 	if err != nil {

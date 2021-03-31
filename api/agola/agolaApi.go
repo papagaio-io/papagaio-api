@@ -17,7 +17,7 @@ import (
 
 func CheckOrganizationExists(agolaOrganizationRef string) bool {
 	client := &http.Client{}
-	URLApi := getOrganizationPath(agolaOrganizationRef)
+	URLApi := getOrganizationUrl(agolaOrganizationRef)
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
@@ -50,7 +50,7 @@ func CreateOrganization(name string, visibility dto.VisibilityType) (string, err
 
 func DeleteOrganization(name string, agolaUserToken string) error {
 	client := &http.Client{}
-	URLApi := getOrgUrl()
+	URLApi := getOrganizationUrl(name)
 	req, err := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)

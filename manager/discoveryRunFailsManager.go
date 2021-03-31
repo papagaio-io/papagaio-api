@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -21,6 +22,7 @@ func discoveryRunFails(db repository.Database) {
 		for _, org := range *organizations {
 			gitSource, err := db.GetGitSourceById(org.GitSourceID)
 			if gitSource == nil || err != nil || org.Projects == nil {
+				log.Println("discoveryRunFails gitsource not fount for", org.Name, "organization")
 				continue
 			}
 
@@ -37,7 +39,7 @@ func discoveryRunFails(db repository.Database) {
 
 				//If there are new runs asks for other runs
 				runList, _ := agola.GetRuns(project.AgolaProjectID, false, "finished", &project.OlderRunFaild.ID, 0, true)
-				project.LastRun = model.RunInfo{ID: (*runList)[len(*runList)-1].ID, RunStartDate: *(*runList)[len(*runList)-1].StartTime, Branch: (*runList)[len(*runList)-1].GetBranchName()}
+				project.LastRun = model.RunInfo{ID: (*runList)[len(*runList)-1].ID, RunStartDate: (*runList)[len(*runList)-1].StartTime, Branch: (*runList)[len(*runList)-1].GetBranchName()}
 
 				//I use the save the faild runs by branch, next I take the older and save to db for optimize agola.GetRuns
 				runsFaildMap := make(map[string]agola.RunDto)
@@ -57,20 +59,27 @@ func discoveryRunFails(db repository.Database) {
 						if run.Result == agola.RunResultFailed && run.StartTime.After(lastFailesRunSaved.RunStartDate) { //Se la prima run fallita di agola corrisponde a quella presa dal db suppongo di avere già notificato gli utenti al polling precedente
 							log.Println("Found run failed!")
 
-							project.LastBranchRunFailsMap[branch] = model.RunInfo{ID: run.ID, RunStartDate: *run.StartTime, Branch: branch}
+							project.LastBranchRunFailsMap[branch] = model.RunInfo{ID: run.ID, RunStartDate: run.StartTime, Branch: branch}
 							runsFaildMap[branch] = run
 
 							emailMap := getUsersEmailMap(gitSource, &org, project.GitRepoPath, run)
 
 							log.Println("send emails to:", emailMap)
 
-							sendConfirmEmail(emailMap, nil, "Run Agola faild subject", "Run Agola faild body")
+							body, err := makeBody(org.Name, project.GitRepoPath, run)
+							if err != nil {
+								log.Println("Failed to make email body")
+								continue
+							}
+							subject := makeSubject(org.Name, project.GitRepoPath, run)
+
+							sendConfirmEmail(emailMap, nil, subject, body)
 						}
 					}
 
 					olderFailedRun := findOlderRun(&runsFaildMap)
 					if olderFailedRun != nil {
-						project.OlderRunFaild = model.RunInfo{ID: olderFailedRun.ID, RunStartDate: *olderFailedRun.StartTime, Branch: branch}
+						project.OlderRunFaild = model.RunInfo{ID: olderFailedRun.ID, RunStartDate: olderFailedRun.StartTime, Branch: branch}
 					}
 				}
 				org.Projects[projectName] = project
@@ -117,6 +126,54 @@ func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organizati
 	return emails
 }
 
+const bodyMainTemplate string = "[%s/%s] FIX Agola Run (#%s)"
+const subjectTemplate string = "Run failed in Agola: %s » %s » release #%s"
+
+func makeSubject(organizationName string, projectName string, failedRun agola.RunDto) string {
+	return fmt.Sprintf(subjectTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter))
+}
+
+func makeBody(organizationName string, projectName string, failedRun agola.RunDto) (string, error) {
+	body := fmt.Sprintf(bodyMainTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter))
+
+	run, err := agola.GetRun(failedRun.ID)
+	if err != nil {
+		return "", err
+	}
+
+	for _, task := range run.Tasks {
+		if task.Status == agola.RunTaskStatusFailed {
+			taskFailed, err := agola.GetTask(run.ID, task.ID)
+			if err != nil {
+				return "", err
+			}
+
+			if taskFailed.SetupStep.Phase == agola.ExecutorTaskPhaseFailed {
+				logs, err := agola.GetLogs(run.ID, task.ID, -1)
+				if err != nil {
+					return "", err
+				}
+
+				body += "\n\n#Task setup " + task.Name + " failed\n" + logs
+			}
+
+			for stepID, step := range taskFailed.Steps {
+				if step.Phase == agola.ExecutorTaskPhaseFailed {
+
+					logs, err := agola.GetLogs(run.ID, task.ID, stepID)
+					if err != nil {
+						return "", err
+					}
+
+					body += "\n\n#task " + task.Name + " #step " + step.Name + "\n" + logs
+				}
+			}
+		}
+	}
+
+	return body, nil
+}
+
 func findOlderRun(runs *map[string]agola.RunDto) *agola.RunDto {
 	if runs == nil || len(*runs) == 0 {
 		return nil
@@ -124,7 +181,7 @@ func findOlderRun(runs *map[string]agola.RunDto) *agola.RunDto {
 
 	var retVal *agola.RunDto = nil
 	for _, run := range *runs {
-		if retVal == nil || run.StartTime.Before(*retVal.StartTime) {
+		if retVal == nil || run.StartTime.Before(retVal.StartTime) {
 			retVal = &run
 		}
 	}

@@ -15,6 +15,9 @@ const createProjectPath string = "%s/api/v1alpha/projects"
 const deleteProjectPath string = "%s/api/v1alpha/projects/%s"
 const organizationMembersPath string = "%s/api/v1alpha/orgs/%s/members"
 const runsListPath string = "%s/api/v1alpha/runs?group=%s"
+const runPath string = "%s/api/v1alpha/runs/%s"
+const taskPath string = "%s/api/v1alpha/runs/%s/tasks/%s"
+const logsPath string = "%s/api/v1alpha/logs?runID=%s&taskID=%s&%s"
 
 func getOrganizationUrl(agolaOrganizationRef string) string {
 	return fmt.Sprintf(organizationPath, config.Config.Agola.AgolaAddr, agolaOrganizationRef)
@@ -45,7 +48,7 @@ func getOrganizationMembersUrl(organizationName string) string {
 	return fmt.Sprintf(organizationMembersPath, config.Config.Agola.AgolaAddr, organizationName)
 }
 
-func getRunsListPath(projectRef string, lastRun bool, phase string, startRunID *string, limit uint, asc bool) string {
+func getRunsListUrl(projectRef string, lastRun bool, phase string, startRunID *string, limit uint, asc bool) string {
 	query := url.QueryEscape("/project/" + projectRef)
 	if lastRun {
 		query += "&lastrun"
@@ -64,4 +67,21 @@ func getRunsListPath(projectRef string, lastRun bool, phase string, startRunID *
 	}
 
 	return fmt.Sprintf(runsListPath, config.Config.Agola.AgolaAddr, query)
+}
+
+func getRunUrl(runID string) string {
+	return fmt.Sprintf(runPath, config.Config.Agola.AgolaAddr, runID)
+}
+
+func getTaskUrl(runID string, taskID string) string {
+	return fmt.Sprintf(taskPath, config.Config.Agola.AgolaAddr, runID, taskID)
+}
+
+func getLogsUrl(runID string, taskID string, step int) string {
+	stepParam := "setup"
+	if step != -1 {
+		stepParam = "step=" + fmt.Sprint(step)
+	}
+
+	return fmt.Sprintf(logsPath, config.Config.Agola.AgolaAddr, runID, taskID, stepParam)
 }

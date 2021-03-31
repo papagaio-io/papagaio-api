@@ -48,11 +48,11 @@ func CreateOrganization(name string, visibility dto.VisibilityType) (string, err
 	return jsonResponse.ID, err
 }
 
-func DeleteOrganization(name string) error {
+func DeleteOrganization(name string, agolaUserToken string) error {
 	client := &http.Client{}
 	URLApi := getOrgUrl()
 	req, err := http.NewRequest("DELETE", URLApi, nil)
-	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 

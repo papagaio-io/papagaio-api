@@ -60,7 +60,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error {
 	client := &http.Client{}
 
-	URLApi := getWehHookUrl(gitSource.GitAPIURL, gitOrgRef, string(webHookID), gitSource.GitToken)
+	URLApi := getWehHookUrl(gitSource.GitAPIURL, gitOrgRef, fmt.Sprint(webHookID), gitSource.GitToken)
 
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
 	resp, err := client.Do(req)

@@ -16,7 +16,7 @@ const deleteProjectPath string = "%s/api/v1alpha/projects/%s"
 const organizationMembersPath string = "%s/api/v1alpha/orgs/%s/members"
 const runsListPath string = "%s/api/v1alpha/runs?group=%s"
 
-func getOrganizationPath(agolaOrganizationRef string) string {
+func getOrganizationUrl(agolaOrganizationRef string) string {
 	return fmt.Sprintf(organizationPath, config.Config.Agola.AgolaAddr, agolaOrganizationRef)
 }
 

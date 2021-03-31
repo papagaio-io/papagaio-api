@@ -10,6 +10,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
+	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
@@ -126,15 +127,21 @@ func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organizati
 	return emails
 }
 
-const bodyMainTemplate string = "[%s/%s] FIX Agola Run (#%s)"
+const bodyMainTemplate string = "[%s/%s] FIX Agola Run (#%s)\nSee: <%s>"
 const subjectTemplate string = "Run failed in Agola: %s » %s » release #%s"
+const runAgolaPath string = "%s/org/%s/projects/%s.proj/runs/%s"
 
 func makeSubject(organizationName string, projectName string, failedRun agola.RunDto) string {
 	return fmt.Sprintf(subjectTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter))
 }
 
+func getRunAgolaUrl(organizationName string, projectName string, runID string) string {
+	return fmt.Sprintf(runAgolaPath, config.Config.Agola.AgolaAddr, organizationName, projectName, runID)
+}
+
 func makeBody(organizationName string, projectName string, failedRun agola.RunDto) (string, error) {
-	body := fmt.Sprintf(bodyMainTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter))
+	runUrl := getRunAgolaUrl(organizationName, projectName, failedRun.ID)
+	body := fmt.Sprintf(bodyMainTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter), runUrl)
 
 	run, err := agola.GetRun(failedRun.ID)
 	if err != nil {

@@ -124,7 +124,15 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		NotFoundResponse(w)
 	}
 
+	gitSource, err := service.Db.GetGitSourceById(organization.GitSourceID)
+	if err != nil || gitSource == nil {
+		InternalServerError(w)
+	}
+
+	gitApi.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)
+	agolaApi.DeleteOrganization(organization.Name)
 	err = service.Db.DeleteOrganization(organizationID)
+
 	if err != nil {
 		InternalServerError(w)
 	}

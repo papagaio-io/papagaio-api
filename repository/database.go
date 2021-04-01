@@ -36,8 +36,6 @@ func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
 
-	databaseDataInit(&db) //TODO remove only for test
-
 	return db
 }
 
@@ -48,17 +46,6 @@ func (db *AppDb) Init(config config.Configuration) {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func databaseDataInit(db *AppDb) {
-	//db.DB.DropAll()
-	/*db.SaveGitSource(&model.GitSource{Name: "gitSourceProva", GitType: model.Gitea, GitAPIURL: "https://wecode.sorintdev.it", GitToken: "d5e630f316de7132d4f840c305853865b2470cf2", AgolaToken: "aad79c015e46597a443d9018b7517c1c4b73c2d1", AgolaRemoteSource: "gitea"})
-	db.SaveUser(&model.User{Email: "test@sorint.it"})*/
-
-	/*gitSource, _ := db.GetGitSourceById("N2ItNWUwNy00YzMyLWI0YzQtMzI3YTcwZjIwNmE4")
-	gitSource.AgolaRemoteSource = "gitea"
-	gitSource.AgolaToken = "aad79c015e46597a443d9018b7517c1c4b73c2d1" //token prova di tullio
-	db.SaveGitSource(gitSource)*/
 }
 
 func getNewUid() string {

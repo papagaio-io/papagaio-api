@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -119,6 +120,21 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	vars := mux.Vars(r)
 	organizationID := vars["id"]
 
+	internalonlyQuery, ok := r.URL.Query()["internalonly"]
+	internalonly := false
+	if ok {
+		if len(internalonlyQuery[0]) == 0 {
+			internalonly = true
+		} else {
+			var parsError error
+			internalonly, parsError = strconv.ParseBool(internalonlyQuery[0])
+			if parsError != nil {
+				UnprocessableEntityResponse(w, "internalonly param value is not valid")
+				return
+			}
+		}
+	}
+
 	organization, err := service.Db.GetOrganizationById(organizationID)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
@@ -131,10 +147,12 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	err = agolaApi.DeleteOrganization(organization.Name, gitSource.AgolaToken)
-	if err != nil {
-		InternalServerError(w)
-		return
+	if !internalonly {
+		err = agolaApi.DeleteOrganization(organization.Name, gitSource.AgolaToken)
+		if err != nil {
+			InternalServerError(w)
+			return
+		}
 	}
 
 	gitApi.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)

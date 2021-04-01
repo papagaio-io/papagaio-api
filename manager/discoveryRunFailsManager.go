@@ -127,7 +127,7 @@ func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organizati
 	return emails
 }
 
-const bodyMainTemplate string = "[%s/%s] FIX Agola Run (#%s)\nSee: <%s>"
+const bodyMainTemplate string = `[%s/%s] FIX Agola Run (#%s)\nSee: <a href="%s">click here</a>`
 const subjectTemplate string = "Run failed in Agola: %s » %s » release #%s"
 const runAgolaPath string = "%s/org/%s/projects/%s.proj/runs/%s"
 

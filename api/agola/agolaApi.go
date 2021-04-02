@@ -26,6 +26,17 @@ func CheckOrganizationExists(agolaOrganizationRef string) bool {
 	return err == nil && api.IsResponseOK(resp.StatusCode)
 }
 
+func CheckProjectExists(agolaOrganizationRef string, projectName string) bool {
+	client := &http.Client{}
+	URLApi := getProjectUrl(agolaOrganizationRef, projectName)
+	req, err := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	return err == nil && api.IsResponseOK(resp.StatusCode)
+}
+
 func CreateOrganization(name string, visibility dto.VisibilityType) (string, error) {
 	client := &http.Client{}
 	URLApi := getOrgUrl()
@@ -106,7 +117,7 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 
 func DeleteProject(organizationName string, projectname string, agolaUserToken string) error {
 	client := &http.Client{}
-	URLApi := getDeleteProjectUrl(organizationName, projectname)
+	URLApi := getProjectUrl(organizationName, projectname)
 	req, err := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)

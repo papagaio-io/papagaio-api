@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
-	"wecode.sorint.it/opensource/papagaio-api/manager"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/service"
+	"wecode.sorint.it/opensource/papagaio-api/trigger"
 )
 
 var serveCmd = &cobra.Command{
@@ -70,8 +70,8 @@ func serve(cmd *cobra.Command, args []string) {
 		logRouter = router
 	}
 
-	manager.StartSyncMembers(&db)
-	manager.StartRunFailsDiscovery(&db)
+	trigger.StartOrganizationSync(&db)
+	trigger.StartRunFailsDiscovery(&db)
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

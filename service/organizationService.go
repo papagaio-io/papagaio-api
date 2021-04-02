@@ -99,7 +99,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	manager.StartSynkOrganization(service.Db, org, gitSource)
+	manager.StartOrganizationCheckout(service.Db, org, gitSource)
 
 	JSONokResponse(w, config.Config.Agola.AgolaAddr+"/org/"+org.Name)
 }

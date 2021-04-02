@@ -1,4 +1,4 @@
-package manager
+package trigger
 
 import (
 	"fmt"
@@ -14,6 +14,10 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
+
+func StartRunFailsDiscovery(db repository.Database) {
+	go discoveryRunFails(db)
+}
 
 func discoveryRunFails(db repository.Database) {
 	for {

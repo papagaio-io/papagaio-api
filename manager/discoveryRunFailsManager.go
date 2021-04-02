@@ -178,6 +178,8 @@ func makeBody(organizationName string, projectName string, failedRun agola.RunDt
 		}
 	}
 
+	log.Println("* mail body *", body)
+
 	return body, nil
 }
 

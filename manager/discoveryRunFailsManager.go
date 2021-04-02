@@ -127,7 +127,8 @@ func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organizati
 	return emails
 }
 
-const bodyMainTemplate string = `[%s/%s] FIX Agola Run (#%s)\nSee: <a href="%s"` + ">click here</a>"
+const bodyMessageTemplate string = "[%s/%s] FIX Agola Run (#%s)\n"
+const bodyLinkTemplate string = `See: <a href="%s">click here</a>`
 const subjectTemplate string = "Run failed in Agola: %s » %s » release #%s"
 const runAgolaPath string = "%s/org/%s/projects/%s.proj/runs/%s"
 
@@ -141,7 +142,8 @@ func getRunAgolaUrl(organizationName string, projectName string, runID string) s
 
 func makeBody(organizationName string, projectName string, failedRun agola.RunDto) (string, error) {
 	runUrl := getRunAgolaUrl(organizationName, projectName, failedRun.ID)
-	body := fmt.Sprintf(bodyMainTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter), runUrl)
+	body := fmt.Sprintf(bodyMessageTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter))
+	body += fmt.Sprintf(bodyLinkTemplate, runUrl)
 
 	run, err := agola.GetRun(failedRun.ID)
 	if err != nil {

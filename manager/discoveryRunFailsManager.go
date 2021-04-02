@@ -143,6 +143,8 @@ func makeBody(organizationName string, projectName string, failedRun agola.RunDt
 	runUrl := getRunAgolaUrl(organizationName, projectName, failedRun.ID)
 	body := fmt.Sprintf(bodyMainTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter), runUrl)
 
+	fmt.Println("tullio**** ", body)
+
 	run, err := agola.GetRun(failedRun.ID)
 	if err != nil {
 		return "", err

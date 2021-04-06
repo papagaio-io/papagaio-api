@@ -31,6 +31,13 @@ type Configuration struct {
 
 	//Cmd conficuration
 	CmdConfig CmdConfig
+	//Timers
+	TriggersConfig TriggersConfig
+}
+
+type TriggersConfig struct {
+	OrganizationsDefaultTriggerTime uint
+	RunFailedDefaultTriggerTime     uint
 }
 
 type AgolaConfig struct {

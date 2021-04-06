@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/manager/membersManager"
 	"wecode.sorint.it/opensource/papagaio-api/manager/repositoryManager"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
@@ -34,6 +35,6 @@ func syncOrganizationRun(db repository.Database) {
 			repositoryManager.SynkGitRepositorys(db, &org, gitSource)
 		}
 
-		time.Sleep(5 * time.Minute)
+		time.Sleep(time.Duration(config.Config.TriggersConfig.OrganizationsDefaultTriggerTime) * time.Minute)
 	}
 }

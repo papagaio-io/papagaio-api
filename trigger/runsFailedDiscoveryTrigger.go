@@ -93,7 +93,7 @@ func discoveryRunFails(db repository.Database) {
 		}
 
 		log.Println("End discoveryRunFails")
-		time.Sleep(5 * time.Minute)
+		time.Sleep(time.Duration(config.Config.TriggersConfig.RunFailedDefaultTriggerTime) * time.Minute)
 	}
 }
 

@@ -18,5 +18,9 @@
     "LogHttpRequest": true,
     "DisableKeycloakAuthentication": false,
     "DisableSSLCertificateValidation": true,
-    "TokenTolerance": 3600
+    "TokenTolerance": 3600,
+    "TriggersConfig": {
+      "OrganizationsDefaultTriggerTime": 5,
+      "RunFailedDefaultTriggerTime": 5
+    }
 }

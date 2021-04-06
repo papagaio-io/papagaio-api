@@ -3,6 +3,7 @@ package repositoryManager
 import (
 	"errors"
 	"log"
+	"strings"
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
@@ -62,12 +63,24 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 	}
 
 	gitRepositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
-	log.Println("repositoryList:", *gitRepositoryList)
 
 	//if some project is not present in agola I remove from db
 	for _, project := range organization.Projects {
 		if !agolaApi.CheckProjectExists(organization.Name, project.GitRepoPath) {
 			delete(organization.Projects, project.GitRepoPath)
+		}
+
+		gitRepoExists := false
+		for _, gitRepo := range *gitRepositoryList {
+			if strings.Compare(project.GitRepoPath, gitRepo) == 0 {
+				gitRepoExists = true
+				break
+			}
+		}
+		if !gitRepoExists {
+			agolaApi.DeleteProject(organization.Name, project.GitRepoPath, gitSource.AgolaToken)
+			delete(organization.Projects, project.GitRepoPath)
+
 		}
 	}
 
@@ -84,17 +97,30 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
+		//TODO sincronizzazione lista dei branch da GIT, anche quelli vuoti(senza push e senza RUN)
+
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {
 			if project, ok := organization.Projects[repo]; ok && !project.Archivied {
-				agolaApi.ArchiveProject(organization.Name, repo)
-				project.Archivied = true
+				err := agolaApi.ArchiveProject(organization.Name, repo)
+				if err != nil {
+					project.Archivied = true
+					organization.Projects[repo] = project
+				}
 			}
 
 			continue
 		}
 
 		if agolaApi.CheckProjectExists(organization.Name, repo) {
+			if project, ok := organization.Projects[repo]; ok && project.Archivied {
+				err := agolaApi.UnarchiveProject(organization.Name, repo)
+				if err != nil {
+					project.Archivied = false
+					organization.Projects[repo] = project
+				}
+			}
+
 			continue
 		}
 

@@ -116,6 +116,8 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 }
 
 func DeleteProject(organizationName string, projectname string, agolaUserToken string) error {
+	log.Println("DeleteProject start")
+
 	client := &http.Client{}
 	URLApi := getProjectUrl(organizationName, projectname)
 	req, err := http.NewRequest("DELETE", URLApi, nil)
@@ -127,6 +129,8 @@ func DeleteProject(organizationName string, projectname string, agolaUserToken s
 		respMessage, _ := ioutil.ReadAll(resp.Body)
 		return errors.New(string(respMessage))
 	}
+
+	log.Println("DeleteProject end")
 
 	return err
 }

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"strings"
 
@@ -41,11 +40,6 @@ func (db *AppDb) GetGitSources() (*[]model.GitSource, error) {
 }
 
 func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
-	gs, _ := db.GetGitSourceByName(gitSource.Name)
-	if gs != nil {
-		return errors.New("Gitsource just present on db")
-	}
-
 	if len(gitSource.ID) == 0 {
 		gitSource.ID = getNewUid()
 	}

@@ -78,3 +78,11 @@ func GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repository
 		return github.GetRepositoryTeams(gitSource, gitOrgRef, repositoryRef)
 	}
 }
+
+func GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool {
+	if gitSource.GitType == model.Gitea {
+		return gitea.GetBranches(gitSource, gitOrgRef, repositoryRef)
+	} else {
+		return github.GetBranches(gitSource, gitOrgRef, repositoryRef)
+	}
+}

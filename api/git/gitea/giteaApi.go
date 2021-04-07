@@ -26,7 +26,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 		Active:       true,
 		BranchFilter: "*",
 		Config:       WebHookConfigRequestDto{ContentType: "json", URL: config.Config.Server.LocalHostAddress + webHookConfigPath, HTTPMethod: "post"},
-		Events:       []string{"repository", "push"},
+		Events:       []string{"repository", "push", "create", "delete"},
 		Type:         "gitea",
 	}
 	data, _ := json.Marshal(webHookRequest)
@@ -178,6 +178,17 @@ func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]dto.UserTeamResp
 	json.Unmarshal(body, &usersResponse)
 
 	return &usersResponse, err
+}
+
+func GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool {
+	branchList, _ := getBranches(gitSource, gitOrgRef, repositoryRef)
+	retVal := make(map[string]bool)
+
+	for _, branche := range *branchList {
+		retVal[branche.Name] = true
+	}
+
+	return retVal
 }
 
 func getBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]BranchResponseDto, error) {

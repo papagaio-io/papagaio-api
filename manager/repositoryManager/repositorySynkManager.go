@@ -97,7 +97,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
-		//TODO sincronizzazione lista dei branch da GIT, anche quelli vuoti(senza push e senza RUN)
+		BranchSynck(db, gitSource, organization, repo)
 
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {
@@ -142,6 +142,25 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 	db.SaveOrganization(organization)
 
 	log.Println("End SynkGitRepositorys")
+
+	return nil
+}
+
+func BranchSynck(db repository.Database, gitSource *model.GitSource, organization *model.Organization, repositoryName string) error {
+	branchList := git.GetBranches(gitSource, organization.Name, repositoryName)
+	for branch, _ := range branchList {
+		if _, ok := organization.Projects[repositoryName].Branchs[branch]; !ok {
+			organization.Projects[repositoryName].Branchs[branch] = model.Branch{Name: branch}
+		}
+	}
+
+	for branch, _ := range organization.Projects[repositoryName].Branchs {
+		if _, ok := branchList[branch]; !ok {
+			delete(organization.Projects[repositoryName].Branchs, branch)
+		}
+	}
+
+	db.SaveOrganization(organization)
 
 	return nil
 }

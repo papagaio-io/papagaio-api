@@ -22,7 +22,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	conf["url"] = config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + gitOrgRef
 	fmt.Println("url:", conf["url"])
 	conf["content_type"] = "json"
-	hook := &github.Hook{Name: &webHookName, Events: []string{"repository", "push"}, Active: &active, Config: conf}
+	hook := &github.Hook{Name: &webHookName, Events: []string{"repository", "push", "create", "delete"}, Active: &active, Config: conf}
 	hook, resp, err := client.Organizations.CreateHook(context.Background(), gitOrgRef, hook)
 	hookID := -1
 	if err == nil {
@@ -144,6 +144,21 @@ func GetRepositoryMembers(gitSource *model.GitSource, organizationName string, r
 	}
 
 	return &retVal, err
+}
+
+func GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool {
+	client := getClient(gitSource)
+	branchList, _, err := client.Repositories.ListBranches(context.Background(), gitOrgRef, repositoryRef, nil)
+
+	retVal := make(map[string]bool)
+
+	if err != nil {
+		for _, branche := range branchList {
+			retVal[*branche.Name] = true
+		}
+	}
+
+	return retVal
 }
 
 func CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error) {

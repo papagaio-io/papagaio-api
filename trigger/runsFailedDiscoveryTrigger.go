@@ -61,6 +61,25 @@ func discoveryRunFails(db repository.Database) {
 					}
 
 					for _, run := range branchRunList {
+						//push run into project and branch run list
+						newRun := model.RunInfo{
+							ID:           run.ID,
+							Branch:       run.GetBranchName(),
+							RunStartDate: run.StartTime,
+							RunEndDate:   run.EndTime,
+							Phase:        model.RunPhase(run.Phase),
+							Result:       model.RunResult(run.Result),
+						}
+						project.PushNewRun(newRun)
+						if _, ok := project.Branchs[branch]; !ok {
+							project.Branchs[branch] = model.Branch{Name: branch, LastRuns: make([]model.RunInfo, 0)}
+						}
+						b := project.Branchs[branch]
+						b.PushNewRun(newRun)
+						project.Branchs[branch] = b
+
+						//
+
 						if run.Result == agola.RunResultFailed && run.StartTime.After(lastFailesRunSaved.RunStartDate) { //Se la prima run fallita di agola corrisponde a quella presa dal db suppongo di avere già notificato gli utenti al polling precedente
 							log.Println("Found run failed!")
 

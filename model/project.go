@@ -1,7 +1,5 @@
 package model
 
-import "time"
-
 type Project struct {
 	OrganizationID string `json:"organizationID"`
 	GitRepoPath    string `json:"gitRepoPath"`
@@ -12,10 +10,8 @@ type Project struct {
 	LastBranchRunFailsMap map[string]RunInfo `json:"lastBranchRunMap"`
 	LastRun               RunInfo            `json:"lastRun"`
 	OlderRunFaild         RunInfo            `json:"olderRunFaild"`
-}
 
-type RunInfo struct {
-	ID           string    `json:"id"`
-	Branch       string    `json:"branch"`
-	RunStartDate time.Time `json:"runStartDate"`
+	//Dati per la dashboard
+	LastRuns []RunInfo         `json:"lastRuns"`
+	Branchs  map[string]Branch `json:"branchs"` //use branch as key
 }

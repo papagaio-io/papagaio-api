@@ -6,35 +6,27 @@ type Project struct {
 	AgolaProjectID string `json:"agolaProjectID"`
 	Archivied      bool   `json:"archivied"`
 
-	LastRuns []RunInfo         `json:"lastRuns"`
-	Branchs  map[string]Branch `json:"branchs"` //use branch as key
+	Branchs map[string]Branch `json:"branchs"` //use branch name as key
 }
-
-const lastProjectRunsSize int = 4
 
 func (project *Project) GetLastRun() RunInfo {
-	if len(project.LastRuns) == 0 {
-		return RunInfo{}
-	}
+	var lastRun RunInfo
 
-	return project.LastRuns[len(project.LastRuns)-1]
-}
-
-func (project *Project) PushNewRun(runInfo RunInfo) {
-	if len(project.LastRuns) > 0 {
-		lastRun := project.LastRuns[len(project.LastRuns)-1]
-		if !runInfo.RunStartDate.After(lastRun.RunStartDate) {
-			return
+	if project.Branchs != nil {
+		for _, branch := range project.Branchs {
+			if branch.LastRuns != nil && len(branch.LastRuns) > 0 {
+				branchLastRun := branch.LastRuns[len(branch.LastRuns)-1]
+				if branchLastRun.RunStartDate.After(lastRun.RunStartDate) {
+					lastRun = branchLastRun
+				}
+			}
 		}
 	}
 
-	project.LastRuns = append(project.LastRuns, runInfo)
-	if len(project.LastRuns) > lastProjectRunsSize {
-		project.LastRuns = project.LastRuns[1:len(project.LastRuns)]
-	}
+	return lastRun
+}
 
-	//push into branch list
-
+func (project *Project) PushNewRun(runInfo RunInfo) {
 	if project.Branchs == nil {
 		project.Branchs = make(map[string]Branch)
 	}

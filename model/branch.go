@@ -7,7 +7,7 @@ type Branch struct {
 	LastRuns       []RunInfo `json:"lastRuns"`
 }
 
-const lastBranchRunsSize int = 5
+const lastBranchRunsSize int = 10
 
 func (branch *Branch) PushNewRun(runInfo RunInfo) {
 	if runInfo.Result != RunResultFailed && runInfo.Result != RunResultSuccess {

@@ -97,7 +97,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
-		BranchSynck(db, gitSource, organization, repo)
+		//BranchSynck(db, gitSource, organization, repo)
 
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {

@@ -97,7 +97,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
-		//BranchSynck(db, gitSource, organization, repo)
+		BranchSynck(db, gitSource, organization, repo)
 
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {
@@ -147,6 +147,12 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 }
 
 func BranchSynck(db repository.Database, gitSource *model.GitSource, organization *model.Organization, repositoryName string) error {
+	if organization.Projects[repositoryName].Branchs == nil {
+		project := organization.Projects[repositoryName]
+		project.Branchs = make(map[string]model.Branch)
+		organization.Projects[repositoryName] = project
+	}
+
 	branchList := git.GetBranches(gitSource, organization.Name, repositoryName)
 	for branch, _ := range branchList {
 		if _, ok := organization.Projects[repositoryName].Branchs[branch]; !ok {

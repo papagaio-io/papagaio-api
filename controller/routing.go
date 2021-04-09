@@ -51,6 +51,9 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 	setupDeleteOrganizationEndpoint(apirouter.PathPrefix("/deleteorganization").Subrouter(), ctrlOrganization)
 	setupAddOrganizationExternalUserEndpoint(apirouter.PathPrefix("/addexternaluser").Subrouter(), ctrlOrganization)
 	setupDeleteOrganizationExternalUserEndpoint(apirouter.PathPrefix("/deleteexternaluser").Subrouter(), ctrlOrganization)
+	setupReportEndpoint(apirouter.PathPrefix("/report").Subrouter(), ctrlOrganization)
+	setupOrganizationReportEndpoint(apirouter.PathPrefix("/report").Subrouter(), ctrlOrganization)
+	setupProjectReportEndpoint(apirouter.PathPrefix("/report").Subrouter(), ctrlOrganization)
 
 	setupGetGitSourcesEndpoint(apirouter.PathPrefix("/gitsources").Subrouter(), ctrlGitSource)
 	setupAddGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
@@ -91,6 +94,21 @@ func setupAddOrganizationExternalUserEndpoint(router *mux.Router, ctrl Organizat
 func setupDeleteOrganizationExternalUserEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.Use(handleRestrictedUserRoutes)
 	router.HandleFunc("/{id}", ctrl.DeleteOrganization).Methods("DELETE")
+}
+
+func setupReportEndpoint(router *mux.Router, ctrl OrganizationController) {
+	router.Use(handleRestrictedAllRoutes)
+	router.HandleFunc("", ctrl.GetReport).Methods("GET")
+}
+
+func setupOrganizationReportEndpoint(router *mux.Router, ctrl OrganizationController) {
+	router.Use(handleRestrictedAllRoutes)
+	router.HandleFunc("/{organizationName}", ctrl.GetOrganizationReport).Methods("GET")
+}
+
+func setupProjectReportEndpoint(router *mux.Router, ctrl OrganizationController) {
+	router.Use(handleRestrictedAllRoutes)
+	router.HandleFunc("/{organizationName}/{projectName}", ctrl.GetProjectReport).Methods("GET")
 }
 
 func setupGetRemoteSourcesEndpoint(router *mux.Router, ctrl OrganizationController) {

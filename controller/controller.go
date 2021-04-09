@@ -11,6 +11,9 @@ type OrganizationController interface {
 	GetRemoteSources(w http.ResponseWriter, r *http.Request)
 	AddExternalUser(w http.ResponseWriter, r *http.Request)
 	RemoveExternalUser(w http.ResponseWriter, r *http.Request)
+	GetReport(w http.ResponseWriter, r *http.Request)
+	GetOrganizationReport(w http.ResponseWriter, r *http.Request)
+	GetProjectReport(w http.ResponseWriter, r *http.Request)
 }
 
 type WebHookController interface {

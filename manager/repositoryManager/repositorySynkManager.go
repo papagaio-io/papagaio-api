@@ -65,9 +65,12 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 	gitRepositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
 
 	//if some project is not present in agola I remove from db
-	for _, project := range organization.Projects {
-		if exists, _ := agolaApi.CheckProjectExists(organization.Name, project.GitRepoPath); !exists {
+	for projectName, project := range organization.Projects {
+		agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization.Name, project.GitRepoPath)
+
+		if !agolaExists {
 			delete(organization.Projects, project.GitRepoPath)
+			continue
 		}
 
 		gitRepoExists := false
@@ -81,6 +84,9 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			agolaApi.DeleteProject(organization.Name, project.GitRepoPath, gitSource.AgolaToken)
 			delete(organization.Projects, project.GitRepoPath)
 
+		} else {
+			project.AgolaProjectID = agolaProjectID
+			organization.Projects[projectName] = project
 		}
 	}
 
@@ -112,13 +118,17 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
-		if exists, _ := agolaApi.CheckProjectExists(organization.Name, repo); exists {
-			if project, ok := organization.Projects[repo]; ok && project.Archivied {
-				err := agolaApi.UnarchiveProject(organization.Name, repo)
-				if err != nil {
-					project.Archivied = false
-					organization.Projects[repo] = project
+		if exists, projectID := agolaApi.CheckProjectExists(organization.Name, repo); exists {
+			if project, ok := organization.Projects[repo]; ok {
+				project.AgolaProjectID = projectID
+				if project.Archivied {
+					err := agolaApi.UnarchiveProject(organization.Name, repo)
+					if err != nil {
+						project.Archivied = false
+						organization.Projects[repo] = project
+					}
 				}
+				organization.Projects[repo] = project
 			}
 
 			continue

@@ -38,7 +38,7 @@ func discoveryRunFails(db repository.Database) {
 
 				checkNewRuns := CheckIfNewRunsPresent(&project)
 				if !checkNewRuns {
-					log.Println("no new runs found...")
+					log.Println("no new runs found for project", projectName)
 					continue
 				}
 
@@ -180,10 +180,10 @@ func makeBody(organizationName string, projectName string, failedRun agola.RunDt
 }
 
 func CheckIfNewRunsPresent(project *model.Project) bool {
-	isLastRun := !project.GetLastRun().RunStartDate.IsZero()
-	runList, _ := agola.GetRuns(project.AgolaProjectID, isLastRun, "finished", nil, 1, true)
+	lastRun := project.GetLastRun()
+	runList, _ := agola.GetRuns(project.AgolaProjectID, true, "finished", nil, 1, true)
 
-	return runList != nil && len(*runList) != 0 && (*runList)[0].StartTime.After(project.GetLastRun().RunStartDate)
+	return runList != nil && len(*runList) != 0 && (*runList)[0].StartTime.After(lastRun.RunStartDate)
 }
 
 func findGiteaUsersEmailRepositoryOwner(gitSource *model.GitSource, organizationName string, gitRepoPath string) (*[]string, error) {

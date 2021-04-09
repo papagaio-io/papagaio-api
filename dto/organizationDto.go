@@ -9,7 +9,7 @@ type OrganizationDto struct {
 	BehaviourExclude string        `json:"behaviourExclude"`
 	BehaviourType    BehaviourType `json:"behaviourType"`
 
-	ExternalUsers map[string]bool `json:"externalUsers"`
+	ExternalUsers map[string]bool `json:"externalUsers,omitempty"`
 
 	Projects    []ProjectDto `json:"projects"`
 	WorstReport *ReportDto   `json:"worstReport,omitempty"`

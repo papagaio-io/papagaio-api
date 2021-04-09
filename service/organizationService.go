@@ -201,6 +201,63 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	service.Db.SaveOrganization(organization)
 }
 
+func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	organizations, _ := service.Db.GetOrganizations()
+
+	retVal := make([]dto.OrganizationDto, 0)
+	for _, organization := range *organizations {
+		retVal = append(retVal, manager.GetOrganizationDto(&organization))
+	}
+
+	JSONokResponse(w, retVal)
+}
+
+func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	organizationName := vars["organizationName"]
+
+	organization, _ := service.Db.GetOrganizationByName(organizationName)
+	if organization == nil {
+		NotFoundResponse(w)
+		return
+	}
+
+	JSONokResponse(w, manager.GetOrganizationDto(organization))
+}
+
+func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	organizationName := vars["organizationName"]
+	projectName := vars["projectName"]
+
+	organization, _ := service.Db.GetOrganizationByName(organizationName)
+	if organization == nil {
+		NotFoundResponse(w)
+		return
+	}
+
+	if organization.Projects == nil {
+		NotFoundResponse(w)
+		return
+	} else if _, ok := organization.Projects[projectName]; !ok {
+		NotFoundResponse(w)
+		return
+	}
+
+	project := organization.Projects[projectName]
+
+	JSONokResponse(w, manager.GetProjectDto(&project, organizationName))
+}
+
 func contains(slice []string, item string) bool {
 	set := make(map[string]struct{}, len(slice))
 	for _, s := range slice {

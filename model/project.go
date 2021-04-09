@@ -26,6 +26,38 @@ func (project *Project) GetLastRun() RunInfo {
 	return lastRun
 }
 
+func (project *Project) GetLastSuccessRun() *RunInfo {
+	var lastSuccessRun *RunInfo = nil
+
+	if project.Branchs != nil {
+		for _, branch := range project.Branchs {
+			for _, run := range branch.LastRuns {
+				if run.Result == RunResultSuccess && (lastSuccessRun == nil || run.RunStartDate.After(lastSuccessRun.RunStartDate)) {
+					lastSuccessRun = &run
+				}
+			}
+		}
+	}
+
+	return lastSuccessRun
+}
+
+func (project *Project) GetLastFailedRun() *RunInfo {
+	var lastFailedRun *RunInfo = nil
+
+	if project.Branchs != nil {
+		for _, branch := range project.Branchs {
+			for _, run := range branch.LastRuns {
+				if run.Result == RunResultFailed && (lastFailedRun == nil || run.RunStartDate.After(lastFailedRun.RunStartDate)) {
+					lastFailedRun = &run
+				}
+			}
+		}
+	}
+
+	return lastFailedRun
+}
+
 func (project *Project) PushNewRun(runInfo RunInfo) {
 	if project.Branchs == nil {
 		project.Branchs = make(map[string]Branch)

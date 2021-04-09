@@ -33,7 +33,9 @@ func GetOrganizationDto(organization *model.Organization) dto.OrganizationDto {
 			}
 		}
 	}
-	retVal.WorstReport = worstReport
+	if worstReport != nil && worstReport.SuccessRunsPercentage < 100 {
+		retVal.WorstReport = worstReport
+	}
 
 	return retVal
 }
@@ -58,7 +60,9 @@ func GetProjectDto(project *model.Project, organizationName string) dto.ProjectD
 			}
 		}
 	}
-	retVal.WorstReport = worstReport
+	if worstReport != nil && worstReport.SuccessRunsPercentage < 100 {
+		retVal.WorstReport = worstReport
+	}
 
 	return retVal
 }
@@ -94,12 +98,12 @@ func GetBranchDto(branch model.Branch, project *model.Project, organizationName 
 
 	lastSuccessRun := project.GetLastSuccessRun()
 	if lastSuccessRun != nil {
-		retVal.LastSuccessRunDate = lastSuccessRun.RunStartDate
+		retVal.LastSuccessRunDate = &lastSuccessRun.RunStartDate
 	}
 
 	lastFailedRun := project.GetLastFailedRun()
 	if lastFailedRun != nil {
-		retVal.LastFailedRunDate = lastFailedRun.RunStartDate
+		retVal.LastFailedRunDate = &lastFailedRun.RunStartDate
 	}
 
 	return retVal
@@ -117,7 +121,11 @@ func GetBranchReport(branch model.Branch, projectName string, organizationName s
 
 	report.FailedRuns = failedRuns
 	report.TotalRuns = uint(len(branch.LastRuns))
-	report.SuccessRunsPercentage = 100 - ((report.TotalRuns * 100) / report.TotalRuns)
+	if report.TotalRuns == 0 {
+		report.SuccessRunsPercentage = 100
+	} else {
+		report.SuccessRunsPercentage = 100 - ((report.SuccessRunsPercentage * 100) / report.TotalRuns)
+	}
 
 	return &report
 }

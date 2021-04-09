@@ -66,7 +66,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 
 	//if some project is not present in agola I remove from db
 	for _, project := range organization.Projects {
-		if !agolaApi.CheckProjectExists(organization.Name, project.GitRepoPath) {
+		if exists, _ := agolaApi.CheckProjectExists(organization.Name, project.GitRepoPath); !exists {
 			delete(organization.Projects, project.GitRepoPath)
 		}
 
@@ -90,7 +90,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 				delete(organization.Projects, repo)
 			}
 
-			if agolaApi.CheckProjectExists(organization.Name, repo) {
+			if exists, _ := agolaApi.CheckProjectExists(organization.Name, repo); exists {
 				agolaApi.DeleteProject(organization.Name, repo, gitSource.AgolaToken)
 			}
 
@@ -112,7 +112,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
-		if agolaApi.CheckProjectExists(organization.Name, repo) {
+		if exists, _ := agolaApi.CheckProjectExists(organization.Name, repo); exists {
 			if project, ok := organization.Projects[repo]; ok && project.Archivied {
 				err := agolaApi.UnarchiveProject(organization.Name, repo)
 				if err != nil {

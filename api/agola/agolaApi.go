@@ -26,7 +26,7 @@ func CheckOrganizationExists(agolaOrganizationRef string) bool {
 	return err == nil && api.IsResponseOK(resp.StatusCode)
 }
 
-func CheckProjectExists(agolaOrganizationRef string, projectName string) bool {
+func CheckProjectExists(agolaOrganizationRef string, projectName string) (bool, string) {
 	client := &http.Client{}
 	URLApi := getProjectUrl(agolaOrganizationRef, projectName)
 	req, err := http.NewRequest("GET", URLApi, nil)
@@ -34,7 +34,16 @@ func CheckProjectExists(agolaOrganizationRef string, projectName string) bool {
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	return err == nil && api.IsResponseOK(resp.StatusCode)
+	var projectID string
+	projectExists := err == nil && api.IsResponseOK(resp.StatusCode)
+	if projectExists {
+		body, _ := ioutil.ReadAll(resp.Body)
+		var jsonResponse CreateProjectResponseDto //TODO make different struct with ID only
+		json.Unmarshal(body, &jsonResponse)
+		projectID = jsonResponse.ID
+	}
+
+	return projectExists, projectID
 }
 
 func CreateOrganization(name string, visibility dto.VisibilityType) (string, error) {
@@ -81,6 +90,11 @@ func DeleteOrganization(name string, agolaUserToken string) error {
 
 func CreateProject(projectName string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error) {
 	log.Println("CreateProject start")
+
+	if exists, projectID := CheckProjectExists(organization.Name, projectName); exists {
+		log.Println("project already exists with ID:", projectID)
+		return projectID, nil
+	}
 
 	client := &http.Client{}
 	URLApi := getCreateProjectUrl()

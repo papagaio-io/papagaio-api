@@ -5,5 +5,6 @@ type RunState string
 const (
 	RunStateSuccess RunState = "success"
 	RunStateFailed  RunState = "error"
-	RunStateNon     RunState = "none"
+	//RunStateRunning RunState = "running"
+	RunStateNone RunState = "none"
 )

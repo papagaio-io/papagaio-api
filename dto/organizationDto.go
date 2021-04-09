@@ -1,10 +1,9 @@
 package dto
 
 type OrganizationDto struct {
-	ID               string         `json:"id"`
-	Name             string         `json:"name"`
-	UserEmailCreator string         `json:"userEmailCreator"`
-	Visibility       VisibilityType `json:"visibility"`
+	ID         string         `json:"id"`
+	Name       string         `json:"name"`
+	Visibility VisibilityType `json:"visibility"`
 
 	BehaviourInclude string        `json:"behaviourInclude"`
 	BehaviourExclude string        `json:"behaviourExclude"`
@@ -12,6 +11,6 @@ type OrganizationDto struct {
 
 	ExternalUsers map[string]bool `json:"externalUsers"`
 
-	Projects    []BranchDto `json:"projects"`
-	WorstReport ReportDto   `json:"worstReport,omitempty"`
+	Projects    []ProjectDto `json:"projects"`
+	WorstReport *ReportDto   `json:"worstReport,omitempty"`
 }

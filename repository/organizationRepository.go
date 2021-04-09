@@ -43,7 +43,7 @@ func (db *AppDb) SaveOrganization(organization *model.Organization) error {
 	key := "org/" + organization.ID
 	value, err := json.Marshal(organization)
 	if err != nil {
-		log.Println("SaveOrganization erro in json marshal", err)
+		log.Println("SaveOrganization error in json marshal", err)
 		return err
 	}
 

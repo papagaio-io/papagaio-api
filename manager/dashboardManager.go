@@ -8,19 +8,17 @@ import (
 
 func GetOrganizationDto(organization *model.Organization) dto.OrganizationDto {
 	retVal := dto.OrganizationDto{
-		ID:               organization.ID,
-		Name:             organization.Name,
-		Visibility:       organization.Visibility,
-		BehaviourInclude: organization.BehaviourInclude,
-		BehaviourExclude: organization.BehaviourExclude,
-		BehaviourType:    organization.BehaviourType,
-		ExternalUsers:    organization.ExternalUsers,
+		ID:         organization.ID,
+		Name:       organization.Name,
+		Visibility: organization.Visibility,
 	}
 
 	projectList := make([]dto.ProjectDto, 0)
 	if organization.Projects != nil {
 		for _, project := range organization.Projects {
-			projectList = append(projectList, GetProjectDto(&project, organization.Name))
+			if !project.Archivied {
+				projectList = append(projectList, GetProjectDto(&project, organization.Name))
+			}
 		}
 	}
 	retVal.Projects = projectList

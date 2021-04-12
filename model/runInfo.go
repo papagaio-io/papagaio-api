@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"wecode.sorint.it/opensource/papagaio-api/config"
+)
 
 type RunInfo struct {
 	ID           string    `json:"id"`
@@ -29,3 +34,9 @@ const (
 	RunResultSuccess RunResult = "success"
 	RunResultFailed  RunResult = "failed"
 )
+
+const runURL string = "%s/org/%s/projects/%s.proj/runs/%s"
+
+func (run *RunInfo) GetURL(organizationName string, projectName string) string {
+	return fmt.Sprintf(runURL, config.Config.Agola.AgolaAddr, organizationName, projectName, run.ID)
+}

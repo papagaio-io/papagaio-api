@@ -38,7 +38,7 @@ func SetupHTTPClient() {
 	}
 }
 
-func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlMember MemberController, ctrlWebHook WebHookController, ctrlUser UserController) {
+func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlMember MemberController, ctrlWebHook WebHookController, ctrlUser UserController, ctrlTrigger TriggersController) {
 	db = database
 
 	apirouter := mux.NewRouter().PathPrefix("/api").Subrouter().UseEncodedPath()
@@ -63,6 +63,9 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 	setupWebHookEndpoint(apirouter.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
 
 	setupAddUserEndpoint(apirouter.PathPrefix("/adduser").Subrouter(), ctrlUser)
+
+	setupGetTriggersConfigEndpoint(apirouter.PathPrefix("/gettriggersconfig").Subrouter(), ctrlTrigger)
+	setupSaveTriggersConfigEndpoint(apirouter.PathPrefix("/savetriggersconfig").Subrouter(), ctrlTrigger)
 }
 
 func setupPingRouter(router *mux.Router) {
@@ -143,6 +146,16 @@ func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
 func setupAddUserEndpoint(router *mux.Router, ctrl UserController) {
 	router.Use(handleRestrictedAdminRoutes)
 	router.HandleFunc("", ctrl.AddUser).Methods("POST")
+}
+
+func setupGetTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
+	router.Use(handleRestrictedUserRoutes)
+	router.HandleFunc("", ctrl.GetTriggersConfig).Methods("GET")
+}
+
+func setupSaveTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
+	router.Use(handleRestrictedUserRoutes)
+	router.HandleFunc("", ctrl.SaveTriggersConfig).Methods("POST")
 }
 
 func handleRestrictedUserRoutes(h http.Handler) http.Handler {

@@ -35,3 +35,8 @@ type GitSourceController interface {
 type UserController interface {
 	AddUser(w http.ResponseWriter, r *http.Request)
 }
+
+type TriggersController interface {
+	GetTriggersConfig(w http.ResponseWriter, r *http.Request)
+	SaveTriggersConfig(w http.ResponseWriter, r *http.Request)
+}

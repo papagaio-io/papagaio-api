@@ -26,6 +26,11 @@ type Database interface {
 	SaveUser(user *model.User) error
 	GetUserByEmail(email string) (*model.User, error)
 	DeleteUser(email string) error
+
+	GetOrganizationsTriggerTime() int
+	SaveOrganizationsTriggerTime(val int)
+	GetRunFailedTriggerTime() int
+	SaveRunFailedTriggerTime(val int)
 }
 
 type AppDb struct {

@@ -122,7 +122,8 @@ func GetBranchReport(branch model.Branch, projectName string, organizationName s
 	if report.TotalRuns == 0 {
 		report.SuccessRunsPercentage = 100
 	} else {
-		report.SuccessRunsPercentage = 100 - ((report.SuccessRunsPercentage * 100) / report.TotalRuns)
+		successRuns := report.TotalRuns - report.FailedRuns
+		report.SuccessRunsPercentage = (successRuns * 100) / report.TotalRuns
 	}
 
 	return &report

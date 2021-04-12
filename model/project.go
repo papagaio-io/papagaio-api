@@ -31,10 +31,8 @@ func (project *Project) GetLastSuccessRun() *RunInfo {
 
 	if project.Branchs != nil {
 		for _, branch := range project.Branchs {
-			for _, run := range branch.LastRuns {
-				if run.Result == RunResultSuccess && (lastSuccessRun == nil || run.RunStartDate.After(lastSuccessRun.RunStartDate)) {
-					lastSuccessRun = &run
-				}
+			if !branch.LastSuccessRun.RunEndDate.IsZero() && (lastSuccessRun == nil || branch.LastSuccessRun.RunStartDate.After(lastSuccessRun.RunStartDate)) {
+				lastSuccessRun = &branch.LastSuccessRun
 			}
 		}
 	}
@@ -47,10 +45,8 @@ func (project *Project) GetLastFailedRun() *RunInfo {
 
 	if project.Branchs != nil {
 		for _, branch := range project.Branchs {
-			for _, run := range branch.LastRuns {
-				if run.Result == RunResultFailed && (lastFailedRun == nil || run.RunStartDate.After(lastFailedRun.RunStartDate)) {
-					lastFailedRun = &run
-				}
+			if !branch.LastFailedRun.RunEndDate.IsZero() && (lastFailedRun == nil || branch.LastFailedRun.RunStartDate.After(lastFailedRun.RunStartDate)) {
+				lastFailedRun = &branch.LastFailedRun
 			}
 		}
 	}

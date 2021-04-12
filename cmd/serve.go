@@ -14,6 +14,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/service"
 	"wecode.sorint.it/opensource/papagaio-api/trigger"
+	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 var serveCmd = &cobra.Command{
@@ -36,6 +37,7 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	db := repository.NewAppDb(config.Config)
+	tr := utils.ConfigUtils{Db: &db}
 
 	ctrlOrganization := service.OrganizationService{
 		Db: &db,
@@ -55,10 +57,14 @@ func serve(cmd *cobra.Command, args []string) {
 		Db: &db,
 	}
 
+	ctrlTrigger := service.TriggersService{
+		Db: &db,
+		Tr: tr,
+	}
 	router := mux.NewRouter()
 
 	controller.SetupHTTPClient()
-	controller.SetupRouter(&db, router, &ctrlOrganization, &ctrlGitSource, &ctrlMember, &ctrlWebHook, &ctrlUser)
+	controller.SetupRouter(&db, router, &ctrlOrganization, &ctrlGitSource, &ctrlMember, &ctrlWebHook, &ctrlUser, &ctrlTrigger)
 
 	log.Println("Papagaio Server Starting on port ", config.Config.Server.Port)
 

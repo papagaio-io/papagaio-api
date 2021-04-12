@@ -13,13 +13,14 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartRunFailsDiscovery(db repository.Database) {
-	go discoveryRunFails(db)
+func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils) {
+	go discoveryRunFails(db, tr)
 }
 
-func discoveryRunFails(db repository.Database) {
+func discoveryRunFails(db repository.Database, tr utils.ConfigUtils) {
 	for {
 		log.Println("Start discoveryRunFails")
 
@@ -83,7 +84,7 @@ func discoveryRunFails(db repository.Database) {
 		}
 
 		log.Println("End discoveryRunFails")
-		time.Sleep(time.Duration(config.Config.TriggersConfig.RunFailedDefaultTriggerTime) * time.Minute)
+		time.Sleep(time.Duration(tr.GetRunFailedTriggerTime()) * time.Minute)
 	}
 }
 

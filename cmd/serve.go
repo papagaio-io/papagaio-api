@@ -76,8 +76,8 @@ func serve(cmd *cobra.Command, args []string) {
 		logRouter = router
 	}
 
-	trigger.StartOrganizationSync(&db)
-	trigger.StartRunFailsDiscovery(&db)
+	trigger.StartOrganizationSync(&db, tr)
+	trigger.StartRunFailsDiscovery(&db, tr)
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

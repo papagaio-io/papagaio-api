@@ -97,11 +97,15 @@ func GetBranchDto(branch model.Branch, project *model.Project, organizationName 
 	lastSuccessRun := project.GetLastSuccessRun()
 	if lastSuccessRun != nil {
 		retVal.LastSuccessRunDate = &lastSuccessRun.RunStartDate
+		runUrl := lastSuccessRun.GetURL(organizationName, project.GitRepoPath)
+		retVal.LastSuccessRunURL = &runUrl
 	}
 
 	lastFailedRun := project.GetLastFailedRun()
 	if lastFailedRun != nil {
 		retVal.LastFailedRunDate = &lastFailedRun.RunStartDate
+		runUrl := lastFailedRun.GetURL(organizationName, project.GitRepoPath)
+		retVal.LastFailedRunURL = &runUrl
 	}
 
 	return retVal

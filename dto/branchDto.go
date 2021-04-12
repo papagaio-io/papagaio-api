@@ -10,4 +10,7 @@ type BranchDto struct {
 	LastSuccessRunDate *time.Time    `json:"lastSuccessRunDate,omitempty"`
 	LastFailedRunDate  *time.Time    `json:"lastFailedRunDate,omitempty"`
 	LastRunDuration    time.Duration `json:"lastRunDuration,omitempty"`
+
+	LastSuccessRunURL *string `json:"lastSuccessRunURL,omitempty"`
+	LastFailedRunURL  *string `json:"lastFailedRunURL,omitempty"`
 }

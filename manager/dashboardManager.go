@@ -1,6 +1,8 @@
 package manager
 
 import (
+	"time"
+
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -34,6 +36,40 @@ func GetOrganizationDto(organization *model.Organization) dto.OrganizationDto {
 	if worstReport != nil && worstReport.SuccessRunsPercentage < 100 {
 		retVal.WorstReport = worstReport
 	}
+
+	var lastSuccessRun *time.Time = nil
+	var lasFailedRun *time.Time = nil
+	var lastDuration time.Duration
+	var lastSuccessRunURL *string = nil
+	var lastFailedRunURL *string = nil
+
+	for _, project := range retVal.Projects {
+		for _, branch := range project.Branchs {
+			if branch.LastSuccessRunDate != nil && (lastSuccessRun == nil || branch.LastSuccessRunDate.After(*lastSuccessRun)) {
+				lastSuccessRun = branch.LastSuccessRunDate
+				lastSuccessRunURL = branch.LastSuccessRunURL
+
+				if lasFailedRun == nil || lastSuccessRun.After(*lasFailedRun) {
+					lastDuration = branch.LastRunDuration
+				}
+			}
+
+			if branch.LastFailedRunDate != nil && (lasFailedRun == nil || branch.LastFailedRunDate.After(*lasFailedRun)) {
+				lasFailedRun = branch.LastFailedRunDate
+				lastFailedRunURL = branch.LastFailedRunURL
+
+				if lastSuccessRun == nil || lasFailedRun.After(*lastSuccessRun) {
+					lastDuration = branch.LastRunDuration
+				}
+			}
+		}
+	}
+
+	retVal.LastSuccessRunDate = lastSuccessRun
+	retVal.LastFailedRunDate = lasFailedRun
+	retVal.LastRunDuration = lastDuration
+	retVal.LastSuccessRunURL = lastSuccessRunURL
+	retVal.LastFailedRunURL = lastFailedRunURL
 
 	return retVal
 }

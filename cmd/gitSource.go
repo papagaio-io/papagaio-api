@@ -10,7 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"wecode.sorint.it/opensource/papagaio-api/api"
-	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
@@ -111,7 +110,7 @@ func addGitSource(cmd *cobra.Command, args []string) {
 	data, _ := json.Marshal(gitSource)
 
 	client := &http.Client{}
-	URLApi := config.Config.CmdConfig.DefaultGatewayURL + "/api/gitsource"
+	URLApi := cfgGitSource.gatewayURL + "/api/gitsource"
 	reqBody := strings.NewReader(string(data))
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
 	req.Header.Add("Authorization", "token "+cfgGitSource.token)
@@ -138,7 +137,7 @@ func removeGitSource(cmd *cobra.Command, args []string) {
 	}
 
 	client := &http.Client{}
-	URLApi := config.Config.CmdConfig.DefaultGatewayURL + "/api/gitsource/" + cfgGitSource.name
+	URLApi := cfgGitSource.gatewayURL + "/api/gitsource/" + cfgGitSource.name
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+cfgGitSource.token)
 

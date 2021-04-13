@@ -28,12 +28,6 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	var webHookMessage dto.WebHookDto
 	json.Unmarshal(data, &webHookMessage)
 
-	//TODO remove if is only for test
-	if true {
-		fmt.Println("data:", string(data))
-		return
-	}
-
 	log.Println("webHook message: ", webHookMessage)
 
 	vars := mux.Vars(r)

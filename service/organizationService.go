@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -15,10 +16,12 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/manager"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 type OrganizationService struct {
-	Db repository.Database
+	Db          repository.Database
+	CommonMutex *utils.CommonMutex
 }
 
 func (service *OrganizationService) GetOrganizations(w http.ResponseWriter, r *http.Request) {
@@ -141,6 +144,15 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
+	mutex := utils.ReserveOrganizationMutex(organization.Name, service.CommonMutex)
+	mutex.Lock()
+
+	locked := true
+	var deferRun func(uid string, commonMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
+	defer deferRun(organization.Name, service.CommonMutex, mutex, &locked)
+
+	organization, err = service.Db.GetOrganizationById(organizationID)
+
 	gitSource, err := service.Db.GetGitSourceById(organization.GitSourceID)
 	if err != nil || gitSource == nil {
 		InternalServerError(w)
@@ -157,6 +169,10 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 
 	gitApi.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)
 	err = service.Db.DeleteOrganization(organizationID)
+
+	mutex.Unlock()
+	utils.ReleaseOrganizationMutex(organization.Name, service.CommonMutex)
+	locked = false
 
 	if err != nil {
 		InternalServerError(w)
@@ -175,11 +191,24 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 		return
 	}
 
+	mutex := utils.ReserveOrganizationMutex(organization.Name, service.CommonMutex)
+	mutex.Lock()
+
+	locked := true
+	var deferRun func(uid string, voteMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
+	defer deferRun(organization.Name, service.CommonMutex, mutex, &locked)
+
+	organization, err = service.Db.GetOrganizationById(organizationID)
+
 	var req *dto.ExternalUserDto
 	json.NewDecoder(r.Body).Decode(&req)
 
 	organization.ExternalUsers[req.Email] = true
 	service.Db.SaveOrganization(organization)
+
+	mutex.Unlock()
+	utils.ReleaseOrganizationMutex(organization.Name, service.CommonMutex)
+	locked = false
 }
 
 func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r *http.Request) {

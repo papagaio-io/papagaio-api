@@ -38,7 +38,7 @@ func SetupHTTPClient() {
 	}
 }
 
-func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlMember MemberController, ctrlWebHook WebHookController, ctrlUser UserController, ctrlTrigger TriggersController) {
+func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlWebHook WebHookController, ctrlUser UserController, ctrlTrigger TriggersController) {
 	db = database
 
 	apirouter := mux.NewRouter().PathPrefix("/api").Subrouter().UseEncodedPath()
@@ -86,17 +86,17 @@ func setupCreateOrganizationEndpoint(router *mux.Router, ctrl OrganizationContro
 
 func setupDeleteOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.Use(handleRestrictedUserRoutes)
-	router.HandleFunc("/{id}", ctrl.DeleteOrganization).Methods("DELETE")
+	router.HandleFunc("/{organizationName}", ctrl.DeleteOrganization).Methods("DELETE")
 }
 
 func setupAddOrganizationExternalUserEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.Use(handleRestrictedUserRoutes)
-	router.HandleFunc("/{id}", ctrl.DeleteOrganization).Methods("POST")
+	router.HandleFunc("/{organizationName}", ctrl.AddExternalUser).Methods("POST")
 }
 
 func setupDeleteOrganizationExternalUserEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.Use(handleRestrictedUserRoutes)
-	router.HandleFunc("/{id}", ctrl.DeleteOrganization).Methods("DELETE")
+	router.HandleFunc("/{organizationName}", ctrl.RemoveExternalUser).Methods("DELETE")
 }
 
 func setupReportEndpoint(router *mux.Router, ctrl OrganizationController) {

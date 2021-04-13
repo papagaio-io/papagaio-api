@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -16,16 +17,30 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils) {
-	go discoveryRunFails(db, tr)
+func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, CommonMutex *utils.CommonMutex) {
+	go discoveryRunFails(db, tr, CommonMutex)
 }
 
-func discoveryRunFails(db repository.Database, tr utils.ConfigUtils) {
+func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex *utils.CommonMutex) {
 	for {
 		log.Println("Start discoveryRunFails")
 
-		organizations, _ := db.GetOrganizations()
-		for _, org := range *organizations {
+		organizationsName, _ := db.GetOrganizationsName()
+
+		for _, organizationName := range organizationsName {
+			mutex := utils.ReserveOrganizationMutex(organizationName, CommonMutex)
+			mutex.Lock()
+
+			locked := true
+			var deferRun func(name string, voteMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
+			defer deferRun(organizationName, CommonMutex, mutex, &locked)
+
+			org, _ := db.GetOrganizationByName(organizationName)
+			if org == nil {
+				log.Println("discoveryRunFails organization ", organizationName, "not found")
+				continue
+			}
+
 			gitSource, err := db.GetGitSourceById(org.GitSourceID)
 			if gitSource == nil || err != nil || org.Projects == nil {
 				log.Println("discoveryRunFails gitsource not fount for", org.Name, "organization")
@@ -64,7 +79,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils) {
 
 					if run.Result == agola.RunResultFailed && run.StartTime.After(lastRun.RunStartDate) {
 						log.Println("Found run failed!")
-						emailMap := getUsersEmailMap(gitSource, &org, project.GitRepoPath, run)
+						emailMap := getUsersEmailMap(gitSource, org, project.GitRepoPath, run)
 						log.Println("send emails to:", emailMap)
 
 						body, err := makeBody(org.Name, project.GitRepoPath, run)
@@ -80,7 +95,11 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils) {
 
 				org.Projects[projectName] = project
 			}
-			db.SaveOrganization(&org)
+			db.SaveOrganization(org)
+
+			mutex.Unlock()
+			utils.ReleaseOrganizationMutex(organizationName, CommonMutex)
+			locked = false
 		}
 
 		log.Println("End discoveryRunFails")

@@ -121,7 +121,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	organizationID := vars["id"]
+	organizationName := vars["organizationName"]
 
 	internalonlyQuery, ok := r.URL.Query()["internalonly"]
 	internalonly := false
@@ -138,20 +138,18 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	organization, err := service.Db.GetOrganizationById(organizationID)
+	mutex := utils.ReserveOrganizationMutex(organizationName, service.CommonMutex)
+	mutex.Lock()
+
+	locked := true
+	var deferRun func(name string, commonMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
+	defer deferRun(organizationName, service.CommonMutex, mutex, &locked)
+
+	organization, err := service.Db.GetOrganizationByName(organizationName)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
 		return
 	}
-
-	mutex := utils.ReserveOrganizationMutex(organization.Name, service.CommonMutex)
-	mutex.Lock()
-
-	locked := true
-	var deferRun func(uid string, commonMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
-	defer deferRun(organization.Name, service.CommonMutex, mutex, &locked)
-
-	organization, err = service.Db.GetOrganizationById(organizationID)
 
 	gitSource, err := service.Db.GetGitSourceById(organization.GitSourceID)
 	if err != nil || gitSource == nil {
@@ -160,18 +158,18 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	}
 
 	if !internalonly {
-		err = agolaApi.DeleteOrganization(organization.Name, gitSource.AgolaToken)
+		err = agolaApi.DeleteOrganization(organizationName, gitSource.AgolaToken)
 		if err != nil {
 			InternalServerError(w)
 			return
 		}
 	}
 
-	gitApi.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)
-	err = service.Db.DeleteOrganization(organizationID)
+	gitApi.DeleteWebHook(gitSource, organizationName, organization.WebHookID)
+	err = service.Db.DeleteOrganization(organization.Name)
 
 	mutex.Unlock()
-	utils.ReleaseOrganizationMutex(organization.Name, service.CommonMutex)
+	utils.ReleaseOrganizationMutex(organizationName, service.CommonMutex)
 	locked = false
 
 	if err != nil {
@@ -184,21 +182,20 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	organizationID := vars["organizationID"]
-	organization, err := service.Db.GetOrganizationById(organizationID)
+	organizationName := vars["organizationName"]
+
+	mutex := utils.ReserveOrganizationMutex(organizationName, service.CommonMutex)
+	mutex.Lock()
+
+	locked := true
+	var deferRun func(name string, voteMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
+	defer deferRun(organizationName, service.CommonMutex, mutex, &locked)
+
+	organization, err := service.Db.GetOrganizationByName(organizationName)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
 		return
 	}
-
-	mutex := utils.ReserveOrganizationMutex(organization.Name, service.CommonMutex)
-	mutex.Lock()
-
-	locked := true
-	var deferRun func(uid string, voteMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
-	defer deferRun(organization.Name, service.CommonMutex, mutex, &locked)
-
-	organization, err = service.Db.GetOrganizationById(organizationID)
 
 	var req *dto.ExternalUserDto
 	json.NewDecoder(r.Body).Decode(&req)
@@ -207,7 +204,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	service.Db.SaveOrganization(organization)
 
 	mutex.Unlock()
-	utils.ReleaseOrganizationMutex(organization.Name, service.CommonMutex)
+	utils.ReleaseOrganizationMutex(organizationName, service.CommonMutex)
 	locked = false
 }
 
@@ -216,8 +213,16 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	organizationID := vars["organizationID"]
-	organization, err := service.Db.GetOrganizationById(organizationID)
+	organizationName := vars["organizationName"]
+
+	mutex := utils.ReserveOrganizationMutex(organizationName, service.CommonMutex)
+	mutex.Lock()
+
+	locked := true
+	var deferRun func(name string, voteMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
+	defer deferRun(organizationName, service.CommonMutex, mutex, &locked)
+
+	organization, err := service.Db.GetOrganizationByName(organizationName)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
 		return
@@ -228,6 +233,10 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 
 	delete(organization.ExternalUsers, req.Email)
 	service.Db.SaveOrganization(organization)
+
+	mutex.Unlock()
+	utils.ReleaseOrganizationMutex(organizationName, service.CommonMutex)
+	locked = false
 }
 
 func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Request) {

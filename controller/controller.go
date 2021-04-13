@@ -20,11 +20,6 @@ type WebHookController interface {
 	WebHookOrganization(w http.ResponseWriter, r *http.Request)
 }
 
-type MemberController interface {
-	AddOrganizationMember(w http.ResponseWriter, r *http.Request)
-	RemoveOrganizationMember(w http.ResponseWriter, r *http.Request)
-}
-
 type GitSourceController interface {
 	GetGitSources(w http.ResponseWriter, r *http.Request)
 	AddGitSource(w http.ResponseWriter, r *http.Request)

@@ -48,9 +48,9 @@ func ReleaseOrganizationMutex(organizationName string, mutex *CommonMutex) {
 	mutex.GeneralMutex.Unlock()
 }
 
-func ReleaseOrganizationMutexDefer(uid string, commonMutex *CommonMutex, mutex *sync.Mutex, locked *bool) {
+func ReleaseOrganizationMutexDefer(organizationName string, commonMutex *CommonMutex, mutex *sync.Mutex, locked *bool) {
 	if *locked {
 		mutex.Unlock()
-		ReleaseOrganizationMutex(uid, commonMutex)
+		ReleaseOrganizationMutex(organizationName, commonMutex)
 	}
 }

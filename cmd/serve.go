@@ -39,8 +39,11 @@ func serve(cmd *cobra.Command, args []string) {
 	db := repository.NewAppDb(config.Config)
 	tr := utils.ConfigUtils{Db: &db}
 
+	commonMutex := utils.NewEventMutex()
+
 	ctrlOrganization := service.OrganizationService{
-		Db: &db,
+		Db:          &db,
+		CommonMutex: &commonMutex,
 	}
 
 	ctrlGitSource := service.GitSourceService{

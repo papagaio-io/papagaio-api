@@ -52,8 +52,6 @@ func (db *AppDb) Init(config config.Configuration) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	db.DB.DropAll()
 }
 
 func getNewUid() string {

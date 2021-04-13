@@ -51,7 +51,8 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	ctrlWebHook := service.WebHookService{
-		Db: &db,
+		Db:          &db,
+		CommonMutex: &commonMutex,
 	}
 
 	ctrlUser := service.UserService{

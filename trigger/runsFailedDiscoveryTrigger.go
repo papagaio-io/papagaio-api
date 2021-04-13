@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -32,8 +31,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 			mutex.Lock()
 
 			locked := true
-			var deferRun func(name string, voteMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
-			defer deferRun(organizationName, CommonMutex, mutex, &locked)
+			defer utils.ReleaseOrganizationMutexDefer(organizationName, CommonMutex, mutex, &locked)
 
 			org, _ := db.GetOrganizationByName(organizationName)
 			if org == nil {

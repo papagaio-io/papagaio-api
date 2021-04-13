@@ -41,7 +41,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 				continue
 			}
 
-			gitSource, err := db.GetGitSourceById(org.GitSourceID)
+			gitSource, err := db.GetGitSourceByName(org.GitSourceName)
 			if gitSource == nil || err != nil || org.Projects == nil {
 				log.Println("discoveryRunFails gitsource not fount for", org.Name, "organization")
 				continue

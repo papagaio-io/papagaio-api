@@ -44,7 +44,7 @@ func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
 		gitSource.ID = getNewUid()
 	}
 
-	key := "gs/" + string(gitSource.ID)
+	key := "gs/" + string(gitSource.Name)
 	value, err := json.Marshal(gitSource)
 	if err != nil {
 		log.Println("SaveGitSource error in json marshal", err)
@@ -61,12 +61,12 @@ func (db *AppDb) SaveGitSource(gitSource *model.GitSource) error {
 	return err
 }
 
-func (db *AppDb) GetGitSourceById(id string) (*model.GitSource, error) {
+func (db *AppDb) GetGitSourceByName(name string) (*model.GitSource, error) {
 	var retVal *model.GitSource
 
 	dst := make([]byte, 0)
 	err := db.DB.View(func(txn *badger.Txn) error {
-		prefix := "gs/" + string(id)
+		prefix := "gs/" + string(name)
 
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false
@@ -101,7 +101,7 @@ func (db *AppDb) GetGitSourceById(id string) (*model.GitSource, error) {
 	return retVal, err
 }
 
-func (db *AppDb) GetGitSourceByName(name string) (*model.GitSource, error) {
+func (db *AppDb) GetGitSourceById(id string) (*model.GitSource, error) {
 	var gitSource *model.GitSource
 
 	dst := make([]byte, 0)
@@ -120,7 +120,7 @@ func (db *AppDb) GetGitSourceByName(name string) (*model.GitSource, error) {
 			dst, _ = item.ValueCopy(dst)
 			json.Unmarshal(dst, &localGitSource)
 
-			if strings.Compare(localGitSource.Name, name) != 0 {
+			if strings.Compare(localGitSource.ID, id) != 0 {
 				continue
 			}
 

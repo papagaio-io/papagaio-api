@@ -8,8 +8,8 @@ type Organization struct {
 	UserEmailCreator string             `json:"userEmailCreator"`
 	Visibility       dto.VisibilityType `json:"visibility"`
 
-	GitSourceID string `json:"gitSourceId"`
-	WebHookID   int    `json:"webHookId"`
+	GitSourceName string `json:"gitSourceName"`
+	WebHookID     int    `json:"webHookId"`
 
 	BehaviourInclude string            `json:"behaviourInclude"`
 	BehaviourExclude string            `json:"behaviourExclude"`

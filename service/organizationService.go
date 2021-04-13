@@ -53,14 +53,14 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org := &model.Organization{}
 	org.Name = req.Name
-	org.GitSourceID = req.GitSourceId
+	org.GitSourceName = req.GitSourceName
 	org.Visibility = req.Visibility
 	org.BehaviourType = req.BehaviourType
 	org.BehaviourInclude = req.BehaviourInclude
 	org.BehaviourExclude = req.BehaviourExclude
 
 	//Some checks
-	gitSource, err := service.Db.GetGitSourceById(org.GitSourceID)
+	gitSource, err := service.Db.GetGitSourceByName(org.GitSourceName)
 	if gitSource == nil || err != nil {
 		UnprocessableEntityResponse(w, "Gitsource non found")
 		return
@@ -151,7 +151,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	gitSource, err := service.Db.GetGitSourceById(organization.GitSourceID)
+	gitSource, err := service.Db.GetGitSourceByName(organization.GitSourceName)
 	if err != nil || gitSource == nil {
 		InternalServerError(w)
 		return

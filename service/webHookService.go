@@ -49,7 +49,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		return
 	}
 
-	gitSource, _ := service.Db.GetGitSourceById(organization.GitSourceID)
+	gitSource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
 
 	if organization.Projects == nil {
 		organization.Projects = make(map[string]model.Project)

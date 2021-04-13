@@ -43,7 +43,7 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, CommonMut
 
 			log.Println("start synk organization", org.Name)
 
-			gitSource, _ := db.GetGitSourceById(org.GitSourceID)
+			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
 			fmt.Println("gitSource:", gitSource)
 
 			membersManager.SynkMembers(org, gitSource)

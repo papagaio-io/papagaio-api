@@ -10,7 +10,7 @@ type CreateOrganizationDto struct {
 	Name       string         `json:"name"`
 	Visibility VisibilityType `json:"visibility"`
 
-	GitSourceId string `json:"gitSourceId"`
+	GitSourceName string `json:"gitSourceName"`
 
 	BehaviourInclude string        `json:"behaviourInclude"`
 	BehaviourExclude string        `json:"behaviourExclude"`
@@ -18,7 +18,7 @@ type CreateOrganizationDto struct {
 }
 
 func (org CreateOrganizationDto) IsValid() error {
-	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.GitSourceId) > 0 {
+	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.GitSourceName) > 0 {
 		return nil
 	}
 	return errors.New("Invalid visibility type")

@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"sync"
 
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -142,8 +141,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	mutex.Lock()
 
 	locked := true
-	var deferRun func(name string, commonMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
-	defer deferRun(organizationName, service.CommonMutex, mutex, &locked)
+	defer utils.ReleaseOrganizationMutexDefer(organizationName, service.CommonMutex, mutex, &locked)
 
 	organization, err := service.Db.GetOrganizationByName(organizationName)
 	if err != nil || organization == nil {
@@ -188,8 +186,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	mutex.Lock()
 
 	locked := true
-	var deferRun func(name string, voteMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
-	defer deferRun(organizationName, service.CommonMutex, mutex, &locked)
+	defer utils.ReleaseOrganizationMutexDefer(organizationName, service.CommonMutex, mutex, &locked)
 
 	organization, err := service.Db.GetOrganizationByName(organizationName)
 	if err != nil || organization == nil {
@@ -219,8 +216,7 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	mutex.Lock()
 
 	locked := true
-	var deferRun func(name string, voteMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
-	defer deferRun(organizationName, service.CommonMutex, mutex, &locked)
+	defer utils.ReleaseOrganizationMutexDefer(organizationName, service.CommonMutex, mutex, &locked)
 
 	organization, err := service.Db.GetOrganizationByName(organizationName)
 	if err != nil || organization == nil {

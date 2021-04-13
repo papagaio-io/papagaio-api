@@ -3,7 +3,6 @@ package trigger
 import (
 	"fmt"
 	"log"
-	"sync"
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -28,8 +27,7 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, CommonMut
 			mutex.Lock()
 
 			locked := true
-			var deferRun func(name string, voteMutex *utils.CommonMutex, mutex *sync.Mutex, locked *bool) = utils.ReleaseOrganizationMutexDefer
-			defer deferRun(organizationName, CommonMutex, mutex, &locked)
+			defer utils.ReleaseOrganizationMutexDefer(organizationName, CommonMutex, mutex, &locked)
 
 			org, _ := db.GetOrganizationByName(organizationName)
 			if org == nil {

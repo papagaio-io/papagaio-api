@@ -18,7 +18,8 @@ import (
 )
 
 type WebHookService struct {
-	Db repository.Database
+	Db          repository.Database
+	CommonMutex *utils.CommonMutex
 }
 
 func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *http.Request) {
@@ -32,6 +33,13 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 	vars := mux.Vars(r)
 	gitOrgRef := vars["gitOrgRef"]
+
+	mutex := utils.ReserveOrganizationMutex(gitOrgRef, service.CommonMutex)
+	mutex.Lock()
+
+	locked := true
+	defer utils.ReleaseOrganizationMutexDefer(gitOrgRef, service.CommonMutex, mutex, &locked)
+
 	organization, _ := service.Db.GetOrganizationByName(gitOrgRef)
 	if organization == nil {
 		log.Println("Warning!!! Organization", gitOrgRef, "not found in db")
@@ -113,6 +121,10 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 		repositoryManager.BranchSynck(service.Db, gitSource, organization, webHookMessage.Repository.Name)
 	}
+
+	mutex.Unlock()
+	utils.ReleaseOrganizationMutex(gitOrgRef, service.CommonMutex)
+	locked = false
 
 	fmt.Println("WebHookOrganization end...")
 }

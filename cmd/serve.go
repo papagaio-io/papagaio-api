@@ -50,8 +50,6 @@ func serve(cmd *cobra.Command, args []string) {
 		Db: &db,
 	}
 
-	ctrlMember := service.MemberService{}
-
 	ctrlWebHook := service.WebHookService{
 		Db: &db,
 	}
@@ -67,7 +65,7 @@ func serve(cmd *cobra.Command, args []string) {
 	router := mux.NewRouter()
 
 	controller.SetupHTTPClient()
-	controller.SetupRouter(&db, router, &ctrlOrganization, &ctrlGitSource, &ctrlMember, &ctrlWebHook, &ctrlUser, &ctrlTrigger)
+	controller.SetupRouter(&db, router, &ctrlOrganization, &ctrlGitSource, &ctrlWebHook, &ctrlUser, &ctrlTrigger)
 
 	log.Println("Papagaio Server Starting on port ", config.Config.Server.Port)
 
@@ -79,8 +77,8 @@ func serve(cmd *cobra.Command, args []string) {
 		logRouter = router
 	}
 
-	trigger.StartOrganizationSync(&db, tr)
-	trigger.StartRunFailsDiscovery(&db, tr)
+	trigger.StartOrganizationSync(&db, tr, &commonMutex)
+	trigger.StartRunFailsDiscovery(&db, tr, &commonMutex)
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

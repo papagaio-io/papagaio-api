@@ -11,6 +11,7 @@ import (
 )
 
 type Database interface {
+	GetOrganizationsName() ([]string, error)
 	GetOrganizations() (*[]model.Organization, error)
 	SaveOrganization(organization *model.Organization) error
 	GetOrganizationByName(organizationName string) (*model.Organization, error)
@@ -51,6 +52,8 @@ func (db *AppDb) Init(config config.Configuration) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	db.DB.DropAll()
 }
 
 func getNewUid() string {

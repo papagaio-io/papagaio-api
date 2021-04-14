@@ -55,13 +55,18 @@ func addUser(cmd *cobra.Command, args []string) {
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
 	req.Header.Add("Authorization", "token "+cfgUser.token)
 
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
 
-	if !api.IsResponseOK(resp.StatusCode) {
-		body, _ := ioutil.ReadAll(resp.Body)
-		cmd.PrintErrln(string(body))
+	if err != nil {
+		cmd.Println("Error:", err.Error())
 	} else {
-		cmd.Println("user created")
+
+		if !api.IsResponseOK(resp.StatusCode) {
+			body, _ := ioutil.ReadAll(resp.Body)
+			cmd.PrintErrln(string(body))
+		} else {
+			cmd.Println("user created")
+		}
 	}
 }
 
@@ -73,12 +78,16 @@ func removeUser(cmd *cobra.Command, args []string) {
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+cfgUser.token)
 
-	resp, _ := client.Do(req)
-	if !api.IsResponseOK(resp.StatusCode) {
-		body, _ := ioutil.ReadAll(resp.Body)
-		cmd.PrintErrln(string(body))
+	resp, err := client.Do(req)
+	if err != nil {
+		cmd.Println("Error:", err.Error())
 	} else {
-		cmd.Println("user removed")
+		if !api.IsResponseOK(resp.StatusCode) {
+			body, _ := ioutil.ReadAll(resp.Body)
+			cmd.PrintErrln(string(body))
+		} else {
+			cmd.Println("user removed")
+		}
 	}
 }
 

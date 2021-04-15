@@ -1,8 +1,8 @@
 package dto
 
 type ProjectDto struct {
-	Name    string      `json:"name"`
+	Name    string      `json:"projectName"`
 	Branchs []BranchDto `json:"branchs"`
 
-	WorstReport *ReportDto `json:"worstReport,omitempty"`
+	WorstReport *ReportDto `json:"worstReport"`
 }

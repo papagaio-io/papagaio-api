@@ -45,6 +45,9 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 
 		project := model.Project{OrganizationID: organization.ID, GitRepoPath: repo, AgolaProjectID: projectID}
 		organization.Projects[repo] = project
+
+		BranchSynck(db, gitSource, organization, repo)
+
 		db.SaveOrganization(organization)
 
 		log.Println("End add repository:", repo)

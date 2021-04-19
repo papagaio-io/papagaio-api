@@ -101,6 +101,26 @@ func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, e
 	return &retVal, err
 }
 
+func GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto {
+	client := &http.Client{}
+
+	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
+	req, _ := http.NewRequest("GET", URLApi, nil)
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+
+	if api.IsResponseOK(resp.StatusCode) {
+		body, _ := ioutil.ReadAll(resp.Body)
+		var data OrganizationResponseDto
+		json.Unmarshal(body, &data)
+
+		organization := dto.OrganizationDto{Name: data.Name, ID: data.ID, AvatarURL: data.AvatarURL}
+		return &organization
+	}
+
+	return nil
+}
+
 func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
 	client := &http.Client{}
 

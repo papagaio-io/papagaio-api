@@ -6,6 +6,7 @@ type OrganizationDto struct {
 	ID         string         `json:"id"`
 	Name       string         `json:"organizationName"`
 	Visibility VisibilityType `json:"visibility"`
+	AvatarURL  string         `json:"avatarUrl"`
 
 	Projects    []ProjectDto `json:"projects"`
 	WorstReport *ReportDto   `json:"worstReport"`

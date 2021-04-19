@@ -4,15 +4,20 @@ import (
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
-func GetOrganizationDto(organization *model.Organization) dto.OrganizationDto {
+func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSource) dto.OrganizationDto {
 	retVal := dto.OrganizationDto{
 		ID:         organization.ID,
 		Name:       organization.Name,
 		Visibility: organization.Visibility,
+	}
+	orgDto := git.GetOrganization(gitsource, organization.Name)
+	if orgDto != nil {
+		retVal.AvatarURL = orgDto.AvatarURL
 	}
 
 	projectList := make([]dto.ProjectDto, 0)

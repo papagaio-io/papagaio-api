@@ -42,3 +42,9 @@ type MetadataResponseDto struct {
 type BranchResponseDto struct {
 	Name string `json:"name"`
 }
+
+type OrganizationResponseDto struct {
+	Name      string `json:"full_name"`
+	AvatarURL string `json:"avatar_url"`
+	ID        int    `json:"id"`
+}

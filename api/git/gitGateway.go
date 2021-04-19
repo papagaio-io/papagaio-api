@@ -86,3 +86,11 @@ func GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef str
 		return github.GetBranches(gitSource, gitOrgRef, repositoryRef)
 	}
 }
+
+func GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto {
+	if gitSource.GitType == model.Gitea {
+		return gitea.GetOrganization(gitSource, gitOrgRef)
+	} else {
+		return github.GetOrganization(gitSource, gitOrgRef)
+	}
+}

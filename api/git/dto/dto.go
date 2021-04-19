@@ -27,3 +27,9 @@ func (commitMetadata *CommitMetadataDto) GetAuthorEmail() string {
 type CommitParentDto struct {
 	Sha string `json:"sha"`
 }
+
+type OrganizationDto struct {
+	Name      string
+	AvatarURL string
+	ID        int
+}

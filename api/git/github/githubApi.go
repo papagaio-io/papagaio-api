@@ -210,6 +210,16 @@ func GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryR
 	return retVal, nil
 }
 
+func GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto {
+	client := getClient(gitSource)
+	org, _, err := client.Organizations.Get(context.Background(), gitOrgRef)
+	if err != nil {
+		return nil
+	}
+
+	return &dto.OrganizationDto{Name: *org.Name, ID: int(*org.ID), AvatarURL: *org.AvatarURL}
+}
+
 func getClient(gitSource *model.GitSource) *github.Client {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(

@@ -243,7 +243,8 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 
 	retVal := make([]dto.OrganizationDto, 0)
 	for _, organization := range *organizations {
-		retVal = append(retVal, manager.GetOrganizationDto(&organization))
+		gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
+		retVal = append(retVal, manager.GetOrganizationDto(&organization, gitsource))
 	}
 
 	JSONokResponse(w, retVal)
@@ -262,7 +263,9 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 		return
 	}
 
-	JSONokResponse(w, manager.GetOrganizationDto(organization))
+	gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
+
+	JSONokResponse(w, manager.GetOrganizationDto(organization, gitsource))
 }
 
 func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *http.Request) {

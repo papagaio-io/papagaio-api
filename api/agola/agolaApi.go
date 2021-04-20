@@ -253,6 +253,8 @@ func GetRuns(projectRef string, lastRun bool, phase string, startRunID *string, 
 
 	client := &http.Client{}
 	URLApi := getRunsListUrl(projectRef, lastRun, phase, startRunID, limit, asc)
+	fmt.Println("GetRuns project:", projectRef)
+	fmt.Println("GetRuns url:", URLApi)
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)

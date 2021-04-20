@@ -199,7 +199,9 @@ func makeBody(organizationName string, projectName string, failedRun agola.RunDt
 
 func CheckIfNewRunsPresent(project *model.Project) bool {
 	lastRun := project.GetLastRun()
+	fmt.Println("CheckIfNewRunsPresent:", lastRun)
 	runList, _ := agola.GetRuns(project.AgolaProjectID, true, "finished", nil, 1, true)
+	fmt.Println("runList:", runList)
 
 	return runList != nil && len(*runList) != 0 && (*runList)[0].StartTime.After(lastRun.RunStartDate)
 }

@@ -15,6 +15,6 @@ type OrganizationDto struct {
 	LastFailedRunDate  *time.Time    `json:"lastFailedRunDate"`
 	LastRunDuration    time.Duration `json:"lastRunDuration"`
 
-	LastSuccessRunURL *string `json:"lastSuccessRunURL"`
-	LastFailedRunURL  *string `json:"lastFailedRunURL"`
+	LastSuccessRunURL string `json:"lastSuccessRunURL"`
+	LastFailedRunURL  string `json:"lastFailedRunURL"`
 }

@@ -45,8 +45,8 @@ func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSo
 	var lastSuccessRun *time.Time = nil
 	var lasFailedRun *time.Time = nil
 	var lastDuration time.Duration
-	var lastSuccessRunURL *string = nil
-	var lastFailedRunURL *string = nil
+	var lastSuccessRunURL string = ""
+	var lastFailedRunURL string = ""
 
 	for _, project := range retVal.Projects {
 		for _, branch := range project.Branchs {
@@ -139,14 +139,14 @@ func GetBranchDto(branch model.Branch, project *model.Project, organizationName 
 	if lastSuccessRun != nil {
 		retVal.LastSuccessRunDate = &lastSuccessRun.RunStartDate
 		runUrl := lastSuccessRun.GetURL(organizationName, project.GitRepoPath)
-		retVal.LastSuccessRunURL = &runUrl
+		retVal.LastSuccessRunURL = runUrl
 	}
 
 	lastFailedRun := project.GetLastFailedRun()
 	if lastFailedRun != nil {
 		retVal.LastFailedRunDate = &lastFailedRun.RunStartDate
 		runUrl := lastFailedRun.GetURL(organizationName, project.GitRepoPath)
-		retVal.LastFailedRunURL = &runUrl
+		retVal.LastFailedRunURL = runUrl
 	}
 
 	return retVal

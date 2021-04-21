@@ -58,21 +58,25 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	}
 
 	if webHookMessage.IsRepositoryCreated() {
+		log.Println("Repository created: ", webHookMessage.Repository.Name)
+		project := model.Project{GitRepoPath: webHookMessage.Repository.Name, Archivied: true}
+
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
-		if !agolaConfExists {
-			return
+		if agolaConfExists {
+			projectID, err := agolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+			project.AgolaProjectID = projectID
+			if err != nil {
+				log.Println("Warning!!! Agola CreateProject API error!")
+			} else {
+				project.Archivied = false
+			}
 		}
 
-		projectID, err := agolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
-		if err != nil {
-			fmt.Println("Warning!!! Agola CreateProject API error!")
-			return
-		}
-
-		project := model.Project{GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID, Archivied: false}
 		organization.Projects[webHookMessage.Repository.Name] = project
 		service.Db.SaveOrganization(organization)
 	} else if webHookMessage.IsRepositoryDeleted() {
+		log.Println("Repository deleted: ", webHookMessage.Repository.Name)
+
 		if orgProject, ok := organization.Projects[webHookMessage.Repository.Name]; !ok {
 			log.Println("Warning!!! project", orgProject, "not found in db")
 			return
@@ -86,6 +90,8 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 		service.Db.SaveOrganization(organization)
 	} else if webHookMessage.IsPush() {
+		log.Println("Repository push: ", webHookMessage.Repository.Name)
+
 		project, projectExist := organization.Projects[webHookMessage.Repository.Name]
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
 

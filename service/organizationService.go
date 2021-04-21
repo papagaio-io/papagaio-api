@@ -21,6 +21,7 @@ import (
 type OrganizationService struct {
 	Db          repository.Database
 	CommonMutex *utils.CommonMutex
+	AgolaApi    agolaApi.AgolaApiInterface
 }
 
 func (service *OrganizationService) GetOrganizations(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +86,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
+	org.ID, err = service.AgolaApi.CreateOrganization(org.Name, org.Visibility)
 	if err != nil {
 		log.Println("Agola CreateOrganization error")
 		InternalServerError(w)
@@ -101,7 +102,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	manager.StartOrganizationCheckout(service.Db, org, gitSource)
+	manager.StartOrganizationCheckout(service.Db, org, gitSource, service.AgolaApi)
 
 	JSONokResponse(w, config.Config.Agola.AgolaAddr+"/org/"+org.Name)
 }
@@ -110,7 +111,7 @@ func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *h
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	remoteSources, _ := agolaApi.GetRemoteSources()
+	remoteSources, _ := service.AgolaApi.GetRemoteSources()
 
 	JSONokResponse(w, remoteSources)
 }
@@ -156,7 +157,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	}
 
 	if !internalonly {
-		err = agolaApi.DeleteOrganization(organizationName, gitSource.AgolaToken)
+		err = service.AgolaApi.DeleteOrganization(organizationName, gitSource.AgolaToken)
 		if err != nil {
 			InternalServerError(w)
 			return

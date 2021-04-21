@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -12,7 +12,7 @@ import (
 )
 
 //Sincronizzo i membri della organization tra gitea e agola
-func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource) {
+func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface) {
 	log.Println("SyncMembersForGitea start")
 
 	gitTeams, _ := gitApi.GetOrganizationTeams(gitSource, organization.Name)
@@ -43,7 +43,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
 			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
-		} else if agolaUserRole == agolaApi.Member {
+		} else if agolaUserRole == agola.Member {
 			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
 		}
 	}
@@ -54,7 +54,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
 			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
-		} else if agolaUserRole == agolaApi.Owner {
+		} else if agolaUserRole == agola.Owner {
 			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
 		}
 	}
@@ -80,8 +80,8 @@ func findGiteaMemberByAgolaUserRef(gitMembers map[int]dto.UserTeamResponseDto, a
 	return nil
 }
 
-func toMapMembers(members *[]agolaApi.MemberDto) *map[string]agolaApi.MemberDto {
-	membersMap := make(map[string]agolaApi.MemberDto)
+func toMapMembers(members *[]agola.MemberDto) *map[string]agola.MemberDto {
+	membersMap := make(map[string]agola.MemberDto)
 	for _, member := range *members {
 		membersMap[member.Username] = member
 	}

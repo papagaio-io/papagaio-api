@@ -16,22 +16,22 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, CommonMutex *utils.CommonMutex) {
-	go discoveryRunFails(db, tr, CommonMutex)
+func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface) {
+	go discoveryRunFails(db, tr, commonMutex, agolaApi)
 }
 
-func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex *utils.CommonMutex) {
+func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface) {
 	for {
 		log.Println("Start discoveryRunFails")
 
 		organizationsName, _ := db.GetOrganizationsName()
 
 		for _, organizationName := range organizationsName {
-			mutex := utils.ReserveOrganizationMutex(organizationName, CommonMutex)
+			mutex := utils.ReserveOrganizationMutex(organizationName, commonMutex)
 			mutex.Lock()
 
 			locked := true
-			defer utils.ReleaseOrganizationMutexDefer(organizationName, CommonMutex, mutex, &locked)
+			defer utils.ReleaseOrganizationMutexDefer(organizationName, commonMutex, mutex, &locked)
 
 			org, _ := db.GetOrganizationByName(organizationName)
 			if org == nil {
@@ -50,7 +50,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 					continue
 				}
 
-				checkNewRuns := CheckIfNewRunsPresent(&project)
+				checkNewRuns := CheckIfNewRunsPresent(&project, agolaApi)
 				if !checkNewRuns {
 					log.Println("no new runs found for project", projectName)
 					continue
@@ -58,7 +58,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 
 				//If there are new runs asks for other runs
 				lastRun := project.GetLastRun()
-				runList, _ := agola.GetRuns(project.AgolaProjectID, false, "finished", &lastRun.ID, 0, true)
+				runList, _ := agolaApi.GetRuns(project.AgolaProjectID, false, "finished", &lastRun.ID, 0, true)
 
 				runList = takeWebhookTrigger(runList)
 
@@ -80,7 +80,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 						emailMap := getUsersEmailMap(gitSource, org, project.GitRepoPath, run)
 						log.Println("send emails to:", emailMap)
 
-						body, err := makeBody(org.Name, project.GitRepoPath, run)
+						body, err := makeBody(org.Name, project.GitRepoPath, run, agolaApi)
 						if err != nil {
 							log.Println("Failed to make email body")
 							continue
@@ -96,7 +96,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 			db.SaveOrganization(org)
 
 			mutex.Unlock()
-			utils.ReleaseOrganizationMutex(organizationName, CommonMutex)
+			utils.ReleaseOrganizationMutex(organizationName, commonMutex)
 			locked = false
 		}
 
@@ -152,25 +152,25 @@ func getRunAgolaUrl(organizationName string, projectName string, runID string) s
 	return fmt.Sprintf(runAgolaPath, config.Config.Agola.AgolaAddr, organizationName, projectName, runID)
 }
 
-func makeBody(organizationName string, projectName string, failedRun agola.RunDto) (string, error) {
+func makeBody(organizationName string, projectName string, failedRun agola.RunDto, agolaApi agola.AgolaApiInterface) (string, error) {
 	runUrl := getRunAgolaUrl(organizationName, projectName, failedRun.ID)
 	body := fmt.Sprintf(bodyMessageTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter))
 	body += fmt.Sprintf(bodyLinkTemplate, runUrl)
 
-	run, err := agola.GetRun(failedRun.ID)
+	run, err := agolaApi.GetRun(failedRun.ID)
 	if err != nil {
 		return "", err
 	}
 
 	for _, task := range run.Tasks {
 		if task.Status == agola.RunTaskStatusFailed {
-			taskFailed, err := agola.GetTask(run.ID, task.ID)
+			taskFailed, err := agolaApi.GetTask(run.ID, task.ID)
 			if err != nil {
 				return "", err
 			}
 
 			if taskFailed.SetupStep.Phase == agola.ExecutorTaskPhaseFailed {
-				logs, err := agola.GetLogs(run.ID, task.ID, -1)
+				logs, err := agolaApi.GetLogs(run.ID, task.ID, -1)
 				if err != nil {
 					return "", err
 				}
@@ -181,7 +181,7 @@ func makeBody(organizationName string, projectName string, failedRun agola.RunDt
 			for stepID, step := range taskFailed.Steps {
 				if step.Phase == agola.ExecutorTaskPhaseFailed {
 
-					logs, err := agola.GetLogs(run.ID, task.ID, stepID)
+					logs, err := agolaApi.GetLogs(run.ID, task.ID, stepID)
 					if err != nil {
 						return "", err
 					}
@@ -197,11 +197,11 @@ func makeBody(organizationName string, projectName string, failedRun agola.RunDt
 	return body, nil
 }
 
-func CheckIfNewRunsPresent(project *model.Project) bool {
+func CheckIfNewRunsPresent(project *model.Project, agolaApi agola.AgolaApiInterface) bool {
 	fmt.Println("CheckIfNewRunsPresent:", project.GitRepoPath)
 	lastRun := project.GetLastRun()
 	fmt.Println("CheckIfNewRunsPresent:", lastRun)
-	runList, _ := agola.GetRuns(project.AgolaProjectID, true, "finished", nil, 1, false)
+	runList, _ := agolaApi.GetRuns(project.AgolaProjectID, true, "finished", nil, 1, false)
 	fmt.Println("CheckIfNewRunsPresent runList:", runList)
 
 	return runList != nil && len(*runList) != 0 && (*runList)[0].StartTime.After(lastRun.RunStartDate)

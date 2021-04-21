@@ -160,6 +160,10 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 }
 
 func BranchSynck(db repository.Database, gitSource *model.GitSource, organization *model.Organization, repositoryName string) {
+	if _, exists := organization.Projects[repositoryName]; !exists {
+		return
+	}
+
 	if organization.Projects[repositoryName].Branchs == nil {
 		project := organization.Projects[repositoryName]
 		project.Branchs = make(map[string]model.Branch)

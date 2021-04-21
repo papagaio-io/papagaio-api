@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -38,17 +37,13 @@ func (githubApi *GithubApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef 
 	active := true
 	conf := make(map[string]interface{})
 	conf["url"] = config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + gitOrgRef
-	fmt.Println("url:", conf["url"])
 	conf["content_type"] = "json"
 	hook := &github.Hook{Name: &webHookName, Events: []string{"repository", "push", "create", "delete"}, Active: &active, Config: conf}
-	hook, resp, err := client.Organizations.CreateHook(context.Background(), gitOrgRef, hook)
+	hook, _, err := client.Organizations.CreateHook(context.Background(), gitOrgRef, hook)
 	hookID := -1
 	if err == nil {
 		hookID = int(*hook.ID)
 	}
-
-	fmt.Println("resp:", resp)
-	fmt.Println("err:", err)
 
 	return hookID, err
 }

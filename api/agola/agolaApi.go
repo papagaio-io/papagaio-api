@@ -3,7 +3,6 @@ package agola
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -145,8 +144,6 @@ func (agolaApi *AgolaApi) CreateProject(projectName string, organization *model.
 	var jsonResponse CreateProjectResponseDto
 	json.Unmarshal(body, &jsonResponse)
 
-	fmt.Println("jsonResponse:", jsonResponse)
-
 	return jsonResponse.ID, err
 }
 
@@ -217,7 +214,7 @@ func (agolaApi *AgolaApi) RemoveOrganizationMember(agolaOrganizationRef string, 
 	var err error
 	client := &http.Client{}
 	URLApi := getAddOrgMemberUrl(agolaOrganizationRef, agolaUserRef)
-	fmt.Println("url ", URLApi)
+
 	reqBody := strings.NewReader(`{}`)
 	req, err := http.NewRequest("DELETE", URLApi, reqBody)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
@@ -274,8 +271,7 @@ func (agolaApi *AgolaApi) GetRuns(projectRef string, lastRun bool, phase string,
 
 	client := &http.Client{}
 	URLApi := getRunsListUrl(projectRef, lastRun, phase, startRunID, limit, asc)
-	fmt.Println("GetRuns project:", projectRef)
-	fmt.Println("GetRuns url:", URLApi)
+
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)

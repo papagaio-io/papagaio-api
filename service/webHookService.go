@@ -69,7 +69,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			return
 		}
 
-		project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID, Archivied: false}
+		project := model.Project{GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID, Archivied: false}
 		organization.Projects[webHookMessage.Repository.Name] = project
 		service.Db.SaveOrganization(organization)
 	} else if webHookMessage.IsRepositoryDeleted() {
@@ -97,7 +97,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 					return
 				}
 
-				project := model.Project{OrganizationID: organization.ID, GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID}
+				project := model.Project{GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID}
 				organization.Projects[webHookMessage.Repository.Name] = project
 				service.Db.SaveOrganization(organization)
 			} else if project.Archivied {

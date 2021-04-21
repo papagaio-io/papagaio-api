@@ -15,7 +15,7 @@ import (
 
 //Inserisco tutti i repository di git su agola
 func CheckoutAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
-	log.Println("Start AddAllGitRepository")
+	log.Println("Start CheckoutAllGitRepository")
 
 	repositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
 	log.Println("repositoryList:", *repositoryList)
@@ -43,7 +43,7 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 			return errors.New(err.Error())
 		}
 
-		project := model.Project{OrganizationID: organization.ID, GitRepoPath: repo, AgolaProjectID: projectID}
+		project := model.Project{GitRepoPath: repo, AgolaProjectID: projectID}
 		organization.Projects[repo] = project
 
 		db.SaveOrganization(organization)
@@ -53,7 +53,7 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 		log.Println("End add repository:", repo)
 	}
 
-	log.Println("End AddAllGitRepository")
+	log.Println("End CheckoutAllGitRepository")
 
 	return nil
 }
@@ -146,7 +146,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			break
 		}
 
-		project := model.Project{OrganizationID: organization.ID, GitRepoPath: repo, AgolaProjectID: projectID}
+		project := model.Project{GitRepoPath: repo, AgolaProjectID: projectID}
 		organization.Projects[repo] = project
 
 		log.Println("End add repository:", repo)

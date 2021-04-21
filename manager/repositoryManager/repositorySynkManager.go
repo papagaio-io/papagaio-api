@@ -8,17 +8,16 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
-	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 //Inserisco tutti i repository di git su agola
-func CheckoutAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface) error {
+func CheckoutAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway) error {
 	log.Println("Start AddAllGitRepository")
 
-	repositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
+	repositoryList, _ := gitGateway.GetRepositories(gitSource, organization.Name)
 	log.Println("repositoryList:", *repositoryList)
 
 	if organization.Projects == nil {
@@ -30,7 +29,7 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 			continue
 		}
 
-		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
+		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {
 			continue
 		}
@@ -49,7 +48,7 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 
 		db.SaveOrganization(organization)
 
-		BranchSynck(db, gitSource, organization, repo)
+		BranchSynck(db, gitSource, organization, repo, gitGateway)
 
 		log.Println("End add repository:", repo)
 	}
@@ -59,14 +58,14 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 	return nil
 }
 
-func SynkGitRepositorys(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface) error {
+func SynkGitRepositorys(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) error {
 	log.Println("Start SynkGitRepositorys for", organization.Name)
 
 	if organization.Projects == nil {
 		organization.Projects = make(map[string]model.Project)
 	}
 
-	gitRepositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
+	gitRepositoryList, _ := gitGateway.GetRepositories(gitSource, organization.Name)
 
 	//if some project is not present in agola I remove from db
 	for projectName, project := range organization.Projects {
@@ -107,9 +106,9 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
-		BranchSynck(db, gitSource, organization, repo)
+		BranchSynck(db, gitSource, organization, repo, gitGateway)
 
-		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
+		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {
 			if project, ok := organization.Projects[repo]; ok && !project.Archivied {
 				err := agolaApi.ArchiveProject(organization.Name, repo)
@@ -160,14 +159,14 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 	return nil
 }
 
-func BranchSynck(db repository.Database, gitSource *model.GitSource, organization *model.Organization, repositoryName string) {
+func BranchSynck(db repository.Database, gitSource *model.GitSource, organization *model.Organization, repositoryName string, gitGateway *git.GitGateway) {
 	if organization.Projects[repositoryName].Branchs == nil {
 		project := organization.Projects[repositoryName]
 		project.Branchs = make(map[string]model.Branch)
 		organization.Projects[repositoryName] = project
 	}
 
-	branchList := git.GetBranches(gitSource, organization.Name, repositoryName)
+	branchList := gitGateway.GetBranches(gitSource, organization.Name, repositoryName)
 
 	for branch, _ := range branchList {
 		if _, ok := organization.Projects[repositoryName].Branchs[branch]; !ok {

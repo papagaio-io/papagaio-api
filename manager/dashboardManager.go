@@ -9,13 +9,13 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
-func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSource) dto.OrganizationDto {
+func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSource, gitGateway *git.GitGateway) dto.OrganizationDto {
 	retVal := dto.OrganizationDto{
 		ID:         organization.ID,
 		Name:       organization.Name,
 		Visibility: organization.Visibility,
 	}
-	orgDto := git.GetOrganization(gitsource, organization.Name)
+	orgDto := gitGateway.GetOrganization(gitsource, organization.Name)
 	if orgDto != nil {
 		retVal.AvatarURL = orgDto.AvatarURL
 	}

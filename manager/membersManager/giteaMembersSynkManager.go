@@ -5,22 +5,22 @@ import (
 	"strings"
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
-	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 //Sincronizzo i membri della organization tra gitea e agola
-func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface) {
+func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	log.Println("SyncMembersForGitea start")
 
-	gitTeams, _ := gitApi.GetOrganizationTeams(gitSource, organization.Name)
+	gitTeams, _ := gitGateway.GetOrganizationTeams(gitSource, organization.Name)
 	gitTeamOwners := make(map[int]dto.UserTeamResponseDto)
 	gitTeamMembers := make(map[int]dto.UserTeamResponseDto)
 
 	for _, team := range *gitTeams {
-		teamMembers, _ := gitApi.GetTeamMembers(gitSource, organization.Name, team.ID)
+		teamMembers, _ := gitGateway.GetTeamMembers(gitSource, organization.Name, team.ID)
 
 		var teamToCheck *map[int]dto.UserTeamResponseDto
 		if strings.Compare(team.Permission, "owner") == 0 {

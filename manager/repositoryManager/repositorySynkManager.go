@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"wecode.sorint.it/opensource/papagaio-api/api/agola"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
@@ -14,7 +15,7 @@ import (
 )
 
 //Inserisco tutti i repository di git su agola
-func CheckoutAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
+func CheckoutAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface) error {
 	log.Println("Start AddAllGitRepository")
 
 	repositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
@@ -58,7 +59,7 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 	return nil
 }
 
-func SynkGitRepositorys(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
+func SynkGitRepositorys(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface) error {
 	log.Println("Start SynkGitRepositorys for", organization.Name)
 
 	if organization.Projects == nil {

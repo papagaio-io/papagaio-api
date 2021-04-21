@@ -21,6 +21,7 @@ type WebHookService struct {
 	Db          repository.Database
 	CommonMutex *utils.CommonMutex
 	AgolaApi    agolaApi.AgolaApiInterface
+	GitGateway  *git.GitGateway
 }
 
 func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +60,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	}
 
 	if webHookMessage.IsRepositoryCreated() {
-		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
+		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
 		if !agolaConfExists {
 			return
 		}
@@ -88,7 +89,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		service.Db.SaveOrganization(organization)
 	} else if webHookMessage.IsPush() {
 		project, projectExist := organization.Projects[webHookMessage.Repository.Name]
-		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
+		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
 
 		if agolaConfExists {
 			if !projectExist {
@@ -120,7 +121,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			}
 		}
 
-		repositoryManager.BranchSynck(service.Db, gitSource, organization, webHookMessage.Repository.Name)
+		repositoryManager.BranchSynck(service.Db, gitSource, organization, webHookMessage.Repository.Name, service.GitGateway)
 	}
 
 	mutex.Unlock()

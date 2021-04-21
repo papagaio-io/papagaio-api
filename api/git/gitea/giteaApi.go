@@ -15,7 +15,25 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
-func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
+type GiteaInterface interface {
+	CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error)
+	DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error
+	GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error)
+	GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto
+	CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool
+	GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error)
+	GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error)
+	GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]dto.UserTeamResponseDto, error)
+	GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool
+	getBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]BranchResponseDto, error)
+	getRepositoryAgolaMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, branchName string) (*[]MetadataResponseDto, error)
+	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error)
+	GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
+}
+
+type GiteaApi struct{}
+
+func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	fmt.Println("CreateWebHook gitOrgRef branchFilter:", gitOrgRef)
 
 	client := &http.Client{}
@@ -57,7 +75,7 @@ func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	return webHookResponse.ID, err
 }
 
-func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error {
+func (giteaApi *GiteaApi) DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error {
 	client := &http.Client{}
 
 	URLApi := getWehHookUrl(gitSource.GitAPIURL, gitOrgRef, fmt.Sprint(webHookID), gitSource.GitToken)
@@ -74,7 +92,7 @@ func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) 
 	return err
 }
 
-func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error) {
+func (giteaApi *GiteaApi) GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error) {
 	client := &http.Client{}
 
 	URLApi := getGetListRepositoryUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
@@ -101,7 +119,7 @@ func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, e
 	return &retVal, err
 }
 
-func GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto {
+func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto {
 	client := &http.Client{}
 
 	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
@@ -121,7 +139,7 @@ func GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.Organiza
 	return nil
 }
 
-func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
+func (giteaApi *GiteaApi) CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
 	client := &http.Client{}
 
 	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
@@ -134,7 +152,7 @@ func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool 
 	return api.IsResponseOK(resp.StatusCode)
 }
 
-func GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
+func (giteaApi *GiteaApi) GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
 	client := &http.Client{}
 
 	URLApi := getRepositoryTeamsListUrl(gitSource.GitAPIURL, gitOrgRef, repositoryRef, gitSource.GitToken)
@@ -156,7 +174,7 @@ func GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repository
 	return &teamsResponse, err
 }
 
-func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
+func (giteaApi *GiteaApi) GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
 	client := &http.Client{}
 
 	URLApi := getOrganizationTeamsListUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
@@ -178,7 +196,7 @@ func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.
 	return &teamsResponse, err
 }
 
-func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]dto.UserTeamResponseDto, error) {
+func (giteaApi *GiteaApi) GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]dto.UserTeamResponseDto, error) {
 	client := &http.Client{}
 
 	URLApi := getTeamUsersListUrl(gitSource.GitAPIURL, fmt.Sprint(teamId), gitSource.GitToken)
@@ -200,8 +218,8 @@ func GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]dto.UserTeamResp
 	return &usersResponse, err
 }
 
-func GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool {
-	branchList, _ := getBranches(gitSource, gitOrgRef, repositoryRef)
+func (giteaApi *GiteaApi) GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool {
+	branchList, _ := giteaApi.getBranches(gitSource, gitOrgRef, repositoryRef)
 	retVal := make(map[string]bool)
 
 	for _, branche := range *branchList {
@@ -211,7 +229,7 @@ func GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef str
 	return retVal
 }
 
-func getBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]BranchResponseDto, error) {
+func (giteaApi *GiteaApi) getBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]BranchResponseDto, error) {
 	client := &http.Client{}
 	URLApi := getListBranchPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, gitSource.GitToken)
 
@@ -232,7 +250,7 @@ func getBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef str
 	return &branchesResponse, err
 }
 
-func getRepositoryAgolaMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, branchName string) (*[]MetadataResponseDto, error) {
+func (giteaApi *GiteaApi) getRepositoryAgolaMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, branchName string) (*[]MetadataResponseDto, error) {
 	client := &http.Client{}
 	URLApi := getListMetadataPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, ".agola", branchName, gitSource.GitToken)
 
@@ -253,14 +271,14 @@ func getRepositoryAgolaMetadata(gitSource *model.GitSource, gitOrgRef string, re
 	return &metadataResponse, err
 }
 
-func CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error) {
-	branchList, err := getBranches(gitSource, gitOrgRef, repositoryRef)
+func (giteaApi *GiteaApi) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error) {
+	branchList, err := giteaApi.getBranches(gitSource, gitOrgRef, repositoryRef)
 	if err != nil {
 		return false, err
 	}
 
 	for _, branch := range *branchList {
-		metadata, err := getRepositoryAgolaMetadata(gitSource, gitOrgRef, repositoryRef, branch.Name)
+		metadata, err := giteaApi.getRepositoryAgolaMetadata(gitSource, gitOrgRef, repositoryRef, branch.Name)
 		if err != nil {
 			return false, err
 		}
@@ -275,7 +293,7 @@ func CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string
 	return false, nil
 }
 
-func GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error) {
+func (giteaApi *GiteaApi) GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error) {
 	client := &http.Client{}
 
 	URLApi := getCommitMetadataPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, commitSha, gitSource.GitToken)

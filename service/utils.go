@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"runtime"
@@ -12,9 +11,9 @@ import (
 func ConvertToJson(model interface{}) []byte {
 	jsonData, err := json.Marshal(model)
 	if err != nil {
-		fmt.Println("ConvertToJson error: ", err)
+		log.Println("ConvertToJson error: ", err)
 	} else {
-		fmt.Println("data: ", jsonData)
+		log.Println("data: ", jsonData)
 	}
 
 	return jsonData

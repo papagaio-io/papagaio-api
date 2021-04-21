@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -25,7 +24,7 @@ type WebHookService struct {
 }
 
 func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("WebHookOrganization start...")
+	log.Println("WebHookOrganization start...")
 
 	data, _ := ioutil.ReadAll(r.Body)
 	var webHookMessage dto.WebHookDto
@@ -67,7 +66,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 		projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 		if err != nil {
-			fmt.Println("Warning!!! Agola CreateProject API error!")
+			log.Println("Warning!!! Agola CreateProject API error!")
 			return
 		}
 
@@ -95,7 +94,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			if !projectExist {
 				projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 				if err != nil {
-					fmt.Println("Warning!!! Agola CreateProject API error!")
+					log.Println("Warning!!! Agola CreateProject API error!")
 					return
 				}
 
@@ -128,5 +127,5 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	utils.ReleaseOrganizationMutex(gitOrgRef, service.CommonMutex)
 	locked = false
 
-	fmt.Println("WebHookOrganization end...")
+	log.Println("WebHookOrganization end...")
 }

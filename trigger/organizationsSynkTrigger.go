@@ -1,7 +1,6 @@
 package trigger
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -43,7 +42,6 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 			log.Println("start synk organization", org.Name)
 
 			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
-			fmt.Println("gitSource:", gitSource)
 
 			membersManager.SynkMembers(org, gitSource, agolaApi, gitGateway)
 			repositoryManager.SynkGitRepositorys(db, org, gitSource, agolaApi, gitGateway)

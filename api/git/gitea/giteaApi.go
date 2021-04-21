@@ -34,8 +34,6 @@ type GiteaInterface interface {
 type GiteaApi struct{}
 
 func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
-	fmt.Println("CreateWebHook gitOrgRef branchFilter:", gitOrgRef)
-
 	client := &http.Client{}
 	URLApi := getCreateWebHookUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
 	webHookConfigPath := controller.GetWebHookPath() + "/" + gitOrgRef
@@ -48,15 +46,12 @@ func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef st
 		Type:         "gitea",
 	}
 	data, _ := json.Marshal(webHookRequest)
-	fmt.Println("json data: ", string(data))
 
 	reqBody := strings.NewReader(string(data))
 	req, err := http.NewRequest("POST", URLApi, reqBody)
 	req.Header.Add("content-type", "application/json")
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
-
-	fmt.Println("CreateWebHook status response: ", resp.StatusCode, resp.Status)
 
 	if err != nil {
 		return -1, err
@@ -70,7 +65,6 @@ func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef st
 
 	var webHookResponse CreateWebHookResponseDto
 	json.Unmarshal(body, &webHookResponse)
-	fmt.Println("webHookResponse: ", webHookResponse)
 
 	return webHookResponse.ID, err
 }
@@ -143,7 +137,6 @@ func (giteaApi *GiteaApi) CheckOrganizationExists(gitSource *model.GitSource, gi
 	client := &http.Client{}
 
 	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
-	fmt.Println("CheckOrganizationExists URLApi: ", URLApi)
 
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, _ := client.Do(req)

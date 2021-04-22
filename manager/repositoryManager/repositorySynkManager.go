@@ -13,7 +13,7 @@ import (
 )
 
 //Inserisco tutti i repository di git su agola
-func CheckoutAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
+func CheckoutAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {
 	log.Println("Start CheckoutAllGitRepository")
 
 	repositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
@@ -39,7 +39,6 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 			project.Archivied = false
 			if err != nil {
 				log.Println("Warning!!! Agola CreateProject API error:", err.Error())
-				//return errors.New(err.Error())
 			}
 		}
 
@@ -52,8 +51,6 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 	}
 
 	log.Println("End CheckoutAllGitRepository")
-
-	return nil
 }
 
 func SynkGitRepositorys(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {

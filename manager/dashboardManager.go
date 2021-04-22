@@ -23,9 +23,7 @@ func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSo
 	projectList := make([]dto.ProjectDto, 0)
 	if organization.Projects != nil {
 		for _, project := range organization.Projects {
-			if !project.Archivied {
-				projectList = append(projectList, GetProjectDto(&project, organization.Name))
-			}
+			projectList = append(projectList, GetProjectDto(&project, organization.Name))
 		}
 	}
 	retVal.Projects = projectList

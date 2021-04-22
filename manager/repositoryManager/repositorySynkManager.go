@@ -1,7 +1,6 @@
 package repositoryManager
 
 import (
-	"errors"
 	"log"
 	"strings"
 
@@ -29,23 +28,22 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 			continue
 		}
 
-		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
-		if !agolaConfExists {
-			continue
-		}
-
 		log.Println("Start add repository:", repo)
 
-		projectID, err := agolaApi.CreateProject(repo, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
+		project := model.Project{GitRepoPath: repo, Archivied: true}
 
-		if err != nil {
-			log.Println("Warning!!! Agola CreateProject API error:", err.Error())
-			return errors.New(err.Error())
+		if agolaConfExists {
+			projectID, err := agolaApi.CreateProject(repo, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+			project.AgolaProjectID = projectID
+			project.Archivied = false
+			if err != nil {
+				log.Println("Warning!!! Agola CreateProject API error:", err.Error())
+				//return errors.New(err.Error())
+			}
 		}
 
-		project := model.Project{GitRepoPath: repo, AgolaProjectID: projectID}
 		organization.Projects[repo] = project
-
 		db.SaveOrganization(organization)
 
 		BranchSynck(db, gitSource, organization, repo)
@@ -67,29 +65,25 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 
 	gitRepositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
 
-	//if some project is not present in agola I remove from db
 	for projectName, project := range organization.Projects {
-		agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization.Name, projectName)
-
-		if !agolaExists {
-			delete(organization.Projects, projectName)
-			continue
-		}
-
 		gitRepoExists := false
 		for _, gitRepo := range *gitRepositoryList {
-			if strings.Compare(project.GitRepoPath, gitRepo) == 0 {
+			if strings.Compare(projectName, gitRepo) == 0 {
 				gitRepoExists = true
 				break
 			}
 		}
 		if !gitRepoExists {
-			agolaApi.DeleteProject(organization.Name, project.GitRepoPath, gitSource.AgolaToken)
-			delete(organization.Projects, project.GitRepoPath)
-
+			agolaApi.DeleteProject(organization.Name, projectName, gitSource.AgolaToken)
+			delete(organization.Projects, projectName)
 		} else {
-			project.AgolaProjectID = agolaProjectID
-			organization.Projects[projectName] = project
+			agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization.Name, projectName)
+			if !agolaExists && !project.Archivied {
+				delete(organization.Projects, projectName)
+			} else {
+				project.AgolaProjectID = agolaProjectID
+				organization.Projects[projectName] = project
+			}
 		}
 	}
 
@@ -106,13 +100,21 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
+		var project model.Project
+		if p, ok := organization.Projects[repo]; !ok {
+			project = model.Project{GitRepoPath: repo}
+			organization.Projects[repo] = project
+		} else {
+			project = p
+		}
+
 		BranchSynck(db, gitSource, organization, repo)
 
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {
 			if project, ok := organization.Projects[repo]; ok && !project.Archivied {
 				err := agolaApi.ArchiveProject(organization.Name, repo)
-				if err != nil {
+				if err == nil {
 					project.Archivied = true
 					organization.Projects[repo] = project
 				}
@@ -138,17 +140,13 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 		}
 
 		log.Println("Start add repository:", repo)
-
 		projectID, err := agolaApi.CreateProject(repo, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
-
 		if err != nil {
 			log.Println("Warning!!! Agola CreateProject API error:", err.Error())
 			break
 		}
-
-		project := model.Project{GitRepoPath: repo, AgolaProjectID: projectID}
+		project.AgolaProjectID = projectID
 		organization.Projects[repo] = project
-
 		log.Println("End add repository:", repo)
 	}
 

@@ -88,6 +88,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
 	if err != nil {
 		log.Println("Agola CreateOrganization error")
+		gitApi.DeleteWebHook(gitSource, org.Name, org.WebHookID)
 		InternalServerError(w)
 		return
 	}

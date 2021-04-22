@@ -13,15 +13,10 @@ func StartOrganizationCheckout(db repository.Database, organization *model.Organ
 	go organizationCheckout(db, organization, gitSource)
 }
 
-func organizationCheckout(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
+func organizationCheckout(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {
 	log.Println("Start organization synk")
 
 	membersManager.SynkMembers(organization, gitSource)
 
-	err := repositoryManager.CheckoutAllGitRepository(db, organization, gitSource)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	repositoryManager.CheckoutAllGitRepository(db, organization, gitSource)
 }

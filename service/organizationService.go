@@ -73,7 +73,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	agolaOrg, err := service.Db.GetOrganizationByName(org.Name)
 	if agolaOrg != nil {
-		UnprocessableEntityResponse(w, "Organization just present in Agola")
+		UnprocessableEntityResponse(w, "Organization just present in papagaio")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
 	if err != nil {
-		log.Println("Agola CreateOrganization error")
+		log.Println("Agola CreateOrganization error:", err)
 		gitApi.DeleteWebHook(gitSource, org.Name, org.WebHookID)
 		InternalServerError(w)
 		return

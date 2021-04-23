@@ -7,6 +7,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSource) dto.OrganizationDto {
@@ -73,6 +74,7 @@ func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSo
 	retVal.LastRunDuration = lastDuration
 	retVal.LastSuccessRunURL = lastSuccessRunURL
 	retVal.LastFailedRunURL = lastFailedRunURL
+	retVal.OrganizationURL = utils.GetOrganizationUrl(organization.Name)
 
 	return retVal
 }

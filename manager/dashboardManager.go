@@ -102,6 +102,7 @@ func GetProjectDto(project *model.Project, organizationName string) dto.ProjectD
 	if worstReport != nil && worstReport.SuccessRunsPercentage < 100 {
 		retVal.WorstReport = worstReport
 	}
+	retVal.ProjectUrl = utils.GetProjectUrl(organizationName, retVal.Name)
 
 	return retVal
 }

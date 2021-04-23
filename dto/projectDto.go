@@ -5,4 +5,5 @@ type ProjectDto struct {
 	Branchs []BranchDto `json:"branchs"`
 
 	WorstReport *ReportDto `json:"worstReport"`
+	ProjectUrl  string     `json:"projectURL"`
 }

@@ -15,15 +15,25 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
-func CheckOrganizationExists(agolaOrganizationRef string) bool {
+func CheckOrganizationExists(agolaOrganizationRef string) (bool, string) {
 	client := &http.Client{}
 	URLApi := getOrganizationUrl(agolaOrganizationRef)
+	fmt.Println("CheckOrganizationExists url:", URLApi)
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	return err == nil && api.IsResponseOK(resp.StatusCode)
+	var organizationID string
+	organizationExists := err == nil && api.IsResponseOK(resp.StatusCode)
+	if organizationExists {
+		body, _ := ioutil.ReadAll(resp.Body)
+		var jsonResponse AgolaCreateORGDto
+		json.Unmarshal(body, &jsonResponse)
+		organizationID = jsonResponse.ID
+	}
+
+	return organizationExists, organizationID
 }
 
 func CheckProjectExists(agolaOrganizationRef string, projectName string) (bool, string) {
@@ -38,7 +48,7 @@ func CheckProjectExists(agolaOrganizationRef string, projectName string) (bool, 
 	projectExists := err == nil && api.IsResponseOK(resp.StatusCode)
 	if projectExists {
 		body, _ := ioutil.ReadAll(resp.Body)
-		var jsonResponse CreateProjectResponseDto //TODO make different struct with ID only
+		var jsonResponse CreateProjectResponseDto
 		json.Unmarshal(body, &jsonResponse)
 		projectID = jsonResponse.ID
 	}

@@ -99,7 +99,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	agolaOrganizationExists := agolaApi.CheckOrganizationExists(org.Name)
+	agolaOrganizationExists, agolaOrganizationID := agolaApi.CheckOrganizationExists(org.Name)
 	if agolaOrganizationExists {
 		log.Println(org.Name, "just exists in Agola")
 		if !forceCreate {
@@ -107,6 +107,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 			JSONokResponse(w, response)
 			return
 		}
+		org.ID = agolaOrganizationID
 	} else {
 		org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
 		if err != nil {

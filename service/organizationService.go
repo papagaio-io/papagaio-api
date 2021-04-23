@@ -9,7 +9,6 @@ import (
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
-	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/manager"
@@ -40,7 +39,22 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var req *dto.CreateOrganizationDto
+	forceCreateQuery, ok := r.URL.Query()["force"]
+	forceCreate := false
+	if ok {
+		if len(forceCreateQuery[0]) == 0 {
+			forceCreate = true
+		} else {
+			var parsError error
+			forceCreate, parsError = strconv.ParseBool(forceCreateQuery[0])
+			if parsError != nil {
+				UnprocessableEntityResponse(w, "forceCreate param value is not valid")
+				return
+			}
+		}
+	}
+
+	var req *dto.CreateOrganizationRequestDto
 	json.NewDecoder(r.Body).Decode(&req)
 
 	if req.IsValid() != nil {
@@ -85,12 +99,22 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
-	if err != nil {
-		log.Println("Agola CreateOrganization error:", err)
-		gitApi.DeleteWebHook(gitSource, org.Name, org.WebHookID)
-		InternalServerError(w)
-		return
+	agolaOrganizationExists := agolaApi.CheckOrganizationExists(org.Name)
+	if agolaOrganizationExists {
+		log.Println(org.Name, "just exists in Agola")
+		if !forceCreate {
+			response := dto.CreateOrganizationResponseDto{AgolaExists: true}
+			JSONokResponse(w, response)
+			return
+		}
+	} else {
+		org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
+		if err != nil {
+			log.Println("Agola CreateOrganization error:", err)
+			gitApi.DeleteWebHook(gitSource, org.Name, org.WebHookID)
+			InternalServerError(w)
+			return
+		}
 	}
 
 	log.Println("Organization created: ", org.ID)
@@ -104,7 +128,8 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	manager.StartOrganizationCheckout(service.Db, org, gitSource)
 
-	JSONokResponse(w, config.Config.Agola.AgolaAddr+"/org/"+org.Name)
+	response := dto.CreateOrganizationResponseDto{OrganizationURL: utils.GetOrganizationUrl(org.Name)}
+	JSONokResponse(w, response)
 }
 
 func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *http.Request) {

@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-type CreateOrganizationDto struct {
+type CreateOrganizationRequestDto struct {
 	Name       string         `json:"name"`
 	Visibility VisibilityType `json:"visibility"`
 
@@ -17,7 +17,7 @@ type CreateOrganizationDto struct {
 	BehaviourType    BehaviourType `json:"behaviourType"`
 }
 
-func (org CreateOrganizationDto) IsValid() error {
+func (org CreateOrganizationRequestDto) IsValid() error {
 	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.GitSourceName) > 0 {
 		return nil
 	}
@@ -55,7 +55,7 @@ func (vt VisibilityType) IsValid() error {
 	return errors.New("Invalid visibility type")
 }
 
-func (org CreateOrganizationDto) IsBehaviourValid() bool {
+func (org CreateOrganizationRequestDto) IsBehaviourValid() bool {
 	if org.BehaviourType.IsValid() != nil {
 		return false
 	}
@@ -83,4 +83,9 @@ func (org CreateOrganizationDto) IsBehaviourValid() bool {
 
 		return true
 	}
+}
+
+type CreateOrganizationResponseDto struct {
+	OrganizationURL string `json:"organizationUrl"`
+	AgolaExists     bool   `json:"agolaExists"`
 }

@@ -17,4 +17,5 @@ type OrganizationDto struct {
 
 	LastSuccessRunURL string `json:"lastSuccessRunURL"`
 	LastFailedRunURL  string `json:"lastFailedRunURL"`
+	OrganizationURL   string `json:"organizationURL"`
 }

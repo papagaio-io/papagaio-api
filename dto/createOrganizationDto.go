@@ -86,6 +86,6 @@ func (org CreateOrganizationRequestDto) IsBehaviourValid() bool {
 }
 
 type CreateOrganizationResponseDto struct {
-	OrganizationURL string `json:"organizationUrl"`
+	OrganizationURL string `json:"organizationURL"`
 	AgolaExists     bool   `json:"agolaExists"`
 }

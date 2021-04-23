@@ -35,7 +35,7 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, CommonMut
 				continue
 			}
 
-			if !agola.CheckOrganizationExists(org.Name) {
+			if agolaOrganizationExists, _ := agola.CheckOrganizationExists(org.Name); !agolaOrganizationExists {
 				db.DeleteOrganization(organizationName)
 				continue
 			}

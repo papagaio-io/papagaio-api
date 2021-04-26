@@ -66,6 +66,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org := &model.Organization{}
 	org.Name = req.Name
+	org.AgolaOrganizationRef = utils.ConvertToAgolaOrganizationRef(org.Name)
 	org.GitSourceName = req.GitSourceName
 	org.Visibility = req.Visibility
 	org.BehaviourType = req.BehaviourType
@@ -85,7 +86,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	agolaOrg, err := service.Db.GetOrganizationByName(org.Name)
+	agolaOrg, err := service.Db.GetOrganizationByName(org.AgolaOrganizationRef)
 	if agolaOrg != nil {
 		UnprocessableEntityResponse(w, "Organization just present in papagaio")
 		return
@@ -99,7 +100,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	agolaOrganizationExists, agolaOrganizationID := agolaApi.CheckOrganizationExists(org.Name)
+	agolaOrganizationExists, agolaOrganizationID := agolaApi.CheckOrganizationExists(org)
 	if agolaOrganizationExists {
 		log.Println(org.Name, "just exists in Agola")
 		if !forceCreate {
@@ -109,7 +110,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 		org.ID = agolaOrganizationID
 	} else {
-		org.ID, err = agolaApi.CreateOrganization(org.Name, org.Visibility)
+		org.ID, err = agolaApi.CreateOrganization(org, org.Visibility)
 		if err != nil {
 			log.Println("Agola CreateOrganization error:", err)
 			gitApi.DeleteWebHook(gitSource, org.Name, org.WebHookID)
@@ -129,7 +130,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	manager.StartOrganizationCheckout(service.Db, org, gitSource)
 
-	response := dto.CreateOrganizationResponseDto{OrganizationURL: utils.GetOrganizationUrl(org.Name)}
+	response := dto.CreateOrganizationResponseDto{OrganizationURL: utils.GetOrganizationUrl(org)}
 	JSONokResponse(w, response)
 }
 
@@ -183,7 +184,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	}
 
 	if !internalonly {
-		err = agolaApi.DeleteOrganization(organizationName, gitSource.AgolaToken)
+		err = agolaApi.DeleteOrganization(organization, gitSource.AgolaToken)
 		if err != nil {
 			InternalServerError(w)
 			return
@@ -319,7 +320,7 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 
 	project := organization.Projects[projectName]
 
-	JSONokResponse(w, manager.GetProjectDto(&project, organizationName))
+	JSONokResponse(w, manager.GetProjectDto(&project, organization))
 }
 
 func contains(slice []string, item string) bool {

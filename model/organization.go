@@ -3,10 +3,11 @@ package model
 import "wecode.sorint.it/opensource/papagaio-api/dto"
 
 type Organization struct {
-	ID               string             `json:"id"`
-	Name             string             `json:"name"`
-	UserEmailCreator string             `json:"userEmailCreator"`
-	Visibility       dto.VisibilityType `json:"visibility"`
+	ID                   string             `json:"id"`
+	Name                 string             `json:"name"`
+	AgolaOrganizationRef string             `json:"agolaOrganizationRef"`
+	UserEmailCreator     string             `json:"userEmailCreator"`
+	Visibility           dto.VisibilityType `json:"visibility"`
 
 	GitSourceName string `json:"gitSourceName"`
 	WebHookID     int    `json:"webHookId"`

@@ -24,7 +24,7 @@ func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSo
 	projectList := make([]dto.ProjectDto, 0)
 	if organization.Projects != nil {
 		for _, project := range organization.Projects {
-			projectList = append(projectList, GetProjectDto(&project, organization.Name))
+			projectList = append(projectList, GetProjectDto(&project, organization))
 		}
 	}
 	retVal.Projects = projectList
@@ -74,18 +74,18 @@ func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSo
 	retVal.LastRunDuration = lastDuration
 	retVal.LastSuccessRunURL = lastSuccessRunURL
 	retVal.LastFailedRunURL = lastFailedRunURL
-	retVal.OrganizationURL = utils.GetOrganizationUrl(organization.Name)
+	retVal.OrganizationURL = utils.GetOrganizationUrl(organization)
 
 	return retVal
 }
 
-func GetProjectDto(project *model.Project, organizationName string) dto.ProjectDto {
+func GetProjectDto(project *model.Project, organization *model.Organization) dto.ProjectDto {
 	retVal := dto.ProjectDto{Name: project.GitRepoPath}
 
 	branchList := make([]dto.BranchDto, 0)
 	if project.Branchs != nil {
 		for _, branch := range project.Branchs {
-			branchList = append(branchList, GetBranchDto(branch, project, organizationName))
+			branchList = append(branchList, GetBranchDto(branch, project, organization.Name))
 		}
 	}
 	retVal.Branchs = branchList
@@ -102,7 +102,7 @@ func GetProjectDto(project *model.Project, organizationName string) dto.ProjectD
 	if worstReport != nil && worstReport.SuccessRunsPercentage < 100 {
 		retVal.WorstReport = worstReport
 	}
-	retVal.ProjectUrl = utils.GetProjectUrl(organizationName, retVal.Name)
+	retVal.ProjectUrl = utils.GetProjectUrl(organization, retVal.Name)
 
 	return retVal
 }

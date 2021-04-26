@@ -71,10 +71,10 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			}
 		}
 		if !gitRepoExists {
-			agolaApi.DeleteProject(organization.Name, projectName, gitSource.AgolaToken)
+			agolaApi.DeleteProject(organization, projectName, gitSource.AgolaToken)
 			delete(organization.Projects, projectName)
 		} else {
-			agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization.Name, projectName)
+			agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization, projectName)
 			if !agolaExists && !project.Archivied {
 				delete(organization.Projects, projectName)
 			} else {
@@ -90,8 +90,8 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 				delete(organization.Projects, repo)
 			}
 
-			if exists, _ := agolaApi.CheckProjectExists(organization.Name, repo); exists {
-				agolaApi.DeleteProject(organization.Name, repo, gitSource.AgolaToken)
+			if exists, _ := agolaApi.CheckProjectExists(organization, repo); exists {
+				agolaApi.DeleteProject(organization, repo, gitSource.AgolaToken)
 			}
 
 			continue
@@ -110,7 +110,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {
 			if project, ok := organization.Projects[repo]; ok && !project.Archivied {
-				err := agolaApi.ArchiveProject(organization.Name, repo)
+				err := agolaApi.ArchiveProject(organization, repo)
 				if err == nil {
 					project.Archivied = true
 					organization.Projects[repo] = project
@@ -120,11 +120,11 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
-		if exists, projectID := agolaApi.CheckProjectExists(organization.Name, repo); exists {
+		if exists, projectID := agolaApi.CheckProjectExists(organization, repo); exists {
 			if project, ok := organization.Projects[repo]; ok {
 				project.AgolaProjectID = projectID
 				if project.Archivied {
-					err := agolaApi.UnarchiveProject(organization.Name, repo)
+					err := agolaApi.UnarchiveProject(organization, repo)
 					if err != nil {
 						project.Archivied = false
 						organization.Projects[repo] = project

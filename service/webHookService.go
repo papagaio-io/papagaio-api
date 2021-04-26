@@ -82,7 +82,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			return
 		}
 
-		agolaApi.DeleteProject(organization.Name, webHookMessage.Repository.Name, gitSource.AgolaToken)
+		agolaApi.DeleteProject(organization, webHookMessage.Repository.Name, gitSource.AgolaToken)
 		delete(organization.Projects, webHookMessage.Repository.Name)
 
 		project := organization.Projects[webHookMessage.Repository.Name]
@@ -107,7 +107,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 				organization.Projects[webHookMessage.Repository.Name] = project
 				service.Db.SaveOrganization(organization)
 			} else if project.Archivied {
-				err := agolaApi.UnarchiveProject(organization.Name, webHookMessage.Repository.Name)
+				err := agolaApi.UnarchiveProject(organization, webHookMessage.Repository.Name)
 				if err != nil {
 					InternalServerError(w)
 				}
@@ -116,7 +116,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			}
 		} else {
 			if projectExist && !project.Archivied {
-				err := agolaApi.ArchiveProject(organization.Name, webHookMessage.Repository.Name)
+				err := agolaApi.ArchiveProject(organization, webHookMessage.Repository.Name)
 				if err != nil {
 					InternalServerError(w)
 				}

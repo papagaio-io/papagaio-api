@@ -15,9 +15,9 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
-func CheckOrganizationExists(agolaOrganizationRef string) (bool, string) {
+func CheckOrganizationExists(organization *model.Organization) (bool, string) {
 	client := &http.Client{}
-	URLApi := getOrganizationUrl(agolaOrganizationRef)
+	URLApi := getOrganizationUrl(organization.AgolaOrganizationRef)
 	fmt.Println("CheckOrganizationExists url:", URLApi)
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
@@ -36,9 +36,9 @@ func CheckOrganizationExists(agolaOrganizationRef string) (bool, string) {
 	return organizationExists, organizationID
 }
 
-func CheckProjectExists(agolaOrganizationRef string, projectName string) (bool, string) {
+func CheckProjectExists(organization *model.Organization, projectName string) (bool, string) {
 	client := &http.Client{}
-	URLApi := getProjectUrl(agolaOrganizationRef, projectName)
+	URLApi := getProjectUrl(organization.AgolaOrganizationRef, projectName)
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
@@ -56,10 +56,10 @@ func CheckProjectExists(agolaOrganizationRef string, projectName string) (bool, 
 	return projectExists, projectID
 }
 
-func CreateOrganization(name string, visibility dto.VisibilityType) (string, error) {
+func CreateOrganization(organization *model.Organization, visibility dto.VisibilityType) (string, error) {
 	client := &http.Client{}
 	URLApi := getOrgUrl()
-	reqBody := strings.NewReader(`{"name": "` + name + `", "visibility": "` + string(visibility) + `"}`)
+	reqBody := strings.NewReader(`{"name": "` + organization.AgolaOrganizationRef + `", "visibility": "` + string(visibility) + `"}`)
 	req, err := http.NewRequest("POST", URLApi, reqBody)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
@@ -78,9 +78,9 @@ func CreateOrganization(name string, visibility dto.VisibilityType) (string, err
 	return jsonResponse.ID, err
 }
 
-func DeleteOrganization(name string, agolaUserToken string) error {
+func DeleteOrganization(organization *model.Organization, agolaUserToken string) error {
 	client := &http.Client{}
-	URLApi := getOrganizationUrl(name)
+	URLApi := getOrganizationUrl(organization.AgolaOrganizationRef)
 	req, err := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)
@@ -101,7 +101,7 @@ func DeleteOrganization(name string, agolaUserToken string) error {
 func CreateProject(projectName string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error) {
 	log.Println("CreateProject start")
 
-	if exists, projectID := CheckProjectExists(organization.Name, projectName); exists {
+	if exists, projectID := CheckProjectExists(organization, projectName); exists {
 		log.Println("project already exists with ID:", projectID)
 		return projectID, nil
 	}
@@ -111,10 +111,10 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 
 	projectRequest := &CreateProjectRequestDto{
 		Name:             projectName,
-		ParentRef:        "org/" + organization.Name,
+		ParentRef:        "org/" + organization.AgolaOrganizationRef,
 		Visibility:       organization.Visibility,
 		RemoteSourceName: remoteSourceName,
-		RepoPath:         organization.Name + "/" + projectName,
+		RepoPath:         organization.AgolaOrganizationRef + "/" + projectName,
 	}
 	data, _ := json.Marshal(projectRequest)
 	reqBody := strings.NewReader(string(data))
@@ -139,11 +139,11 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 	return jsonResponse.ID, err
 }
 
-func DeleteProject(organizationName string, projectname string, agolaUserToken string) error {
+func DeleteProject(organization *model.Organization, projectname string, agolaUserToken string) error {
 	log.Println("DeleteProject start")
 
 	client := &http.Client{}
-	URLApi := getProjectUrl(organizationName, projectname)
+	URLApi := getProjectUrl(organization.AgolaOrganizationRef, projectname)
 	req, err := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)
@@ -180,12 +180,12 @@ func GetRemoteSources() (*[]RemoteSourcesDto, error) {
 	return &jsonResponse, err
 }
 
-func AddOrUpdateOrganizationMember(agolaOrganizationRef string, agolaUserRef string, role string) error {
+func AddOrUpdateOrganizationMember(organization *model.Organization, agolaUserRef string, role string) error {
 	log.Println("AddOrUpdateOrganizationMember start")
 
 	var err error
 	client := &http.Client{}
-	URLApi := getAddOrgMemberUrl(agolaOrganizationRef, agolaUserRef)
+	URLApi := getAddOrgMemberUrl(organization.AgolaOrganizationRef, agolaUserRef)
 	reqBody := strings.NewReader(`{"role": "` + role + `"}`)
 	req, err := http.NewRequest("PUT", URLApi, reqBody)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
@@ -202,10 +202,10 @@ func AddOrUpdateOrganizationMember(agolaOrganizationRef string, agolaUserRef str
 	return err
 }
 
-func RemoveOrganizationMember(agolaOrganizationRef string, agolaUserRef string) error {
+func RemoveOrganizationMember(organization *model.Organization, agolaUserRef string) error {
 	var err error
 	client := &http.Client{}
-	URLApi := getAddOrgMemberUrl(agolaOrganizationRef, agolaUserRef)
+	URLApi := getAddOrgMemberUrl(organization.AgolaOrganizationRef, agolaUserRef)
 	fmt.Println("url ", URLApi)
 	reqBody := strings.NewReader(`{}`)
 	req, err := http.NewRequest("DELETE", URLApi, reqBody)
@@ -221,11 +221,11 @@ func RemoveOrganizationMember(agolaOrganizationRef string, agolaUserRef string) 
 	return err
 }
 
-func GetOrganizationMembers(agolaOrganizationRef string) (*OrganizationMembersResponseDto, error) {
+func GetOrganizationMembers(organization *model.Organization) (*OrganizationMembersResponseDto, error) {
 	log.Println("GetOrganizationMembers start")
 
 	client := &http.Client{}
-	URLApi := getOrganizationMembersUrl(agolaOrganizationRef)
+	URLApi := getOrganizationMembersUrl(organization.AgolaOrganizationRef)
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
@@ -245,15 +245,15 @@ func GetOrganizationMembers(agolaOrganizationRef string) (*OrganizationMembersRe
 }
 
 //TODO after Agola Issue
-func ArchiveProject(agolaOrganizationRef string, projectName string) error {
-	log.Println("ArchiveProject:", agolaOrganizationRef, projectName)
+func ArchiveProject(organization *model.Organization, projectName string) error {
+	log.Println("ArchiveProject:", organization.AgolaOrganizationRef, projectName)
 
 	return nil
 }
 
 //TODO after Agola Issue
-func UnarchiveProject(agolaOrganizationRef string, projectName string) error {
-	log.Println("UnarchiveProject:", agolaOrganizationRef, projectName)
+func UnarchiveProject(organization *model.Organization, projectName string) error {
+	log.Println("UnarchiveProject:", organization.AgolaOrganizationRef, projectName)
 
 	return nil
 }

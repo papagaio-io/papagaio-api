@@ -1,11 +1,20 @@
 package utils
 
-import "wecode.sorint.it/opensource/papagaio-api/config"
+import (
+	"strings"
 
-func GetOrganizationUrl(organizationName string) string {
-	return config.Config.Agola.AgolaAddr + "/org/" + organizationName
+	"wecode.sorint.it/opensource/papagaio-api/config"
+	"wecode.sorint.it/opensource/papagaio-api/model"
+)
+
+func GetOrganizationUrl(organization *model.Organization) string {
+	return config.Config.Agola.AgolaAddr + "/org/" + organization.AgolaOrganizationRef
 }
 
-func GetProjectUrl(organizationName string, projectName string) string {
-	return config.Config.Agola.AgolaAddr + "/org/" + organizationName + "/projects/" + projectName + ".proj"
+func GetProjectUrl(organization *model.Organization, projectName string) string {
+	return config.Config.Agola.AgolaAddr + "/org/" + organization.AgolaOrganizationRef + "/projects/" + projectName + ".proj"
+}
+
+func ConvertToAgolaOrganizationRef(organizationName string) string {
+	return strings.ReplaceAll(organizationName, ".", "")
 }

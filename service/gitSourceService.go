@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
@@ -23,8 +24,13 @@ func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Re
 		InternalServerError(w)
 		return
 	}
+	gs := make([]dto.GitSourcesDto, 0)
 
-	JSONokResponse(w, gitSources)
+	for _, v := range *gitSources {
+		gs = append(gs, dto.GitSourcesDto{Name: v.Name, GitAPIURL: v.GitAPIURL})
+	}
+
+	JSONokResponse(w, &gs)
 }
 
 func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Request) {

@@ -31,10 +31,10 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 		log.Println("Start add repository:", repo)
 
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
-		project := model.Project{GitRepoPath: repo, Archivied: true}
+		project := model.Project{GitRepoPath: repo, Archivied: true, AgolaProjectRef: utils.ConvertToAgolaProjectRef(repo)}
 
 		if agolaConfExists {
-			projectID, err := agolaApi.CreateProject(repo, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+			projectID, err := agolaApi.CreateProject(repo, utils.ConvertToAgolaProjectRef(repo), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 			project.AgolaProjectID = projectID
 			project.Archivied = false
 			if err != nil {
@@ -71,10 +71,10 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			}
 		}
 		if !gitRepoExists {
-			agolaApi.DeleteProject(organization, projectName, gitSource.AgolaToken)
+			agolaApi.DeleteProject(organization, utils.ConvertToAgolaOrganizationRef(projectName), gitSource.AgolaToken)
 			delete(organization.Projects, projectName)
 		} else {
-			agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization, projectName)
+			agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization, utils.ConvertToAgolaProjectRef(projectName))
 			if !agolaExists && !project.Archivied {
 				delete(organization.Projects, projectName)
 			} else {
@@ -90,8 +90,9 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 				delete(organization.Projects, repo)
 			}
 
-			if exists, _ := agolaApi.CheckProjectExists(organization, repo); exists {
-				agolaApi.DeleteProject(organization, repo, gitSource.AgolaToken)
+			agolaProjectRef := utils.ConvertToAgolaOrganizationRef(repo)
+			if exists, _ := agolaApi.CheckProjectExists(organization, agolaProjectRef); exists {
+				agolaApi.DeleteProject(organization, agolaProjectRef, gitSource.AgolaToken)
 			}
 
 			continue
@@ -99,7 +100,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 
 		var project model.Project
 		if p, ok := organization.Projects[repo]; !ok {
-			project = model.Project{GitRepoPath: repo}
+			project = model.Project{GitRepoPath: repo, AgolaProjectRef: utils.ConvertToAgolaProjectRef(repo)}
 			organization.Projects[repo] = project
 		} else {
 			project = p
@@ -110,7 +111,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {
 			if project, ok := organization.Projects[repo]; ok && !project.Archivied {
-				err := agolaApi.ArchiveProject(organization, repo)
+				err := agolaApi.ArchiveProject(organization, utils.ConvertToAgolaProjectRef(repo))
 				if err == nil {
 					project.Archivied = true
 					organization.Projects[repo] = project
@@ -120,11 +121,11 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			continue
 		}
 
-		if exists, projectID := agolaApi.CheckProjectExists(organization, repo); exists {
+		if exists, projectID := agolaApi.CheckProjectExists(organization, utils.ConvertToAgolaProjectRef(repo)); exists {
 			if project, ok := organization.Projects[repo]; ok {
 				project.AgolaProjectID = projectID
 				if project.Archivied {
-					err := agolaApi.UnarchiveProject(organization, repo)
+					err := agolaApi.UnarchiveProject(organization, utils.ConvertToAgolaProjectRef(repo))
 					if err != nil {
 						project.Archivied = false
 						organization.Projects[repo] = project
@@ -137,7 +138,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 		}
 
 		log.Println("Start add repository:", repo)
-		projectID, err := agolaApi.CreateProject(repo, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+		projectID, err := agolaApi.CreateProject(repo, utils.ConvertToAgolaProjectRef(repo), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 		if err != nil {
 			log.Println("Warning!!! Agola CreateProject API error:", err.Error())
 			break

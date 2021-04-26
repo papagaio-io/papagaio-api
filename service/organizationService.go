@@ -313,7 +313,7 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	if organization.Projects == nil {
 		NotFoundResponse(w)
 		return
-	} else if project, ok := organization.Projects[projectName]; !ok || project.Archivied {
+	} else if _, ok := organization.Projects[projectName]; !ok {
 		NotFoundResponse(w)
 		return
 	}

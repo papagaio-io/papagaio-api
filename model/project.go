@@ -1,10 +1,10 @@
 package model
 
 type Project struct {
-	//OrganizationID string `json:"organizationID"`
-	GitRepoPath    string `json:"gitRepoPath"`
-	AgolaProjectID string `json:"agolaProjectID"`
-	Archivied      bool   `json:"archivied"`
+	GitRepoPath     string `json:"gitRepoPath"`
+	AgolaProjectRef string `json:"agolaProjectRef"`
+	AgolaProjectID  string `json:"agolaProjectID"`
+	Archivied       bool   `json:"archivied"`
 
 	Branchs map[string]Branch `json:"branchs"` //use branch name as key
 }

@@ -34,7 +34,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		}
 	}
 
-	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization.Name)
+	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization)
 	agolaMembersMap := toMapMembers(&agolaMembers.Members)
 
 	for _, gitMember := range gitTeamMembers {
@@ -42,9 +42,9 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
-			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
+			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "member")
 		} else if agolaUserRole == agolaApi.Member {
-			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
+			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "owner")
 		}
 	}
 
@@ -53,9 +53,9 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
-			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "owner")
+			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "owner")
 		} else if agolaUserRole == agolaApi.Owner {
-			agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, "member")
+			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "member")
 		}
 	}
 
@@ -63,7 +63,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 
 	for _, agolaMember := range agolaMembers.Members {
 		if findGiteaMemberByAgolaUserRef(gitTeamOwners, agolaMember.Username) == nil && findGiteaMemberByAgolaUserRef(gitTeamMembers, agolaMember.Username) == nil {
-			agolaApi.RemoveOrganizationMember(organization.Name, agolaMember.Username)
+			agolaApi.RemoveOrganizationMember(organization, agolaMember.Username)
 		}
 	}
 

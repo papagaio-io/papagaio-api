@@ -12,17 +12,17 @@ import (
 //Sincronizzo i membri della organization tra github e agola
 func SyncMembersForGithub(organization *model.Organization, gitSource *model.GitSource) {
 	githubUsers, _ := github.GetOrganizationMembers(gitSource, organization.Name)
-	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization.Name)
+	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization)
 
 	for _, gitMember := range *githubUsers {
 		agolaUserRef := utils.ConvertGithubToAgolaUsername(gitMember.Username)
-		agolaApi.AddOrUpdateOrganizationMember(organization.Name, agolaUserRef, gitMember.Role)
+		agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, gitMember.Role)
 	}
 
 	//Verifico i membri eliminati su git
 	for _, agolaMember := range agolaMembers.Members {
 		if findGithubMemberByAgolaUserRef(githubUsers, agolaMember.Username) == nil {
-			agolaApi.RemoveOrganizationMember(organization.Name, agolaMember.Username)
+			agolaApi.RemoveOrganizationMember(organization, agolaMember.Username)
 		}
 	}
 }

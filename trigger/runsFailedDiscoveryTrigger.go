@@ -80,12 +80,12 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 						emailMap := getUsersEmailMap(gitSource, org, project.GitRepoPath, run)
 						log.Println("send emails to:", emailMap)
 
-						body, err := makeBody(org.Name, project.GitRepoPath, run)
+						body, err := makeBody(org, project.GitRepoPath, run)
 						if err != nil {
 							log.Println("Failed to make email body")
 							continue
 						}
-						subject := makeSubject(org.Name, project.GitRepoPath, run)
+						subject := makeSubject(org, project.GitRepoPath, run)
 
 						sendConfirmEmail(emailMap, nil, subject, body)
 					}
@@ -144,17 +144,17 @@ const bodyLinkTemplate string = `See: <a href="%s">click here</a>`
 const subjectTemplate string = "Run failed in Agola: %s » %s » release #%s"
 const runAgolaPath string = "%s/org/%s/projects/%s.proj/runs/%s"
 
-func makeSubject(organizationName string, projectName string, failedRun agola.RunDto) string {
-	return fmt.Sprintf(subjectTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter))
+func makeSubject(organization *model.Organization, projectName string, failedRun agola.RunDto) string {
+	return fmt.Sprintf(subjectTemplate, organization.Name, projectName, fmt.Sprint(failedRun.Counter))
 }
 
-func getRunAgolaUrl(organizationName string, projectName string, runID string) string {
-	return fmt.Sprintf(runAgolaPath, config.Config.Agola.AgolaAddr, organizationName, projectName, runID)
+func getRunAgolaUrl(organization *model.Organization, projectName string, runID string) string {
+	return fmt.Sprintf(runAgolaPath, config.Config.Agola.AgolaAddr, organization, organization.AgolaOrganizationRef, projectName, runID)
 }
 
-func makeBody(organizationName string, projectName string, failedRun agola.RunDto) (string, error) {
-	runUrl := getRunAgolaUrl(organizationName, projectName, failedRun.ID)
-	body := fmt.Sprintf(bodyMessageTemplate, organizationName, projectName, fmt.Sprint(failedRun.Counter))
+func makeBody(organization *model.Organization, projectName string, failedRun agola.RunDto) (string, error) {
+	runUrl := getRunAgolaUrl(organization, projectName, failedRun.ID)
+	body := fmt.Sprintf(bodyMessageTemplate, organization.Name, projectName, fmt.Sprint(failedRun.Counter))
 	body += fmt.Sprintf(bodyLinkTemplate, runUrl)
 
 	run, err := agola.GetRun(failedRun.ID)

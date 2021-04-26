@@ -36,9 +36,11 @@ func CheckOrganizationExists(organization *model.Organization) (bool, string) {
 	return organizationExists, organizationID
 }
 
-func CheckProjectExists(organization *model.Organization, projectName string) (bool, string) {
+func CheckProjectExists(organization *model.Organization, agolaProjectRef string) (bool, string) {
+	log.Println("CheckProjectExists start")
+
 	client := &http.Client{}
-	URLApi := getProjectUrl(organization.AgolaOrganizationRef, projectName)
+	URLApi := getProjectUrl(organization.AgolaOrganizationRef, agolaProjectRef)
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
@@ -98,10 +100,10 @@ func DeleteOrganization(organization *model.Organization, agolaUserToken string)
 	return nil
 }
 
-func CreateProject(projectName string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error) {
+func CreateProject(projectName string, agolaProjectRef string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error) {
 	log.Println("CreateProject start")
 
-	if exists, projectID := CheckProjectExists(organization, projectName); exists {
+	if exists, projectID := CheckProjectExists(organization, agolaProjectRef); exists {
 		log.Println("project already exists with ID:", projectID)
 		return projectID, nil
 	}
@@ -110,11 +112,11 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 	URLApi := getCreateProjectUrl()
 
 	projectRequest := &CreateProjectRequestDto{
-		Name:             projectName,
+		Name:             agolaProjectRef,
 		ParentRef:        "org/" + organization.AgolaOrganizationRef,
 		Visibility:       organization.Visibility,
 		RemoteSourceName: remoteSourceName,
-		RepoPath:         organization.AgolaOrganizationRef + "/" + projectName,
+		RepoPath:         organization.Name + "/" + projectName,
 	}
 	data, _ := json.Marshal(projectRequest)
 	reqBody := strings.NewReader(string(data))
@@ -139,11 +141,11 @@ func CreateProject(projectName string, organization *model.Organization, remoteS
 	return jsonResponse.ID, err
 }
 
-func DeleteProject(organization *model.Organization, projectname string, agolaUserToken string) error {
+func DeleteProject(organization *model.Organization, agolaProjectRef string, agolaUserToken string) error {
 	log.Println("DeleteProject start")
 
 	client := &http.Client{}
-	URLApi := getProjectUrl(organization.AgolaOrganizationRef, projectname)
+	URLApi := getProjectUrl(organization.AgolaOrganizationRef, agolaProjectRef)
 	req, err := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)

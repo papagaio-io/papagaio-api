@@ -11,10 +11,14 @@ func GetOrganizationUrl(organization *model.Organization) string {
 	return config.Config.Agola.AgolaAddr + "/org/" + organization.AgolaOrganizationRef
 }
 
-func GetProjectUrl(organization *model.Organization, projectName string) string {
-	return config.Config.Agola.AgolaAddr + "/org/" + organization.AgolaOrganizationRef + "/projects/" + projectName + ".proj"
+func GetProjectUrl(organization *model.Organization, project *model.Project) string {
+	return config.Config.Agola.AgolaAddr + "/org/" + organization.AgolaOrganizationRef + "/projects/" + project.AgolaProjectRef + ".proj"
 }
 
 func ConvertToAgolaOrganizationRef(organizationName string) string {
 	return strings.ReplaceAll(organizationName, ".", "")
+}
+
+func ConvertToAgolaProjectRef(projectName string) string {
+	return strings.ReplaceAll(projectName, ".", "")
 }

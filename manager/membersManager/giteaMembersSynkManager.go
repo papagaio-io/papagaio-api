@@ -4,23 +4,23 @@ import (
 	"log"
 	"strings"
 
-	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
-	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 //Sincronizzo i membri della organization tra gitea e agola
-func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource) {
+func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	log.Println("SyncMembersForGitea start")
 
-	gitTeams, _ := gitApi.GetOrganizationTeams(gitSource, organization.Name)
+	gitTeams, _ := gitGateway.GetOrganizationTeams(gitSource, organization.Name)
 	gitTeamOwners := make(map[int]dto.UserTeamResponseDto)
 	gitTeamMembers := make(map[int]dto.UserTeamResponseDto)
 
 	for _, team := range *gitTeams {
-		teamMembers, _ := gitApi.GetTeamMembers(gitSource, organization.Name, team.ID)
+		teamMembers, _ := gitGateway.GetTeamMembers(gitSource, organization.Name, team.ID)
 
 		var teamToCheck *map[int]dto.UserTeamResponseDto
 		if strings.Compare(team.Permission, "owner") == 0 {
@@ -43,7 +43,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
 			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "member")
-		} else if agolaUserRole == agolaApi.Member {
+		} else if agolaUserRole == agola.Member {
 			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "owner")
 		}
 	}
@@ -54,7 +54,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
 			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "owner")
-		} else if agolaUserRole == agolaApi.Owner {
+		} else if agolaUserRole == agola.Owner {
 			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "member")
 		}
 	}
@@ -80,8 +80,8 @@ func findGiteaMemberByAgolaUserRef(gitMembers map[int]dto.UserTeamResponseDto, a
 	return nil
 }
 
-func toMapMembers(members *[]agolaApi.MemberDto) *map[string]agolaApi.MemberDto {
-	membersMap := make(map[string]agolaApi.MemberDto)
+func toMapMembers(members *[]agola.MemberDto) *map[string]agola.MemberDto {
+	membersMap := make(map[string]agola.MemberDto)
 	for _, member := range *members {
 		membersMap[member.Username] = member
 	}

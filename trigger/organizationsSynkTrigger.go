@@ -5,28 +5,29 @@ import (
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/manager/membersManager"
 	"wecode.sorint.it/opensource/papagaio-api/manager/repositoryManager"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartOrganizationSync(db repository.Database, tr utils.ConfigUtils, CommonMutex *utils.CommonMutex) {
-	go syncOrganizationRun(db, tr, CommonMutex)
+func StartOrganizationSync(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
+	go syncOrganizationRun(db, tr, commonMutex, agolaApi, gitGateway)
 }
 
-func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, CommonMutex *utils.CommonMutex) {
+func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	db.GetOrganizationsTriggerTime()
 	for {
 		log.Println("start members synk")
 
 		organizationsName, _ := db.GetOrganizationsName()
 		for _, organizationName := range organizationsName {
-			mutex := utils.ReserveOrganizationMutex(organizationName, CommonMutex)
+			mutex := utils.ReserveOrganizationMutex(organizationName, commonMutex)
 			mutex.Lock()
 
 			locked := true
-			defer utils.ReleaseOrganizationMutexDefer(organizationName, CommonMutex, mutex, &locked)
+			defer utils.ReleaseOrganizationMutexDefer(organizationName, commonMutex, mutex, &locked)
 
 			org, _ := db.GetOrganizationByName(organizationName)
 			if org == nil {
@@ -34,7 +35,7 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, CommonMut
 				continue
 			}
 
-			if agolaOrganizationExists, _ := agola.CheckOrganizationExists(org); !agolaOrganizationExists {
+			if agolaOrganizationExists, _ := agolaApi.CheckOrganizationExists(org); !agolaOrganizationExists {
 				db.DeleteOrganization(organizationName)
 				continue
 			}
@@ -43,11 +44,11 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, CommonMut
 
 			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
 
-			membersManager.SynkMembers(org, gitSource)
-			repositoryManager.SynkGitRepositorys(db, org, gitSource)
+			membersManager.SynkMembers(org, gitSource, agolaApi, gitGateway)
+			repositoryManager.SynkGitRepositorys(db, org, gitSource, agolaApi, gitGateway)
 
 			mutex.Unlock()
-			utils.ReleaseOrganizationMutex(organizationName, CommonMutex)
+			utils.ReleaseOrganizationMutex(organizationName, commonMutex)
 			locked = false
 		}
 

@@ -8,10 +8,6 @@ import (
 	"log"
 )
 
-func init() {
-	SetupConfig()
-}
-
 // Configuration contains all informations required to run papagaio
 type Configuration struct {
 	// Server configuration

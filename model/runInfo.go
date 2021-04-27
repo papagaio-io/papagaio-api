@@ -37,6 +37,6 @@ const (
 
 const runURL string = "%s/org/%s/projects/%s.proj/runs/%s"
 
-func (run *RunInfo) GetURL(organizationName string, projectName string) string {
-	return fmt.Sprintf(runURL, config.Config.Agola.AgolaAddr, organizationName, projectName, run.ID)
+func (run *RunInfo) GetURL(organization *Organization, project *Project) string {
+	return fmt.Sprintf(runURL, config.Config.Agola.AgolaAddr, organization.AgolaOrganizationRef, project.AgolaProjectRef, run.ID)
 }

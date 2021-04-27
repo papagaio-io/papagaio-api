@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -13,35 +12,49 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
-func CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
+type GithubInterface interface {
+	CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error)
+	DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error
+	GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error)
+	CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool
+	GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error)
+	GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error)
+	GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error)
+	GetOrganizationMembers(gitSource *model.GitSource, organizationName string) (*[]GitHubUser, error)
+	GetRepositoryMembers(gitSource *model.GitSource, organizationName string, repositoryRef string) (*[]GitHubUser, error)
+	GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool
+	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error)
+	GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
+	GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto
+}
+
+type GithubApi struct{}
+
+func (githubApi *GithubApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
 	client := getClient(gitSource)
 
 	webHookName := "web"
 	active := true
 	conf := make(map[string]interface{})
 	conf["url"] = config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + gitOrgRef
-	fmt.Println("url:", conf["url"])
 	conf["content_type"] = "json"
 	hook := &github.Hook{Name: &webHookName, Events: []string{"repository", "push", "create", "delete"}, Active: &active, Config: conf}
-	hook, resp, err := client.Organizations.CreateHook(context.Background(), gitOrgRef, hook)
+	hook, _, err := client.Organizations.CreateHook(context.Background(), gitOrgRef, hook)
 	hookID := -1
 	if err == nil {
 		hookID = int(*hook.ID)
 	}
 
-	fmt.Println("resp:", resp)
-	fmt.Println("err:", err)
-
 	return hookID, err
 }
 
-func DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error {
+func (githubApi *GithubApi) DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error {
 	client := getClient(gitSource)
 	_, err := client.Organizations.DeleteHook(context.Background(), gitOrgRef, int64(webHookID))
 	return err
 }
 
-func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error) {
+func (githubApi *GithubApi) GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error) {
 	client := getClient(gitSource)
 
 	opt := &github.RepositoryListByOrgOptions{Type: "public"}
@@ -56,13 +69,13 @@ func GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, e
 	return &retVal, err
 }
 
-func CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
+func (githubApi *GithubApi) CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
 	client := getClient(gitSource)
 	_, _, err := client.Organizations.Get(context.Background(), gitOrgRef)
 	return err == nil
 }
 
-func GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
+func (githubApi *GithubApi) GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
 	client := getClient(gitSource)
 	teams, _, err := client.Repositories.ListTeams(context.Background(), gitOrgRef, repositoryRef, nil)
 
@@ -74,7 +87,7 @@ func GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef string, repository
 	return &retVal, err
 }
 
-func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
+func (githubApi *GithubApi) GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
 	client := getClient(gitSource)
 	teams, _, err := client.Teams.ListTeams(context.Background(), gitOrgRef, nil)
 
@@ -86,7 +99,7 @@ func GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.
 	return &retVal, err
 }
 
-func GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error) {
+func (githubApi *GithubApi) GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error) {
 	client := getClient(gitSource)
 	users, _, err := client.Teams.ListTeamMembers(context.Background(), int64(teamId), nil)
 
@@ -100,7 +113,7 @@ func GetTeamMembers(gitSource *model.GitSource, organizationName string, teamId 
 	return &retVal, err
 }
 
-func GetOrganizationMembers(gitSource *model.GitSource, organizationName string) (*[]GitHubUser, error) {
+func (githubApi *GithubApi) GetOrganizationMembers(gitSource *model.GitSource, organizationName string) (*[]GitHubUser, error) {
 	client := getClient(gitSource)
 	users, _, err := client.Organizations.ListMembers(context.Background(), organizationName, nil)
 
@@ -123,7 +136,7 @@ func GetOrganizationMembers(gitSource *model.GitSource, organizationName string)
 	return &retVal, err
 }
 
-func GetRepositoryMembers(gitSource *model.GitSource, organizationName string, repositoryRef string) (*[]GitHubUser, error) {
+func (githubApi *GithubApi) GetRepositoryMembers(gitSource *model.GitSource, organizationName string, repositoryRef string) (*[]GitHubUser, error) {
 	client := getClient(gitSource)
 	users, _, err := client.Repositories.ListCollaborators(context.Background(), organizationName, repositoryRef, nil)
 
@@ -146,7 +159,7 @@ func GetRepositoryMembers(gitSource *model.GitSource, organizationName string, r
 	return &retVal, err
 }
 
-func GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool {
+func (githubApi *GithubApi) GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool {
 	client := getClient(gitSource)
 	branchList, _, err := client.Repositories.ListBranches(context.Background(), gitOrgRef, repositoryRef, nil)
 
@@ -161,7 +174,7 @@ func GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef str
 	return retVal
 }
 
-func CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error) {
+func (githubApi *GithubApi) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error) {
 	client := getClient(gitSource)
 	branchList, _, err := client.Repositories.ListBranches(context.Background(), gitOrgRef, repositoryRef, nil)
 
@@ -189,7 +202,7 @@ func CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string
 	return false, nil
 }
 
-func GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error) {
+func (githubApi *GithubApi) GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error) {
 	client := getClient(gitSource)
 	commit, _, err := client.Repositories.GetCommit(context.Background(), gitOrgRef, repositoryRef, commitSha)
 	if err != nil {
@@ -210,7 +223,7 @@ func GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryR
 	return retVal, nil
 }
 
-func GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto {
+func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto {
 	client := getClient(gitSource)
 	org, _, err := client.Organizations.Get(context.Background(), gitOrgRef)
 	if err != nil {

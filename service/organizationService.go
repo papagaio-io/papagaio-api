@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
-	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/manager"
@@ -20,6 +20,8 @@ import (
 type OrganizationService struct {
 	Db          repository.Database
 	CommonMutex *utils.CommonMutex
+	AgolaApi    agolaApi.AgolaApiInterface
+	GitGateway  *git.GitGateway
 }
 
 func (service *OrganizationService) GetOrganizations(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +82,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	gitOrgExists := gitApi.CheckOrganizationExists(gitSource, org.Name)
+	gitOrgExists := service.GitGateway.CheckOrganizationExists(gitSource, org.Name)
 	if gitOrgExists == false {
 		UnprocessableEntityResponse(w, "Organization not found")
 		return
@@ -94,13 +96,13 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org.UserEmailCreator = r.Header.Get(controller.XAuthEmail)
 
-	org.WebHookID, err = gitApi.CreateWebHook(gitSource, org.Name)
+	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, org.Name)
 	if err != nil {
 		UnprocessableEntityResponse(w, err.Error())
 		return
 	}
 
-	agolaOrganizationExists, agolaOrganizationID := agolaApi.CheckOrganizationExists(org)
+	agolaOrganizationExists, agolaOrganizationID := service.AgolaApi.CheckOrganizationExists(org)
 	if agolaOrganizationExists {
 		log.Println(org.Name, "just exists in Agola")
 		if !forceCreate {
@@ -110,10 +112,10 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 		org.ID = agolaOrganizationID
 	} else {
-		org.ID, err = agolaApi.CreateOrganization(org, org.Visibility)
+		org.ID, err = service.AgolaApi.CreateOrganization(org, org.Visibility)
 		if err != nil {
 			log.Println("Agola CreateOrganization error:", err)
-			gitApi.DeleteWebHook(gitSource, org.Name, org.WebHookID)
+			service.GitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
 			InternalServerError(w)
 			return
 		}
@@ -128,7 +130,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	manager.StartOrganizationCheckout(service.Db, org, gitSource)
+	manager.StartOrganizationCheckout(service.Db, org, gitSource, service.AgolaApi, service.GitGateway)
 
 	response := dto.CreateOrganizationResponseDto{OrganizationURL: utils.GetOrganizationUrl(org)}
 	JSONokResponse(w, response)
@@ -138,7 +140,7 @@ func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *h
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	remoteSources, _ := agolaApi.GetRemoteSources()
+	remoteSources, _ := service.AgolaApi.GetRemoteSources()
 
 	JSONokResponse(w, remoteSources)
 }
@@ -184,14 +186,14 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	}
 
 	if !internalonly {
-		err = agolaApi.DeleteOrganization(organization, gitSource.AgolaToken)
+		err = service.AgolaApi.DeleteOrganization(organization, gitSource.AgolaToken)
 		if err != nil {
 			InternalServerError(w)
 			return
 		}
 	}
 
-	gitApi.DeleteWebHook(gitSource, organizationName, organization.WebHookID)
+	service.GitGateway.DeleteWebHook(gitSource, organizationName, organization.WebHookID)
 	err = service.Db.DeleteOrganization(organization.Name)
 
 	mutex.Unlock()
@@ -272,7 +274,7 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 	retVal := make([]dto.OrganizationDto, 0)
 	for _, organization := range *organizations {
 		gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
-		retVal = append(retVal, manager.GetOrganizationDto(&organization, gitsource))
+		retVal = append(retVal, manager.GetOrganizationDto(&organization, gitsource, service.GitGateway))
 	}
 
 	JSONokResponse(w, retVal)
@@ -293,7 +295,7 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 
 	gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
 
-	JSONokResponse(w, manager.GetOrganizationDto(organization, gitsource))
+	JSONokResponse(w, manager.GetOrganizationDto(organization, gitsource, service.GitGateway))
 }
 
 func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *http.Request) {

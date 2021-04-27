@@ -4,19 +4,19 @@ import (
 	"log"
 	"strings"
 
+	"wecode.sorint.it/opensource/papagaio-api/api/agola"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
-	gitApi "wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 //Inserisco tutti i repository di git su agola
-func CheckoutAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource) {
-	log.Println("Start CheckoutAllGitRepository")
+func CheckoutAllGitRepository(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway) {
+	log.Println("Start AddAllGitRepository")
 
-	repositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
+	repositoryList, _ := gitGateway.GetRepositories(gitSource, organization.Name)
 	log.Println("repositoryList:", *repositoryList)
 
 	if organization.Projects == nil {
@@ -30,7 +30,7 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 
 		log.Println("Start add repository:", repo)
 
-		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
+		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		project := model.Project{GitRepoPath: repo, Archivied: true, AgolaProjectRef: utils.ConvertToAgolaProjectRef(repo)}
 
 		if agolaConfExists {
@@ -45,7 +45,7 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 		organization.Projects[repo] = project
 		db.SaveOrganization(organization)
 
-		BranchSynck(db, gitSource, organization, repo)
+		BranchSynck(db, gitSource, organization, repo, gitGateway)
 
 		log.Println("End add repository:", repo)
 	}
@@ -53,14 +53,14 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 	log.Println("End CheckoutAllGitRepository")
 }
 
-func SynkGitRepositorys(db repository.Database, organization *model.Organization, gitSource *model.GitSource) error {
+func SynkGitRepositorys(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) error {
 	log.Println("Start SynkGitRepositorys for", organization.Name)
 
 	if organization.Projects == nil {
 		organization.Projects = make(map[string]model.Project)
 	}
 
-	gitRepositoryList, _ := gitApi.GetRepositories(gitSource, organization.Name)
+	gitRepositoryList, _ := gitGateway.GetRepositories(gitSource, organization.Name)
 
 	for projectName, project := range organization.Projects {
 		gitRepoExists := false
@@ -106,9 +106,9 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			project = p
 		}
 
-		BranchSynck(db, gitSource, organization, repo)
+		BranchSynck(db, gitSource, organization, repo, gitGateway)
 
-		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
+		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
 		if !agolaConfExists {
 			if project, ok := organization.Projects[repo]; ok && !project.Archivied {
 				err := agolaApi.ArchiveProject(organization, utils.ConvertToAgolaProjectRef(repo))
@@ -126,7 +126,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 				project.AgolaProjectID = projectID
 				if project.Archivied {
 					err := agolaApi.UnarchiveProject(organization, utils.ConvertToAgolaProjectRef(repo))
-					if err != nil {
+					if err == nil {
 						project.Archivied = false
 						organization.Projects[repo] = project
 					}
@@ -155,7 +155,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 	return nil
 }
 
-func BranchSynck(db repository.Database, gitSource *model.GitSource, organization *model.Organization, repositoryName string) {
+func BranchSynck(db repository.Database, gitSource *model.GitSource, organization *model.Organization, repositoryName string, gitGateway *git.GitGateway) {
 	if _, exists := organization.Projects[repositoryName]; !exists {
 		return
 	}
@@ -166,7 +166,7 @@ func BranchSynck(db repository.Database, gitSource *model.GitSource, organizatio
 		organization.Projects[repositoryName] = project
 	}
 
-	branchList := git.GetBranches(gitSource, organization.Name, repositoryName)
+	branchList := gitGateway.GetBranches(gitSource, organization.Name, repositoryName)
 
 	for branch, _ := range branchList {
 		if _, ok := organization.Projects[repositoryName].Branchs[branch]; !ok {

@@ -8,30 +8,28 @@ import (
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
-	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
-	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, CommonMutex *utils.CommonMutex) {
-	go discoveryRunFails(db, tr, CommonMutex)
+func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
+	go discoveryRunFails(db, tr, commonMutex, agolaApi, gitGateway)
 }
 
-func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex *utils.CommonMutex) {
+func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	for {
 		log.Println("Start discoveryRunFails")
 
 		organizationsName, _ := db.GetOrganizationsName()
 
 		for _, organizationName := range organizationsName {
-			mutex := utils.ReserveOrganizationMutex(organizationName, CommonMutex)
+			mutex := utils.ReserveOrganizationMutex(organizationName, commonMutex)
 			mutex.Lock()
 
 			locked := true
-			defer utils.ReleaseOrganizationMutexDefer(organizationName, CommonMutex, mutex, &locked)
+			defer utils.ReleaseOrganizationMutexDefer(organizationName, commonMutex, mutex, &locked)
 
 			org, _ := db.GetOrganizationByName(organizationName)
 			if org == nil {
@@ -50,7 +48,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 					continue
 				}
 
-				checkNewRuns := CheckIfNewRunsPresent(&project)
+				checkNewRuns := CheckIfNewRunsPresent(&project, agolaApi)
 				if !checkNewRuns {
 					log.Println("no new runs found for project", projectName)
 					continue
@@ -58,7 +56,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 
 				//If there are new runs asks for other runs
 				lastRun := project.GetLastRun()
-				runList, _ := agola.GetRuns(project.AgolaProjectID, false, "finished", &lastRun.ID, 0, true)
+				runList, _ := agolaApi.GetRuns(project.AgolaProjectID, false, "finished", &lastRun.ID, 0, true)
 
 				runList = takeWebhookTrigger(runList)
 
@@ -77,10 +75,10 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 
 					if run.Result == agola.RunResultFailed && run.StartTime.After(lastRun.RunStartDate) {
 						log.Println("Found run failed!")
-						emailMap := getUsersEmailMap(gitSource, org, project.GitRepoPath, run)
+						emailMap := getUsersEmailMap(gitSource, org, project.GitRepoPath, run, gitGateway)
 						log.Println("send emails to:", emailMap)
 
-						body, err := makeBody(org, project.GitRepoPath, run)
+						body, err := makeBody(org, project.GitRepoPath, run, agolaApi)
 						if err != nil {
 							log.Println("Failed to make email body")
 							continue
@@ -96,7 +94,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 			db.SaveOrganization(org)
 
 			mutex.Unlock()
-			utils.ReleaseOrganizationMutex(organizationName, CommonMutex)
+			utils.ReleaseOrganizationMutex(organizationName, commonMutex)
 			locked = false
 		}
 
@@ -105,19 +103,19 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, CommonMutex
 	}
 }
 
-func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organization, gitRepoPath string, failedRun agola.RunDto) map[string]bool {
+func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organization, gitRepoPath string, failedRun agola.RunDto, gitGateway *git.GitGateway) map[string]bool {
 	emails := make(map[string]bool, 0)
 
 	//Find all users that commited the failed run and parents
-	emailUsersCommitted := getEmailByRun(&failedRun, gitSource, organization.Name, gitRepoPath)
+	emailUsersCommitted := getEmailByRun(&failedRun, gitSource, organization.Name, gitRepoPath, gitGateway)
 
 	//Users owner of the organization and users owner of the repository
 	var usersRepoOwners *[]string
 
 	if gitSource.GitType == model.Gitea {
-		usersRepoOwners, _ = findGiteaUsersEmailRepositoryOwner(gitSource, organization.Name, gitRepoPath)
+		usersRepoOwners, _ = findGiteaUsersEmailRepositoryOwner(gitSource, organization.Name, gitRepoPath, gitGateway)
 	} else {
-		usersRepoOwners, _ = findGithubUsersRepositoryOwner(gitSource, organization.Name, gitRepoPath)
+		usersRepoOwners, _ = findGithubUsersRepositoryOwner(gitSource, organization.Name, gitRepoPath, gitGateway)
 	}
 
 	for _, email := range emailUsersCommitted {
@@ -152,25 +150,25 @@ func getRunAgolaUrl(organization *model.Organization, projectName string, runID 
 	return fmt.Sprintf(runAgolaPath, config.Config.Agola.AgolaAddr, organization, organization.AgolaOrganizationRef, projectName, runID)
 }
 
-func makeBody(organization *model.Organization, projectName string, failedRun agola.RunDto) (string, error) {
+func makeBody(organization *model.Organization, projectName string, failedRun agola.RunDto, agolaApi agola.AgolaApiInterface) (string, error) {
 	runUrl := getRunAgolaUrl(organization, projectName, failedRun.ID)
 	body := fmt.Sprintf(bodyMessageTemplate, organization.Name, projectName, fmt.Sprint(failedRun.Counter))
 	body += fmt.Sprintf(bodyLinkTemplate, runUrl)
 
-	run, err := agola.GetRun(failedRun.ID)
+	run, err := agolaApi.GetRun(failedRun.ID)
 	if err != nil {
 		return "", err
 	}
 
 	for _, task := range run.Tasks {
 		if task.Status == agola.RunTaskStatusFailed {
-			taskFailed, err := agola.GetTask(run.ID, task.ID)
+			taskFailed, err := agolaApi.GetTask(run.ID, task.ID)
 			if err != nil {
 				return "", err
 			}
 
 			if taskFailed.SetupStep.Phase == agola.ExecutorTaskPhaseFailed {
-				logs, err := agola.GetLogs(run.ID, task.ID, -1)
+				logs, err := agolaApi.GetLogs(run.ID, task.ID, -1)
 				if err != nil {
 					return "", err
 				}
@@ -181,7 +179,7 @@ func makeBody(organization *model.Organization, projectName string, failedRun ag
 			for stepID, step := range taskFailed.Steps {
 				if step.Phase == agola.ExecutorTaskPhaseFailed {
 
-					logs, err := agola.GetLogs(run.ID, task.ID, stepID)
+					logs, err := agolaApi.GetLogs(run.ID, task.ID, stepID)
 					if err != nil {
 						return "", err
 					}
@@ -197,20 +195,17 @@ func makeBody(organization *model.Organization, projectName string, failedRun ag
 	return body, nil
 }
 
-func CheckIfNewRunsPresent(project *model.Project) bool {
-	fmt.Println("CheckIfNewRunsPresent:", project.GitRepoPath)
+func CheckIfNewRunsPresent(project *model.Project, agolaApi agola.AgolaApiInterface) bool {
 	lastRun := project.GetLastRun()
-	fmt.Println("CheckIfNewRunsPresent:", lastRun)
-	runList, _ := agola.GetRuns(project.AgolaProjectID, true, "finished", nil, 1, false)
-	fmt.Println("CheckIfNewRunsPresent runList:", runList)
+	runList, _ := agolaApi.GetRuns(project.AgolaProjectID, true, "finished", nil, 1, false)
 
 	return runList != nil && len(*runList) != 0 && (*runList)[0].StartTime.After(lastRun.RunStartDate)
 }
 
-func findGiteaUsersEmailRepositoryOwner(gitSource *model.GitSource, organizationName string, gitRepoPath string) (*[]string, error) {
+func findGiteaUsersEmailRepositoryOwner(gitSource *model.GitSource, organizationName string, gitRepoPath string, gitGateway *git.GitGateway) (*[]string, error) {
 	retVal := make([]string, 0)
 
-	teams, err := gitea.GetRepositoryTeams(gitSource, organizationName, gitRepoPath)
+	teams, err := gitGateway.GiteaApi.GetRepositoryTeams(gitSource, organizationName, gitRepoPath)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +215,7 @@ func findGiteaUsersEmailRepositoryOwner(gitSource *model.GitSource, organization
 			continue
 		}
 
-		users, err := gitea.GetTeamMembers(gitSource, team.ID)
+		users, err := gitGateway.GiteaApi.GetTeamMembers(gitSource, team.ID)
 		if err != nil {
 			continue
 		}
@@ -233,10 +228,10 @@ func findGiteaUsersEmailRepositoryOwner(gitSource *model.GitSource, organization
 	return &retVal, nil
 }
 
-func findGithubUsersRepositoryOwner(gitSource *model.GitSource, organizationName string, gitRepoPath string) (*[]string, error) {
+func findGithubUsersRepositoryOwner(gitSource *model.GitSource, organizationName string, gitRepoPath string, gitGateway *git.GitGateway) (*[]string, error) {
 	retVal := make([]string, 0)
 
-	users, err := github.GetRepositoryMembers(gitSource, organizationName, gitRepoPath)
+	users, err := gitGateway.GithubApi.GetRepositoryMembers(gitSource, organizationName, gitRepoPath)
 	if err != nil {
 		return nil, err
 	}
@@ -250,16 +245,16 @@ func findGithubUsersRepositoryOwner(gitSource *model.GitSource, organizationName
 	return &retVal, nil
 }
 
-func getEmailByRun(run *agola.RunDto, gitSource *model.GitSource, organizationName string, gitRepoPath string) []string {
+func getEmailByRun(run *agola.RunDto, gitSource *model.GitSource, organizationName string, gitRepoPath string, gitGateway *git.GitGateway) []string {
 	retVal := make([]string, 0)
 
-	commitMetadata, err := git.GetCommitMetadata(gitSource, organizationName, gitRepoPath, run.GetCommitSha())
+	commitMetadata, err := gitGateway.GetCommitMetadata(gitSource, organizationName, gitRepoPath, run.GetCommitSha())
 	if err == nil && commitMetadata != nil {
 		retVal = append(retVal, commitMetadata.GetAuthorEmail())
 
 		if commitMetadata.Parents != nil {
 			for _, parent := range commitMetadata.Parents {
-				commitParentMetadata, err := git.GetCommitMetadata(gitSource, organizationName, gitRepoPath, parent.Sha)
+				commitParentMetadata, err := gitGateway.GetCommitMetadata(gitSource, organizationName, gitRepoPath, parent.Sha)
 				if err == nil && commitParentMetadata != nil {
 					retVal = append(retVal, commitParentMetadata.GetAuthorEmail())
 				}

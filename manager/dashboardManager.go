@@ -10,13 +10,13 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSource) dto.OrganizationDto {
+func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSource, gitGateway *git.GitGateway) dto.OrganizationDto {
 	retVal := dto.OrganizationDto{
 		ID:         organization.ID,
 		Name:       organization.Name,
 		Visibility: organization.Visibility,
 	}
-	orgDto := git.GetOrganization(gitsource, organization.Name)
+	orgDto := gitGateway.GetOrganization(gitsource, organization.Name)
 	if orgDto != nil {
 		retVal.AvatarURL = orgDto.AvatarURL
 	}
@@ -85,7 +85,7 @@ func GetProjectDto(project *model.Project, organization *model.Organization) dto
 	branchList := make([]dto.BranchDto, 0)
 	if project.Branchs != nil {
 		for _, branch := range project.Branchs {
-			branchList = append(branchList, GetBranchDto(branch, project, organization.Name))
+			branchList = append(branchList, GetBranchDto(branch, project, organization))
 		}
 	}
 	retVal.Branchs = branchList
@@ -107,7 +107,7 @@ func GetProjectDto(project *model.Project, organization *model.Organization) dto
 	return retVal
 }
 
-func GetBranchDto(branch model.Branch, project *model.Project, organizationName string) dto.BranchDto {
+func GetBranchDto(branch model.Branch, project *model.Project, organization *model.Organization) dto.BranchDto {
 	retVal := dto.BranchDto{Name: branch.Name}
 
 	if branch.LastRuns == nil || len(branch.LastRuns) == 0 {
@@ -121,7 +121,7 @@ func GetBranchDto(branch model.Branch, project *model.Project, organizationName 
 		}
 	}
 
-	retVal.Report = GetBranchReport(branch, project.GitRepoPath, organizationName)
+	retVal.Report = GetBranchReport(branch, project.GitRepoPath, organization.Name)
 
 	lastRun := project.GetLastRun()
 	if !lastRun.RunStartDate.IsZero() {
@@ -139,14 +139,14 @@ func GetBranchDto(branch model.Branch, project *model.Project, organizationName 
 	lastSuccessRun := project.GetLastSuccessRun()
 	if lastSuccessRun != nil {
 		retVal.LastSuccessRunDate = &lastSuccessRun.RunStartDate
-		runUrl := lastSuccessRun.GetURL(organizationName, project.GitRepoPath)
+		runUrl := lastSuccessRun.GetURL(organization, project)
 		retVal.LastSuccessRunURL = runUrl
 	}
 
 	lastFailedRun := project.GetLastFailedRun()
 	if lastFailedRun != nil {
 		retVal.LastFailedRunDate = &lastFailedRun.RunStartDate
-		runUrl := lastFailedRun.GetURL(organizationName, project.GitRepoPath)
+		runUrl := lastFailedRun.GetURL(organization, project)
 		retVal.LastFailedRunURL = runUrl
 	}
 

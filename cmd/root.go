@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"wecode.sorint.it/opensource/papagaio-api/config"
 )
 
 var rootCmd = &cobra.Command{
@@ -19,4 +20,8 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func init() {
+	config.SetupConfig()
 }

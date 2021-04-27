@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,10 +19,12 @@ import (
 type WebHookService struct {
 	Db          repository.Database
 	CommonMutex *utils.CommonMutex
+	AgolaApi    agolaApi.AgolaApiInterface
+	GitGateway  *git.GitGateway
 }
 
 func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("WebHookOrganization start...")
+	log.Println("WebHookOrganization start...")
 
 	data, _ := ioutil.ReadAll(r.Body)
 	var webHookMessage dto.WebHookDto
@@ -61,9 +62,9 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		log.Println("Repository created: ", webHookMessage.Repository.Name)
 		project := model.Project{GitRepoPath: webHookMessage.Repository.Name, Archivied: true, AgolaProjectRef: utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)}
 
-		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
+		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
 		if agolaConfExists {
-			projectID, err := agolaApi.CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+			projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 			project.AgolaProjectID = projectID
 			if err != nil {
 				log.Println("Warning!!! Agola CreateProject API error!")
@@ -82,7 +83,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			return
 		}
 
-		agolaApi.DeleteProject(organization, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), gitSource.AgolaToken)
+		service.AgolaApi.DeleteProject(organization, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), gitSource.AgolaToken)
 		delete(organization.Projects, webHookMessage.Repository.Name)
 
 		project := organization.Projects[webHookMessage.Repository.Name]
@@ -93,13 +94,13 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		log.Println("Repository push: ", webHookMessage.Repository.Name)
 
 		project, projectExist := organization.Projects[webHookMessage.Repository.Name]
-		agolaConfExists, _ := git.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
+		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
 
 		if agolaConfExists {
 			if !projectExist {
-				projectID, err := agolaApi.CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+				projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 				if err != nil {
-					fmt.Println("Warning!!! Agola CreateProject API error!")
+					log.Println("Warning!!! Agola CreateProject API error!")
 					return
 				}
 
@@ -107,7 +108,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 				organization.Projects[webHookMessage.Repository.Name] = project
 				service.Db.SaveOrganization(organization)
 			} else if project.Archivied {
-				err := agolaApi.UnarchiveProject(organization, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name))
+				err := service.AgolaApi.UnarchiveProject(organization, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name))
 				if err != nil {
 					InternalServerError(w)
 				}
@@ -116,7 +117,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			}
 		} else {
 			if projectExist && !project.Archivied {
-				err := agolaApi.ArchiveProject(organization, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name))
+				err := service.AgolaApi.ArchiveProject(organization, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name))
 				if err != nil {
 					InternalServerError(w)
 				}
@@ -125,12 +126,12 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			}
 		}
 
-		repositoryManager.BranchSynck(service.Db, gitSource, organization, webHookMessage.Repository.Name)
+		repositoryManager.BranchSynck(service.Db, gitSource, organization, webHookMessage.Repository.Name, service.GitGateway)
 	}
 
 	mutex.Unlock()
 	utils.ReleaseOrganizationMutex(gitOrgRef, service.CommonMutex)
 	locked = false
 
-	fmt.Println("WebHookOrganization end...")
+	log.Println("WebHookOrganization end...")
 }

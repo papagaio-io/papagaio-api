@@ -9,6 +9,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
+	"wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
@@ -38,12 +42,16 @@ func serve(cmd *cobra.Command, args []string) {
 
 	db := repository.NewAppDb(config.Config)
 	tr := utils.ConfigUtils{Db: &db}
+	agolaApi := agola.AgolaApi{}
+	gitGateway := git.GitGateway{GiteaApi: &gitea.GiteaApi{}, GithubApi: &github.GithubApi{}}
 
 	commonMutex := utils.NewEventMutex()
 
 	ctrlOrganization := service.OrganizationService{
 		Db:          &db,
 		CommonMutex: &commonMutex,
+		AgolaApi:    &agolaApi,
+		GitGateway:  &gitGateway,
 	}
 
 	ctrlGitSource := service.GitSourceService{
@@ -53,6 +61,8 @@ func serve(cmd *cobra.Command, args []string) {
 	ctrlWebHook := service.WebHookService{
 		Db:          &db,
 		CommonMutex: &commonMutex,
+		AgolaApi:    &agolaApi,
+		GitGateway:  &gitGateway,
 	}
 
 	ctrlUser := service.UserService{
@@ -78,8 +88,8 @@ func serve(cmd *cobra.Command, args []string) {
 		logRouter = router
 	}
 
-	trigger.StartOrganizationSync(&db, tr, &commonMutex)
-	trigger.StartRunFailsDiscovery(&db, tr, &commonMutex)
+	trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway)
+	trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway)
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

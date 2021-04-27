@@ -4,14 +4,15 @@ import (
 	"strings"
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 //Sincronizzo i membri della organization tra github e agola
-func SyncMembersForGithub(organization *model.Organization, gitSource *model.GitSource) {
-	githubUsers, _ := github.GetOrganizationMembers(gitSource, organization.Name)
+func SyncMembersForGithub(organization *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway) {
+	githubUsers, _ := gitGateway.GithubApi.GetOrganizationMembers(gitSource, organization.Name)
 	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization)
 
 	for _, gitMember := range *githubUsers {

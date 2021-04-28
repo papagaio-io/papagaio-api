@@ -11,10 +11,11 @@ import (
 )
 
 type Database interface {
-	GetOrganizationsName() ([]string, error)
+	GetOrganizationsRef() ([]string, error)
 	GetOrganizations() (*[]model.Organization, error)
 	SaveOrganization(organization *model.Organization) error
 	GetOrganizationByName(organizationName string) (*model.Organization, error)
+	GetOrganizationByAgolaRef(organizationName string) (*model.Organization, error)
 	GetOrganizationById(organizationID string) (*model.Organization, error)
 	DeleteOrganization(organizationID string) error
 
@@ -41,6 +42,11 @@ type AppDb struct {
 func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
+
+	orgList, _ := db.GetOrganizationsRef()
+	for _, org := range orgList {
+		db.DeleteOrganization(org)
+	}
 
 	return db
 }

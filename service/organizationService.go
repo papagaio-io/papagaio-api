@@ -68,7 +68,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org := &model.Organization{}
 	org.Name = req.Name
-	org.AgolaOrganizationRef = utils.ConvertToAgolaOrganizationRef(org.Name)
+	org.AgolaOrganizationRef = req.AgolaRef
 	org.GitSourceName = req.GitSourceName
 	org.Visibility = req.Visibility
 	org.BehaviourType = req.BehaviourType
@@ -88,7 +88,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	agolaOrg, err := service.Db.GetOrganizationByName(org.AgolaOrganizationRef)
+	agolaOrg, err := service.Db.GetOrganizationByAgolaRef(org.AgolaOrganizationRef)
 	if agolaOrg != nil {
 		UnprocessableEntityResponse(w, "Organization just present in papagaio")
 		return
@@ -96,7 +96,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org.UserEmailCreator = r.Header.Get(controller.XAuthEmail)
 
-	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, org.Name)
+	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, org.Name, org.AgolaOrganizationRef)
 	if err != nil {
 		UnprocessableEntityResponse(w, err.Error())
 		return
@@ -150,7 +150,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	organizationName := vars["organizationName"]
+	organizationRef := vars["organizationName"]
 
 	internalonlyQuery, ok := r.URL.Query()["internalonly"]
 	internalonly := false
@@ -167,13 +167,13 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	mutex := utils.ReserveOrganizationMutex(organizationName, service.CommonMutex)
+	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
 	locked := true
-	defer utils.ReleaseOrganizationMutexDefer(organizationName, service.CommonMutex, mutex, &locked)
+	defer utils.ReleaseOrganizationMutexDefer(organizationRef, service.CommonMutex, mutex, &locked)
 
-	organization, err := service.Db.GetOrganizationByName(organizationName)
+	organization, err := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
 		return
@@ -193,11 +193,11 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	service.GitGateway.DeleteWebHook(gitSource, organizationName, organization.WebHookID)
+	service.GitGateway.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)
 	err = service.Db.DeleteOrganization(organization.Name)
 
 	mutex.Unlock()
-	utils.ReleaseOrganizationMutex(organizationName, service.CommonMutex)
+	utils.ReleaseOrganizationMutex(organizationRef, service.CommonMutex)
 	locked = false
 
 	if err != nil {
@@ -218,7 +218,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	locked := true
 	defer utils.ReleaseOrganizationMutexDefer(organizationName, service.CommonMutex, mutex, &locked)
 
-	organization, err := service.Db.GetOrganizationByName(organizationName)
+	organization, err := service.Db.GetOrganizationByAgolaRef(organizationName)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
 		return
@@ -248,7 +248,7 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	locked := true
 	defer utils.ReleaseOrganizationMutexDefer(organizationName, service.CommonMutex, mutex, &locked)
 
-	organization, err := service.Db.GetOrganizationByName(organizationName)
+	organization, err := service.Db.GetOrganizationByAgolaRef(organizationName)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
 		return
@@ -287,7 +287,7 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 	vars := mux.Vars(r)
 	organizationName := vars["organizationName"]
 
-	organization, _ := service.Db.GetOrganizationByName(organizationName)
+	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationName)
 	if organization == nil {
 		NotFoundResponse(w)
 		return
@@ -306,7 +306,7 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	organizationName := vars["organizationName"]
 	projectName := vars["projectName"]
 
-	organization, _ := service.Db.GetOrganizationByName(organizationName)
+	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationName)
 	if organization == nil {
 		NotFoundResponse(w)
 		return

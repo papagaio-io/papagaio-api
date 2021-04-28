@@ -13,7 +13,7 @@ import (
 )
 
 type GithubInterface interface {
-	CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error)
+	CreateWebHook(gitSource *model.GitSource, gitOrgRef string, organizationRef string) (int, error)
 	DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error
 	GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error)
 	CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool
@@ -30,13 +30,13 @@ type GithubInterface interface {
 
 type GithubApi struct{}
 
-func (githubApi *GithubApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
+func (githubApi *GithubApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef string, organizationRef string) (int, error) {
 	client := getClient(gitSource)
 
 	webHookName := "web"
 	active := true
 	conf := make(map[string]interface{})
-	conf["url"] = config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + gitOrgRef
+	conf["url"] = config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + organizationRef
 	conf["content_type"] = "json"
 	hook := &github.Hook{Name: &webHookName, Events: []string{"repository", "push", "create", "delete"}, Active: &active, Config: conf}
 	hook, _, err := client.Organizations.CreateHook(context.Background(), gitOrgRef, hook)

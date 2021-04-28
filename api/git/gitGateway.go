@@ -12,11 +12,11 @@ type GitGateway struct {
 	GithubApi github.GithubInterface
 }
 
-func (gitGateway *GitGateway) CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
+func (gitGateway *GitGateway) CreateWebHook(gitSource *model.GitSource, gitOrgRef string, organizationRef string) (int, error) {
 	if gitSource.GitType == model.Gitea {
-		return gitGateway.GiteaApi.CreateWebHook(gitSource, gitOrgRef)
+		return gitGateway.GiteaApi.CreateWebHook(gitSource, gitOrgRef, organizationRef)
 	} else {
-		return gitGateway.GithubApi.CreateWebHook(gitSource, gitOrgRef)
+		return gitGateway.GithubApi.CreateWebHook(gitSource, gitOrgRef, organizationRef)
 	}
 }
 

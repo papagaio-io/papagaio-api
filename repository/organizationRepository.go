@@ -9,7 +9,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
-func (db *AppDb) GetOrganizationsName() ([]string, error) {
+func (db *AppDb) GetOrganizationsRef() ([]string, error) {
 	var retVal []string = make([]string, 0)
 
 	err := db.DB.View(func(txn *badger.Txn) error {
@@ -62,7 +62,7 @@ func (db *AppDb) GetOrganizations() (*[]model.Organization, error) {
 }
 
 func (db *AppDb) SaveOrganization(organization *model.Organization) error {
-	key := "org/" + organization.Name
+	key := "org/" + organization.AgolaOrganizationRef
 	value, err := json.Marshal(organization)
 	if err != nil {
 		log.Println("SaveOrganization error in json marshal", err)
@@ -127,6 +127,37 @@ func (db *AppDb) GetOrganizationByName(organizationName string) (*model.Organiza
 			dst, _ = item.ValueCopy(dst)
 			json.Unmarshal(dst, &localOrganization)
 			if strings.Compare(localOrganization.Name, organizationName) != 0 {
+				continue
+			}
+
+			organization = &localOrganization
+
+			break
+		}
+
+		return nil
+	})
+
+	return organization, err
+}
+
+func (db *AppDb) GetOrganizationByAgolaRef(agolaOrganizationRef string) (*model.Organization, error) {
+	var organization *model.Organization = nil
+
+	dst := make([]byte, 0)
+	err := db.DB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = []byte("org/" + agolaOrganizationRef)
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+
+			var localOrganization model.Organization
+			dst, _ = item.ValueCopy(dst)
+			json.Unmarshal(dst, &localOrganization)
+			if strings.Compare(localOrganization.AgolaOrganizationRef, agolaOrganizationRef) != 0 {
 				continue
 			}
 

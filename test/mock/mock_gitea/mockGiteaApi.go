@@ -8,7 +8,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 	dto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
-	gitea "wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
 	model "wecode.sorint.it/opensource/papagaio-api/model"
 )
 
@@ -164,36 +163,6 @@ func (m *MockGiteaInterface) GetBranches(gitSource *model.GitSource, gitOrgRef, 
 func (mr *MockGiteaInterfaceMockRecorder) GetBranches(gitSource, gitOrgRef, repositoryRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBranches", reflect.TypeOf((*MockGiteaInterface)(nil).GetBranches), gitSource, gitOrgRef, repositoryRef)
-}
-
-// getBranches mocks base method
-func (m *MockGiteaInterface) getBranches(gitSource *model.GitSource, gitOrgRef, repositoryRef string) (*[]gitea.BranchResponseDto, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "getBranches", gitSource, gitOrgRef, repositoryRef)
-	ret0, _ := ret[0].(*[]gitea.BranchResponseDto)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// getBranches indicates an expected call of getBranches
-func (mr *MockGiteaInterfaceMockRecorder) getBranches(gitSource, gitOrgRef, repositoryRef interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "getBranches", reflect.TypeOf((*MockGiteaInterface)(nil).getBranches), gitSource, gitOrgRef, repositoryRef)
-}
-
-// getRepositoryAgolaMetadata mocks base method
-func (m *MockGiteaInterface) getRepositoryAgolaMetadata(gitSource *model.GitSource, gitOrgRef, repositoryRef, branchName string) (*[]gitea.MetadataResponseDto, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "getRepositoryAgolaMetadata", gitSource, gitOrgRef, repositoryRef, branchName)
-	ret0, _ := ret[0].(*[]gitea.MetadataResponseDto)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// getRepositoryAgolaMetadata indicates an expected call of getRepositoryAgolaMetadata
-func (mr *MockGiteaInterfaceMockRecorder) getRepositoryAgolaMetadata(gitSource, gitOrgRef, repositoryRef, branchName interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "getRepositoryAgolaMetadata", reflect.TypeOf((*MockGiteaInterface)(nil).getRepositoryAgolaMetadata), gitSource, gitOrgRef, repositoryRef, branchName)
 }
 
 // CheckRepositoryAgolaConfExists mocks base method

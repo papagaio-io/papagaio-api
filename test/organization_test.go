@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,17 +18,15 @@ func TestGetOrganizationsOK(t *testing.T) {
 
 	organizationsMock := MakeOrganizationList()
 
-	m := mock_repository.NewMockDatabase(ctl)
-	m.EXPECT().GetOrganizations().Return(organizationsMock, nil)
+	db := mock_repository.NewMockDatabase(ctl)
+	db.EXPECT().GetOrganizations().Return(organizationsMock, nil)
 
 	serviceOrganization := service.OrganizationService{
-		Db: m,
+		Db: db,
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(serviceOrganization.GetOrganizations))
 	defer ts.Close()
-
-	fmt.Println("ts.URL:", ts.URL)
 
 	client := ts.Client()
 	resp, err := client.Get(ts.URL)
@@ -39,8 +36,33 @@ func TestGetOrganizationsOK(t *testing.T) {
 	var organizations *[]model.Organization
 	parseBody(resp, organizations)
 
-	fmt.Println("resp:", resp)
-	fmt.Println("organizations:", organizations)
-
 	//assertEventDtoEquals(t, eventDto, dto.CreateFullEventDto(eventMock))
+}
+
+func TestCreateOrganizationOK(t *testing.T) {
+	/*ctl := gomock.NewController(t)
+		defer ctl.Finish()
+
+		db := mock_repository.NewMockDatabase(ctl)
+		agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+		giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+		//TODO expect
+
+		serviceOrganization := service.OrganizationService{
+			Db:         db,
+			AgolaApi:   agolaApi,
+			GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+		}
+
+		ts := httptest.NewServer(http.HandlerFunc(serviceOrganization.CreateOrganization))
+		defer ts.Close()
+
+		client := ts.Client()
+
+		requestBody := strings.NewReader(`{"Uid":"6fcb514b-b878-4c9d-95b7-8dc3a7ce6fd8", "Slots": [2], "User":
+	        {"Name": "Nuovonome", "Surname": "Nuovocognome", "Email": "nuovaemail@email.com"}, "privacyPolicy": true}}`)
+		resp, err := client.Post(ts.URL, "application/json", requestBody)
+
+		assert.Equal(t, err, nil)*/
 }

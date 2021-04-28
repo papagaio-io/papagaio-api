@@ -25,8 +25,6 @@ type GiteaInterface interface {
 	GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error)
 	GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]dto.UserTeamResponseDto, error)
 	GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool
-	getBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (*[]BranchResponseDto, error)
-	getRepositoryAgolaMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, branchName string) (*[]MetadataResponseDto, error)
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
 }

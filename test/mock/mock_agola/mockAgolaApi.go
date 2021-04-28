@@ -36,90 +36,91 @@ func (m *MockAgolaApiInterface) EXPECT() *MockAgolaApiInterfaceMockRecorder {
 }
 
 // CheckOrganizationExists mocks base method
-func (m *MockAgolaApiInterface) CheckOrganizationExists(agolaOrganizationRef string) bool {
+func (m *MockAgolaApiInterface) CheckOrganizationExists(organization *model.Organization) (bool, string) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckOrganizationExists", agolaOrganizationRef)
+	ret := m.ctrl.Call(m, "CheckOrganizationExists", organization)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(string)
+	return ret0, ret1
 }
 
 // CheckOrganizationExists indicates an expected call of CheckOrganizationExists
-func (mr *MockAgolaApiInterfaceMockRecorder) CheckOrganizationExists(agolaOrganizationRef interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) CheckOrganizationExists(organization interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckOrganizationExists", reflect.TypeOf((*MockAgolaApiInterface)(nil).CheckOrganizationExists), agolaOrganizationRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckOrganizationExists", reflect.TypeOf((*MockAgolaApiInterface)(nil).CheckOrganizationExists), organization)
 }
 
 // CheckProjectExists mocks base method
-func (m *MockAgolaApiInterface) CheckProjectExists(agolaOrganizationRef, projectName string) (bool, string) {
+func (m *MockAgolaApiInterface) CheckProjectExists(organization *model.Organization, projectName string) (bool, string) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckProjectExists", agolaOrganizationRef, projectName)
+	ret := m.ctrl.Call(m, "CheckProjectExists", organization, projectName)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(string)
 	return ret0, ret1
 }
 
 // CheckProjectExists indicates an expected call of CheckProjectExists
-func (mr *MockAgolaApiInterfaceMockRecorder) CheckProjectExists(agolaOrganizationRef, projectName interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) CheckProjectExists(organization, projectName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckProjectExists", reflect.TypeOf((*MockAgolaApiInterface)(nil).CheckProjectExists), agolaOrganizationRef, projectName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckProjectExists", reflect.TypeOf((*MockAgolaApiInterface)(nil).CheckProjectExists), organization, projectName)
 }
 
 // CreateOrganization mocks base method
-func (m *MockAgolaApiInterface) CreateOrganization(name string, visibility dto.VisibilityType) (string, error) {
+func (m *MockAgolaApiInterface) CreateOrganization(organization *model.Organization, visibility dto.VisibilityType) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrganization", name, visibility)
+	ret := m.ctrl.Call(m, "CreateOrganization", organization, visibility)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateOrganization indicates an expected call of CreateOrganization
-func (mr *MockAgolaApiInterfaceMockRecorder) CreateOrganization(name, visibility interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) CreateOrganization(organization, visibility interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrganization", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateOrganization), name, visibility)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrganization", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateOrganization), organization, visibility)
 }
 
 // DeleteOrganization mocks base method
-func (m *MockAgolaApiInterface) DeleteOrganization(name, agolaUserToken string) error {
+func (m *MockAgolaApiInterface) DeleteOrganization(organization *model.Organization, agolaUserToken string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOrganization", name, agolaUserToken)
+	ret := m.ctrl.Call(m, "DeleteOrganization", organization, agolaUserToken)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteOrganization indicates an expected call of DeleteOrganization
-func (mr *MockAgolaApiInterfaceMockRecorder) DeleteOrganization(name, agolaUserToken interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) DeleteOrganization(organization, agolaUserToken interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrganization", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteOrganization), name, agolaUserToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrganization", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteOrganization), organization, agolaUserToken)
 }
 
 // CreateProject mocks base method
-func (m *MockAgolaApiInterface) CreateProject(projectName string, organization *model.Organization, remoteSourceName, agolaUserToken string) (string, error) {
+func (m *MockAgolaApiInterface) CreateProject(projectName, agolaProjectRef string, organization *model.Organization, remoteSourceName, agolaUserToken string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateProject", projectName, organization, remoteSourceName, agolaUserToken)
+	ret := m.ctrl.Call(m, "CreateProject", projectName, agolaProjectRef, organization, remoteSourceName, agolaUserToken)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateProject indicates an expected call of CreateProject
-func (mr *MockAgolaApiInterfaceMockRecorder) CreateProject(projectName, organization, remoteSourceName, agolaUserToken interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) CreateProject(projectName, agolaProjectRef, organization, remoteSourceName, agolaUserToken interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateProject), projectName, organization, remoteSourceName, agolaUserToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateProject), projectName, agolaProjectRef, organization, remoteSourceName, agolaUserToken)
 }
 
 // DeleteProject mocks base method
-func (m *MockAgolaApiInterface) DeleteProject(organizationName, projectname, agolaUserToken string) error {
+func (m *MockAgolaApiInterface) DeleteProject(organization *model.Organization, agolaProjectRef, agolaUserToken string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteProject", organizationName, projectname, agolaUserToken)
+	ret := m.ctrl.Call(m, "DeleteProject", organization, agolaProjectRef, agolaUserToken)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteProject indicates an expected call of DeleteProject
-func (mr *MockAgolaApiInterfaceMockRecorder) DeleteProject(organizationName, projectname, agolaUserToken interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) DeleteProject(organization, agolaProjectRef, agolaUserToken interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteProject), organizationName, projectname, agolaUserToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteProject), organization, agolaProjectRef, agolaUserToken)
 }
 
 // GetRemoteSources mocks base method
@@ -138,74 +139,74 @@ func (mr *MockAgolaApiInterfaceMockRecorder) GetRemoteSources() *gomock.Call {
 }
 
 // AddOrUpdateOrganizationMember mocks base method
-func (m *MockAgolaApiInterface) AddOrUpdateOrganizationMember(agolaOrganizationRef, agolaUserRef, role string) error {
+func (m *MockAgolaApiInterface) AddOrUpdateOrganizationMember(organization *model.Organization, agolaUserRef, role string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddOrUpdateOrganizationMember", agolaOrganizationRef, agolaUserRef, role)
+	ret := m.ctrl.Call(m, "AddOrUpdateOrganizationMember", organization, agolaUserRef, role)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddOrUpdateOrganizationMember indicates an expected call of AddOrUpdateOrganizationMember
-func (mr *MockAgolaApiInterfaceMockRecorder) AddOrUpdateOrganizationMember(agolaOrganizationRef, agolaUserRef, role interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) AddOrUpdateOrganizationMember(organization, agolaUserRef, role interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOrUpdateOrganizationMember", reflect.TypeOf((*MockAgolaApiInterface)(nil).AddOrUpdateOrganizationMember), agolaOrganizationRef, agolaUserRef, role)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOrUpdateOrganizationMember", reflect.TypeOf((*MockAgolaApiInterface)(nil).AddOrUpdateOrganizationMember), organization, agolaUserRef, role)
 }
 
 // RemoveOrganizationMember mocks base method
-func (m *MockAgolaApiInterface) RemoveOrganizationMember(agolaOrganizationRef, agolaUserRef string) error {
+func (m *MockAgolaApiInterface) RemoveOrganizationMember(organization *model.Organization, agolaUserRef string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveOrganizationMember", agolaOrganizationRef, agolaUserRef)
+	ret := m.ctrl.Call(m, "RemoveOrganizationMember", organization, agolaUserRef)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveOrganizationMember indicates an expected call of RemoveOrganizationMember
-func (mr *MockAgolaApiInterfaceMockRecorder) RemoveOrganizationMember(agolaOrganizationRef, agolaUserRef interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) RemoveOrganizationMember(organization, agolaUserRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveOrganizationMember", reflect.TypeOf((*MockAgolaApiInterface)(nil).RemoveOrganizationMember), agolaOrganizationRef, agolaUserRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveOrganizationMember", reflect.TypeOf((*MockAgolaApiInterface)(nil).RemoveOrganizationMember), organization, agolaUserRef)
 }
 
 // GetOrganizationMembers mocks base method
-func (m *MockAgolaApiInterface) GetOrganizationMembers(agolaOrganizationRef string) (*agola.OrganizationMembersResponseDto, error) {
+func (m *MockAgolaApiInterface) GetOrganizationMembers(organization *model.Organization) (*agola.OrganizationMembersResponseDto, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrganizationMembers", agolaOrganizationRef)
+	ret := m.ctrl.Call(m, "GetOrganizationMembers", organization)
 	ret0, _ := ret[0].(*agola.OrganizationMembersResponseDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrganizationMembers indicates an expected call of GetOrganizationMembers
-func (mr *MockAgolaApiInterfaceMockRecorder) GetOrganizationMembers(agolaOrganizationRef interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) GetOrganizationMembers(organization interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationMembers", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetOrganizationMembers), agolaOrganizationRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationMembers", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetOrganizationMembers), organization)
 }
 
 // ArchiveProject mocks base method
-func (m *MockAgolaApiInterface) ArchiveProject(agolaOrganizationRef, projectName string) error {
+func (m *MockAgolaApiInterface) ArchiveProject(organization *model.Organization, agolaProjectRef string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ArchiveProject", agolaOrganizationRef, projectName)
+	ret := m.ctrl.Call(m, "ArchiveProject", organization, agolaProjectRef)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ArchiveProject indicates an expected call of ArchiveProject
-func (mr *MockAgolaApiInterfaceMockRecorder) ArchiveProject(agolaOrganizationRef, projectName interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) ArchiveProject(organization, agolaProjectRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ArchiveProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).ArchiveProject), agolaOrganizationRef, projectName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ArchiveProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).ArchiveProject), organization, agolaProjectRef)
 }
 
 // UnarchiveProject mocks base method
-func (m *MockAgolaApiInterface) UnarchiveProject(agolaOrganizationRef, projectName string) error {
+func (m *MockAgolaApiInterface) UnarchiveProject(organization *model.Organization, agolaProjectRef string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UnarchiveProject", agolaOrganizationRef, projectName)
+	ret := m.ctrl.Call(m, "UnarchiveProject", organization, agolaProjectRef)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UnarchiveProject indicates an expected call of UnarchiveProject
-func (mr *MockAgolaApiInterfaceMockRecorder) UnarchiveProject(agolaOrganizationRef, projectName interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) UnarchiveProject(organization, agolaProjectRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnarchiveProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).UnarchiveProject), agolaOrganizationRef, projectName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnarchiveProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).UnarchiveProject), organization, agolaProjectRef)
 }
 
 // GetRuns mocks base method

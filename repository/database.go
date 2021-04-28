@@ -43,11 +43,6 @@ func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
 
-	orgList, _ := db.GetOrganizationsRef()
-	for _, org := range orgList {
-		db.DeleteOrganization(org)
-	}
-
 	return db
 }
 

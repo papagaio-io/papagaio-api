@@ -1,14 +1,24 @@
 package test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/gorilla/mux"
 	"gotest.tools/assert"
+	"wecode.sorint.it/opensource/papagaio-api/api/agola"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
+	gitDto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
+	"wecode.sorint.it/opensource/papagaio-api/controller"
+	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/service"
+	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_agola"
+	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_gitea"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
 )
 
@@ -40,29 +50,87 @@ func TestGetOrganizationsOK(t *testing.T) {
 }
 
 func TestCreateOrganizationOK(t *testing.T) {
-	/*ctl := gomock.NewController(t)
-		defer ctl.Finish()
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
 
-		db := mock_repository.NewMockDatabase(ctl)
-		agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
-		giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
 
-		//TODO expect
+	organizationReqDto := dto.CreateOrganizationRequestDto{
+		Name:          "Test",
+		AgolaRef:      "Test",
+		Visibility:    dto.Public,
+		GitSourceName: "gitea",
+		BehaviourType: dto.None,
+	}
 
-		serviceOrganization := service.OrganizationService{
-			Db:         db,
-			AgolaApi:   agolaApi,
-			GitGateway: &git.GitGateway{GiteaApi: giteaApi},
-		}
+	gitSource := (*MakeGitSourceMap())[organizationReqDto.GitSourceName]
+	db.EXPECT().GetGitSourceByName(gomock.Eq(organizationReqDto.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
+	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
+	giteaApi.EXPECT().CreateWebHook(gomock.Any(), organizationReqDto.Name, organizationReqDto.AgolaRef).Return(1, nil)
+	agolaApi.EXPECT().CheckOrganizationExists(gomock.Any()).Return(false, "")
+	agolaApi.EXPECT().CreateOrganization(gomock.Any(), organizationReqDto.Visibility).Return("123456", nil)
+	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
-		ts := httptest.NewServer(http.HandlerFunc(serviceOrganization.CreateOrganization))
-		defer ts.Close()
+	setupSynkMembersUserTestMocks(agolaApi, giteaApi, organizationReqDto.Name)
+	setupCheckoutAllGitRepositoryEmptyMocks(giteaApi, organizationReqDto.Name)
 
-		client := ts.Client()
+	serviceOrganization := service.OrganizationService{
+		Db:         db,
+		AgolaApi:   agolaApi,
+		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+	}
 
-		requestBody := strings.NewReader(`{"Uid":"6fcb514b-b878-4c9d-95b7-8dc3a7ce6fd8", "Slots": [2], "User":
-	        {"Name": "Nuovonome", "Surname": "Nuovocognome", "Email": "nuovaemail@email.com"}, "privacyPolicy": true}}`)
-		resp, err := client.Post(ts.URL, "application/json", requestBody)
+	router := mux.NewRouter()
+	router.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.Header.Set(controller.XAuthEmail, "testuser")
+			h.ServeHTTP(w, r)
+		})
+	})
+	router.HandleFunc("/", serviceOrganization.CreateOrganization)
+	ts := httptest.NewServer(router)
 
-		assert.Equal(t, err, nil)*/
+	client := ts.Client()
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+
+	var responseDto dto.CreateOrganizationResponseDto
+	parseBody(resp, &responseDto)
+
+	assert.Equal(t, responseDto.AgolaExists, false, "AgolaExists is not correct")
+	assert.Check(t, strings.Contains(responseDto.OrganizationURL, "/org/"+organizationReqDto.AgolaRef), "OrganizationURL is not correct")
+}
+
+func setupSynkMembersUserTestMocks(agolaApi *mock_agola.MockAgolaApiInterface, giteaApi *mock_gitea.MockGiteaInterface, organizationName string) {
+	gitTeams := []gitDto.TeamResponseDto{
+		gitDto.TeamResponseDto{
+			ID:         1,
+			Name:       "Owners",
+			Permission: "owner",
+		},
+	}
+	giteaApi.EXPECT().GetOrganizationTeams(gomock.Any(), organizationName).Return(&gitTeams, nil)
+
+	gitTeamMembers := []gitDto.UserTeamResponseDto{
+		gitDto.UserTeamResponseDto{
+			Username: "user.test",
+			Email:    "user.test@email.com",
+		},
+	}
+	giteaApi.EXPECT().GetTeamMembers(gomock.Any(), 1).Return(&gitTeamMembers, nil)
+
+	agolaApi.EXPECT().GetOrganizationMembers(gomock.Any()).Return(&agola.OrganizationMembersResponseDto{}, nil)
+	agolaApi.EXPECT().AddOrUpdateOrganizationMember(gomock.Any(), "usertest", "owner")
+}
+
+func setupCheckoutAllGitRepositoryEmptyMocks(giteaApi *mock_gitea.MockGiteaInterface, organizationName string) {
+	repositoryList := make([]string, 0)
+	giteaApi.EXPECT().GetRepositories(gomock.Any(), organizationName).AnyTimes().Return(&repositoryList, nil) //TODO remove AnyTimes after goroutin removing
 }

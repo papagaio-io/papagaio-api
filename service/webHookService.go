@@ -33,17 +33,17 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	log.Println("webHook message: ", webHookMessage)
 
 	vars := mux.Vars(r)
-	gitOrgRef := vars["gitOrgRef"]
+	organizationRef := vars["organizationRef"]
 
-	mutex := utils.ReserveOrganizationMutex(gitOrgRef, service.CommonMutex)
+	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
 	locked := true
-	defer utils.ReleaseOrganizationMutexDefer(gitOrgRef, service.CommonMutex, mutex, &locked)
+	defer utils.ReleaseOrganizationMutexDefer(organizationRef, service.CommonMutex, mutex, &locked)
 
-	organization, _ := service.Db.GetOrganizationByName(gitOrgRef)
+	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if organization == nil {
-		log.Println("Warning!!! Organization", gitOrgRef, "not found in db")
+		log.Println("Warning!!! Organization", organizationRef, "not found in db")
 		return
 	}
 
@@ -130,7 +130,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	}
 
 	mutex.Unlock()
-	utils.ReleaseOrganizationMutex(gitOrgRef, service.CommonMutex)
+	utils.ReleaseOrganizationMutex(organizationRef, service.CommonMutex)
 	locked = false
 
 	log.Println("WebHookOrganization end...")

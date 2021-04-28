@@ -36,18 +36,18 @@ func (m *MockGithubInterface) EXPECT() *MockGithubInterfaceMockRecorder {
 }
 
 // CreateWebHook mocks base method
-func (m *MockGithubInterface) CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
+func (m *MockGithubInterface) CreateWebHook(gitSource *model.GitSource, gitOrgRef, organizationRef string) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateWebHook", gitSource, gitOrgRef)
+	ret := m.ctrl.Call(m, "CreateWebHook", gitSource, gitOrgRef, organizationRef)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateWebHook indicates an expected call of CreateWebHook
-func (mr *MockGithubInterfaceMockRecorder) CreateWebHook(gitSource, gitOrgRef interface{}) *gomock.Call {
+func (mr *MockGithubInterfaceMockRecorder) CreateWebHook(gitSource, gitOrgRef, organizationRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWebHook", reflect.TypeOf((*MockGithubInterface)(nil).CreateWebHook), gitSource, gitOrgRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWebHook", reflect.TypeOf((*MockGithubInterface)(nil).CreateWebHook), gitSource, gitOrgRef, organizationRef)
 }
 
 // DeleteWebHook mocks base method

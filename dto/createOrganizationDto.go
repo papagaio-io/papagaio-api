@@ -4,10 +4,12 @@ import (
 	"errors"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 type CreateOrganizationRequestDto struct {
 	Name       string         `json:"name"`
+	AgolaRef   string         `json:"agolaRef"`
 	Visibility VisibilityType `json:"visibility"`
 
 	GitSourceName string `json:"gitSourceName"`
@@ -18,7 +20,7 @@ type CreateOrganizationRequestDto struct {
 }
 
 func (org CreateOrganizationRequestDto) IsValid() error {
-	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.GitSourceName) > 0 {
+	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.GitSourceName) > 0 && len(org.AgolaRef) > 0 && !strings.Contains(org.AgolaRef, ".") {
 		return nil
 	}
 	return errors.New("Invalid visibility type")

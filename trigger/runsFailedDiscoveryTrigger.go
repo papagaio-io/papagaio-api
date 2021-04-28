@@ -22,18 +22,18 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 	for {
 		log.Println("Start discoveryRunFails")
 
-		organizationsName, _ := db.GetOrganizationsName()
+		organizationsRef, _ := db.GetOrganizationsRef()
 
-		for _, organizationName := range organizationsName {
-			mutex := utils.ReserveOrganizationMutex(organizationName, commonMutex)
+		for _, organizationRef := range organizationsRef {
+			mutex := utils.ReserveOrganizationMutex(organizationRef, commonMutex)
 			mutex.Lock()
 
 			locked := true
-			defer utils.ReleaseOrganizationMutexDefer(organizationName, commonMutex, mutex, &locked)
+			defer utils.ReleaseOrganizationMutexDefer(organizationRef, commonMutex, mutex, &locked)
 
-			org, _ := db.GetOrganizationByName(organizationName)
+			org, _ := db.GetOrganizationByAgolaRef(organizationRef)
 			if org == nil {
-				log.Println("discoveryRunFails organization ", organizationName, "not found")
+				log.Println("discoveryRunFails organization ", organizationRef, "not found")
 				continue
 			}
 
@@ -94,7 +94,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 			db.SaveOrganization(org)
 
 			mutex.Unlock()
-			utils.ReleaseOrganizationMutex(organizationName, commonMutex)
+			utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
 			locked = false
 		}
 

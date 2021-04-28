@@ -33,19 +33,19 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 	return m.recorder
 }
 
-// GetOrganizationsName mocks base method
-func (m *MockDatabase) GetOrganizationsName() ([]string, error) {
+// GetOrganizationsRef mocks base method
+func (m *MockDatabase) GetOrganizationsRef() ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrganizationsName")
+	ret := m.ctrl.Call(m, "GetOrganizationsRef")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetOrganizationsName indicates an expected call of GetOrganizationsName
-func (mr *MockDatabaseMockRecorder) GetOrganizationsName() *gomock.Call {
+// GetOrganizationsRef indicates an expected call of GetOrganizationsRef
+func (mr *MockDatabaseMockRecorder) GetOrganizationsRef() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationsName", reflect.TypeOf((*MockDatabase)(nil).GetOrganizationsName))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationsRef", reflect.TypeOf((*MockDatabase)(nil).GetOrganizationsRef))
 }
 
 // GetOrganizations mocks base method
@@ -90,6 +90,21 @@ func (m *MockDatabase) GetOrganizationByName(organizationName string) (*model.Or
 func (mr *MockDatabaseMockRecorder) GetOrganizationByName(organizationName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationByName", reflect.TypeOf((*MockDatabase)(nil).GetOrganizationByName), organizationName)
+}
+
+// GetOrganizationByAgolaRef mocks base method
+func (m *MockDatabase) GetOrganizationByAgolaRef(organizationName string) (*model.Organization, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrganizationByAgolaRef", organizationName)
+	ret0, _ := ret[0].(*model.Organization)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrganizationByAgolaRef indicates an expected call of GetOrganizationByAgolaRef
+func (mr *MockDatabaseMockRecorder) GetOrganizationByAgolaRef(organizationName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationByAgolaRef", reflect.TypeOf((*MockDatabase)(nil).GetOrganizationByAgolaRef), organizationName)
 }
 
 // GetOrganizationById mocks base method

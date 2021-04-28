@@ -16,7 +16,7 @@ import (
 )
 
 type GiteaInterface interface {
-	CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error)
+	CreateWebHook(gitSource *model.GitSource, gitOrgRef string, organizationRef string) (int, error)
 	DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error
 	GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error)
 	GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto
@@ -31,10 +31,10 @@ type GiteaInterface interface {
 
 type GiteaApi struct{}
 
-func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef string) (int, error) {
+func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef string, organizationRef string) (int, error) {
 	client := &http.Client{}
 	URLApi := getCreateWebHookUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
-	webHookConfigPath := controller.GetWebHookPath() + "/" + gitOrgRef
+	webHookConfigPath := controller.GetWebHookPath() + "/" + organizationRef
 
 	webHookRequest := CreateWebHookRequestDto{
 		Active:       true,

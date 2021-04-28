@@ -17,7 +17,7 @@ const XAuthEmail string = "X-Auth-Email"
 
 const apiPath string = "/api"
 const WebHookPath string = "/webhook"
-const WenHookPathParam string = "/{gitOrgRef}"
+const WenHookPathParam string = "/{organizationRef}"
 
 var db repository.Database
 
@@ -140,7 +140,7 @@ func setupDeleteGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) 
 }
 
 func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
-	router.HandleFunc("/{gitOrgRef}", ctrl.WebHookOrganization).Methods("POST")
+	router.HandleFunc("/{organizationRef}", ctrl.WebHookOrganization).Methods("POST")
 }
 
 func setupAddUserEndpoint(router *mux.Router, ctrl UserController) {

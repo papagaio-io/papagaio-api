@@ -17,26 +17,30 @@ func StartOrganizationSync(db repository.Database, tr utils.ConfigUtils, commonM
 }
 
 func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
-	db.GetOrganizationsTriggerTime()
 	for {
 		log.Println("start members synk")
 
-		organizationsName, _ := db.GetOrganizationsName()
-		for _, organizationName := range organizationsName {
-			mutex := utils.ReserveOrganizationMutex(organizationName, commonMutex)
+		organizationsRef, _ := db.GetOrganizationsRef()
+		for _, organizationRef := range organizationsRef {
+			mutex := utils.ReserveOrganizationMutex(organizationRef, commonMutex)
 			mutex.Lock()
 
 			locked := true
-			defer utils.ReleaseOrganizationMutexDefer(organizationName, commonMutex, mutex, &locked)
+			defer utils.ReleaseOrganizationMutexDefer(organizationRef, commonMutex, mutex, &locked)
 
-			org, _ := db.GetOrganizationByName(organizationName)
+			org, _ := db.GetOrganizationByAgolaRef(organizationRef)
 			if org == nil {
-				log.Println("syncOrganizationRun organization ", organizationName, "not found")
+				log.Println("syncOrganizationRun organization ", organizationRef, "not found")
 				continue
 			}
 
 			if agolaOrganizationExists, _ := agolaApi.CheckOrganizationExists(org); !agolaOrganizationExists {
-				db.DeleteOrganization(organizationName)
+				gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
+				if gitSource != nil {
+					gitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
+				}
+
+				db.DeleteOrganization(organizationRef)
 				continue
 			}
 
@@ -48,7 +52,7 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 			repositoryManager.SynkGitRepositorys(db, org, gitSource, agolaApi, gitGateway)
 
 			mutex.Unlock()
-			utils.ReleaseOrganizationMutex(organizationName, commonMutex)
+			utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
 			locked = false
 		}
 

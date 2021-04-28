@@ -17,7 +17,6 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 	log.Println("Start AddAllGitRepository")
 
 	repositoryList, _ := gitGateway.GetRepositories(gitSource, organization.Name)
-	log.Println("repositoryList:", *repositoryList)
 
 	if organization.Projects == nil {
 		organization.Projects = make(map[string]model.Project)

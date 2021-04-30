@@ -88,6 +88,15 @@ func (org CreateOrganizationRequestDto) IsBehaviourValid() bool {
 }
 
 type CreateOrganizationResponseDto struct {
-	OrganizationURL string `json:"organizationURL"`
-	AgolaExists     bool   `json:"agolaExists"`
+	OrganizationURL string                               `json:"organizationURL"`
+	ErrorCode       CreateOrganizationResponseStatusCode `json:"errorCode"`
 }
+
+type CreateOrganizationResponseStatusCode string
+
+const (
+	NoError                         CreateOrganizationResponseStatusCode = "NO_ERROR"
+	AgolaOrganizationExistsError    CreateOrganizationResponseStatusCode = "ORG_AGOLA_EXISTS"
+	PapagaioOrganizationExistsError CreateOrganizationResponseStatusCode = "ORG_PAPAGAIO_EXISTS"
+	GitOrganizationNotFoundError    CreateOrganizationResponseStatusCode = "ORG_GIT_NOT_FOUND"
+)

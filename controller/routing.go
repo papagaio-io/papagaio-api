@@ -86,7 +86,7 @@ func setupCreateOrganizationEndpoint(router *mux.Router, ctrl OrganizationContro
 
 func setupDeleteOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.Use(handleRestrictedUserRoutes)
-	router.HandleFunc("/{organizationName}", ctrl.DeleteOrganization).Methods("DELETE")
+	router.HandleFunc("/{organizationRef}", ctrl.DeleteOrganization).Methods("DELETE")
 }
 
 func setupAddOrganizationExternalUserEndpoint(router *mux.Router, ctrl OrganizationController) {
@@ -112,11 +112,6 @@ func setupOrganizationReportEndpoint(router *mux.Router, ctrl OrganizationContro
 func setupProjectReportEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.Use(handleRestrictedAllRoutes)
 	router.HandleFunc("/{organizationName}/{projectName}", ctrl.GetProjectReport).Methods("GET")
-}
-
-func setupGetRemoteSourcesEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedAllRoutes)
-	router.HandleFunc("", ctrl.GetRemoteSources).Methods("GET")
 }
 
 func setupGetGitSourcesEndpoint(router *mux.Router, ctrl GitSourceController) {

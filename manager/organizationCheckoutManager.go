@@ -12,7 +12,7 @@ import (
 )
 
 func StartOrganizationCheckout(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
-	go organizationCheckout(db, organization, gitSource, agolaApi, gitGateway)
+	organizationCheckout(db, organization, gitSource, agolaApi, gitGateway)
 }
 
 func organizationCheckout(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {

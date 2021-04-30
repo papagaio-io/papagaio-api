@@ -123,21 +123,6 @@ func (mr *MockAgolaApiInterfaceMockRecorder) DeleteProject(organization, agolaPr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteProject), organization, agolaProjectRef, agolaUserToken)
 }
 
-// GetRemoteSources mocks base method
-func (m *MockAgolaApiInterface) GetRemoteSources() (*[]agola.RemoteSourcesDto, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRemoteSources")
-	ret0, _ := ret[0].(*[]agola.RemoteSourcesDto)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetRemoteSources indicates an expected call of GetRemoteSources
-func (mr *MockAgolaApiInterfaceMockRecorder) GetRemoteSources() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteSources", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetRemoteSources))
-}
-
 // AddOrUpdateOrganizationMember mocks base method
 func (m *MockAgolaApiInterface) AddOrUpdateOrganizationMember(organization *model.Organization, agolaUserRef, role string) error {
 	m.ctrl.T.Helper()

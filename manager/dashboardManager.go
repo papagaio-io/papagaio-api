@@ -14,6 +14,7 @@ func GetOrganizationDto(organization *model.Organization, gitsource *model.GitSo
 	retVal := dto.OrganizationDto{
 		ID:         organization.ID,
 		Name:       organization.Name,
+		AgolaRef:   organization.AgolaOrganizationRef,
 		Visibility: organization.Visibility,
 	}
 	orgDto := gitGateway.GetOrganization(gitsource, organization.Name)

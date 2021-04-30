@@ -5,6 +5,7 @@ import "time"
 type OrganizationDto struct {
 	ID         string         `json:"id"`
 	Name       string         `json:"organizationName"`
+	AgolaRef   string         `json:"agolaRef"`
 	Visibility VisibilityType `json:"visibility"`
 	AvatarURL  string         `json:"avatarUrl"`
 

@@ -84,13 +84,15 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	gitOrgExists := service.GitGateway.CheckOrganizationExists(gitSource, org.Name)
 	if gitOrgExists == false {
-		UnprocessableEntityResponse(w, "Organization not found")
+		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.GitOrganizationNotFoundError}
+		JSONokResponse(w, response)
 		return
 	}
 
 	agolaOrg, err := service.Db.GetOrganizationByAgolaRef(org.AgolaOrganizationRef)
 	if agolaOrg != nil {
-		UnprocessableEntityResponse(w, "Organization just present in papagaio")
+		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.PapagaioOrganizationExistsError}
+		JSONokResponse(w, response)
 		return
 	}
 
@@ -98,7 +100,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, org.Name, org.AgolaOrganizationRef)
 	if err != nil {
-		UnprocessableEntityResponse(w, err.Error())
+		InternalServerError(w)
 		return
 	}
 
@@ -106,7 +108,8 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	if agolaOrganizationExists {
 		log.Println(org.Name, "just exists in Agola")
 		if !forceCreate {
-			response := dto.CreateOrganizationResponseDto{AgolaExists: true}
+			service.GitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
+			response := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaOrganizationExistsError}
 			JSONokResponse(w, response)
 			return
 		}
@@ -132,17 +135,8 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	manager.StartOrganizationCheckout(service.Db, org, gitSource, service.AgolaApi, service.GitGateway)
 
-	response := dto.CreateOrganizationResponseDto{OrganizationURL: utils.GetOrganizationUrl(org)}
+	response := dto.CreateOrganizationResponseDto{OrganizationURL: utils.GetOrganizationUrl(org), ErrorCode: dto.NoError}
 	JSONokResponse(w, response)
-}
-
-func (service *OrganizationService) GetRemoteSources(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	remoteSources, _ := service.AgolaApi.GetRemoteSources()
-
-	JSONokResponse(w, remoteSources)
 }
 
 func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +144,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	organizationRef := vars["organizationName"]
+	organizationRef := vars["organizationRef"]
 
 	internalonlyQuery, ok := r.URL.Query()["internalonly"]
 	internalonly := false
@@ -194,7 +188,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	}
 
 	service.GitGateway.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)
-	err = service.Db.DeleteOrganization(organization.Name)
+	err = service.Db.DeleteOrganization(organization.AgolaOrganizationRef)
 
 	mutex.Unlock()
 	utils.ReleaseOrganizationMutex(organizationRef, service.CommonMutex)

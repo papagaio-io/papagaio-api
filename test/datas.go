@@ -28,7 +28,10 @@ func MakeOrganizationMap() *map[string]model.Organization {
 			Visibility:           dto.Public,
 			GitSourceName:        "gitea",
 			UserEmailCreator:     "testuser",
-			BehaviourInclude:     "*", BehaviourType: dto.Wildcard}
+			BehaviourInclude:     "*",
+			BehaviourType:        dto.Wildcard,
+			WebHookID:            i,
+		}
 	}
 
 	return &retVal

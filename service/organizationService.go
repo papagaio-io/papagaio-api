@@ -59,6 +59,12 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	var req *dto.CreateOrganizationRequestDto
 	json.NewDecoder(r.Body).Decode(&req)
 
+	if !req.IsAgolaRefValid() {
+		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaRefNotValid}
+		JSONokResponse(w, response)
+		return
+	}
+
 	if req.IsValid() != nil {
 		UnprocessableEntityResponse(w, "Parameters have no correct values")
 		return

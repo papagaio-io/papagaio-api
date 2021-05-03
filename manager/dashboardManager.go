@@ -3,7 +3,6 @@ package manager
 import (
 	"time"
 
-	"wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -115,6 +114,7 @@ func GetBranchDto(branch model.Branch, project *model.Project, organization *mod
 		retVal.State = dto.RunStateNone
 	} else {
 		lastRun := branch.LastRuns[len(branch.LastRuns)-1]
+
 		if lastRun.Result == model.RunResultSuccess {
 			retVal.State = dto.RunStateSuccess
 		} else {
@@ -123,19 +123,6 @@ func GetBranchDto(branch model.Branch, project *model.Project, organization *mod
 	}
 
 	retVal.Report = GetBranchReport(branch, project.GitRepoPath, organization.Name)
-
-	lastRun := project.GetLastRun()
-	if !lastRun.RunStartDate.IsZero() {
-		if lastRun.Result == model.RunResult(agola.RunResultSuccess) {
-			retVal.State = dto.RunStateSuccess
-		} else {
-			retVal.State = dto.RunStateFailed
-		}
-
-		retVal.LastRunDuration = lastRun.RunEndDate.Sub(lastRun.RunStartDate)
-	} else {
-		retVal.State = dto.RunStateNone
-	}
 
 	lastSuccessRun := project.GetLastSuccessRun()
 	if lastSuccessRun != nil {

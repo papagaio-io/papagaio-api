@@ -100,11 +100,11 @@ func TestCreateOrganizationJustExistsInPapagaio(t *testing.T) {
 	}
 
 	gitSource := (*MakeGitSourceMap())[organizationReqDto.GitSourceName]
-	dorganizationModel := model.Organization{Name: organizationReqDto.Name, AgolaOrganizationRef: organizationReqDto.AgolaRef}
+	organizationModel := model.Organization{Name: organizationReqDto.Name, AgolaOrganizationRef: organizationReqDto.AgolaRef}
 
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organizationReqDto.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
-	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(&dorganizationModel, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(&organizationModel, nil)
 
 	serviceOrganization := service.OrganizationService{
 		Db:         db,
@@ -263,7 +263,7 @@ func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 
 	gitSource := (*MakeGitSourceMap())[organizationReqDto.GitSourceName]
 
-	db.EXPECT().GetGitSourceByName(gomock.Eq(organizationReqDto.GitSourceName)).Return(&gitSource, nil)
+	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
 	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
 	giteaApi.EXPECT().CreateWebHook(gomock.Any(), organizationReqDto.Name, organizationReqDto.AgolaRef).Return(1, nil)

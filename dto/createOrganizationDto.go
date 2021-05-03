@@ -19,11 +19,17 @@ type CreateOrganizationRequestDto struct {
 	BehaviourType    BehaviourType `json:"behaviourType"`
 }
 
-func (org CreateOrganizationRequestDto) IsValid() error {
+var organizationRegexp = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9]*([-]?[a-zA-Z0-9]+)+$`)
+
+func (org *CreateOrganizationRequestDto) IsAgolaRefValid() bool {
+	return organizationRegexp.MatchString(org.AgolaRef)
+}
+
+func (org *CreateOrganizationRequestDto) IsValid() error {
 	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.GitSourceName) > 0 && len(org.AgolaRef) > 0 && !strings.Contains(org.AgolaRef, ".") {
 		return nil
 	}
-	return errors.New("Invalid visibility type")
+	return errors.New("fields not valid")
 }
 
 type BehaviourType string
@@ -39,7 +45,7 @@ func (bt BehaviourType) IsValid() error {
 	case Wildcard, Regex, None:
 		return nil
 	}
-	return errors.New("Invalid visibility type")
+	return errors.New("invalid visibility type")
 }
 
 type VisibilityType string
@@ -54,7 +60,7 @@ func (vt VisibilityType) IsValid() error {
 	case Public, Private:
 		return nil
 	}
-	return errors.New("Invalid visibility type")
+	return errors.New("invalid visibility type")
 }
 
 func (org CreateOrganizationRequestDto) IsBehaviourValid() bool {
@@ -99,4 +105,5 @@ const (
 	AgolaOrganizationExistsError    CreateOrganizationResponseStatusCode = "ORG_AGOLA_EXISTS"
 	PapagaioOrganizationExistsError CreateOrganizationResponseStatusCode = "ORG_PAPAGAIO_EXISTS"
 	GitOrganizationNotFoundError    CreateOrganizationResponseStatusCode = "ORG_GIT_NOT_FOUND"
+	AgolaRefNotValid                CreateOrganizationResponseStatusCode = "AGOLA_REF_NOT_VALID"
 )

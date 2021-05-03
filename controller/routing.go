@@ -63,6 +63,7 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 	setupWebHookEndpoint(apirouter.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
 
 	setupAddUserEndpoint(apirouter.PathPrefix("/adduser").Subrouter(), ctrlUser)
+	setupRemoveUserEndpoint(apirouter.PathPrefix("/removeuser").Subrouter(), ctrlUser)
 
 	setupGetTriggersConfigEndpoint(apirouter.PathPrefix("/gettriggersconfig").Subrouter(), ctrlTrigger)
 	setupSaveTriggersConfigEndpoint(apirouter.PathPrefix("/savetriggersconfig").Subrouter(), ctrlTrigger)
@@ -141,6 +142,11 @@ func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
 func setupAddUserEndpoint(router *mux.Router, ctrl UserController) {
 	router.Use(handleRestrictedAdminRoutes)
 	router.HandleFunc("", ctrl.AddUser).Methods("POST")
+}
+
+func setupRemoveUserEndpoint(router *mux.Router, ctrl UserController) {
+	router.Use(handleRestrictedAdminRoutes)
+	router.HandleFunc("/{email}", ctrl.RemoveUser).Methods("DELETE")
 }
 
 func setupGetTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {

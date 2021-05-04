@@ -60,7 +60,7 @@ func (gitGateway *GitGateway) GetTeamMembers(gitSource *model.GitSource, organiz
 	}
 }
 
-func (gitGateway *GitGateway) CheckRepositoryAgolaConf(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error) {
+func (gitGateway *GitGateway) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error) {
 	if gitSource.GitType == model.Gitea {
 		return gitGateway.GiteaApi.CheckRepositoryAgolaConfExists(gitSource, gitOrgRef, repositoryRef)
 	} else {

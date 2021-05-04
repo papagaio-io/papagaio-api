@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"wecode.sorint.it/opensource/papagaio-api/controller"
+	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
@@ -56,4 +58,18 @@ func (service *UserService) RemoveUser(w http.ResponseWriter, r *http.Request) {
 		InternalServerError(w)
 		return
 	}
+}
+
+func (service *UserService) GetUserInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	userEmail := r.Header.Get(controller.XAuthEmail)
+	user, err := service.Db.GetUserByEmail(userEmail)
+
+	if err != nil {
+		InternalServerError(w)
+		return
+	}
+	JSONokResponse(w, dto.UserInfo{IsAdministrator: user != nil})
 }

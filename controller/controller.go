@@ -29,6 +29,7 @@ type GitSourceController interface {
 type UserController interface {
 	AddUser(w http.ResponseWriter, r *http.Request)
 	RemoveUser(w http.ResponseWriter, r *http.Request)
+	GetUserInfo(w http.ResponseWriter, r *http.Request)
 }
 
 type TriggersController interface {

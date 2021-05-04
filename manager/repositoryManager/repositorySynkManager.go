@@ -29,7 +29,7 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 
 		log.Println("Start add repository:", repo)
 
-		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
+		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConfExists(gitSource, organization.Name, repo)
 		project := model.Project{GitRepoPath: repo, Archivied: true, AgolaProjectRef: utils.ConvertToAgolaProjectRef(repo)}
 
 		if agolaConfExists {
@@ -107,7 +107,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 
 		BranchSynck(db, gitSource, organization, repo, gitGateway)
 
-		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, repo)
+		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConfExists(gitSource, organization.Name, repo)
 		if !agolaConfExists {
 			if project, ok := organization.Projects[repo]; ok && !project.Archivied {
 				err := agolaApi.ArchiveProject(organization, utils.ConvertToAgolaProjectRef(repo))

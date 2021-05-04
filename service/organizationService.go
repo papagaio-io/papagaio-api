@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -212,7 +211,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 
 	vars := mux.Vars(r)
 	organizationName := vars["organizationName"]
-	fmt.Println("****** organization:", organizationName)
+
 	mutex := utils.ReserveOrganizationMutex(organizationName, service.CommonMutex)
 	mutex.Lock()
 

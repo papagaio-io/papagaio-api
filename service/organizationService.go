@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -211,7 +212,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 
 	vars := mux.Vars(r)
 	organizationName := vars["organizationName"]
-
+	fmt.Println("****** organization:", organizationName)
 	mutex := utils.ReserveOrganizationMutex(organizationName, service.CommonMutex)
 	mutex.Lock()
 
@@ -226,6 +227,10 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 
 	var req *dto.ExternalUserDto
 	json.NewDecoder(r.Body).Decode(&req)
+
+	if organization.ExternalUsers == nil {
+		organization.ExternalUsers = make(map[string]bool)
+	}
 
 	organization.ExternalUsers[req.Email] = true
 	service.Db.SaveOrganization(organization)

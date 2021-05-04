@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -36,8 +35,6 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
-	fmt.Println("organizationRef:", organizationRef)
-
 	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
@@ -67,7 +64,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConfExists(gitSource, organization.Name, webHookMessage.Repository.Name)
 		if agolaConfExists {
-			projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+			projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, project.AgolaProjectRef, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 			project.AgolaProjectID = projectID
 			if err != nil {
 				log.Println("Warning!!! Agola CreateProject API error!")
@@ -81,12 +78,14 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	} else if webHookMessage.IsRepositoryDeleted() {
 		log.Println("Repository deleted: ", webHookMessage.Repository.Name)
 
-		if orgProject, ok := organization.Projects[webHookMessage.Repository.Name]; !ok {
+		orgProject, ok := organization.Projects[webHookMessage.Repository.Name]
+
+		if !ok {
 			log.Println("Warning!!! project", orgProject, "not found in db")
 			return
 		}
 
-		service.AgolaApi.DeleteProject(organization, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), gitSource.AgolaToken)
+		service.AgolaApi.DeleteProject(organization, orgProject.AgolaProjectRef, gitSource.AgolaToken)
 		delete(organization.Projects, webHookMessage.Repository.Name)
 
 		project := organization.Projects[webHookMessage.Repository.Name]
@@ -101,30 +100,33 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 		if agolaConfExists {
 			if !projectExist {
-				projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+				agolaProjectRef := utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)
+				projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, agolaProjectRef, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 				if err != nil {
 					log.Println("Warning!!! Agola CreateProject API error!")
 					return
 				}
 
-				project := model.Project{GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID, AgolaProjectRef: utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)}
+				project := model.Project{GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID, AgolaProjectRef: agolaProjectRef}
 				organization.Projects[webHookMessage.Repository.Name] = project
 				service.Db.SaveOrganization(organization)
 			} else if project.Archivied {
-				err := service.AgolaApi.UnarchiveProject(organization, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name))
+				err := service.AgolaApi.UnarchiveProject(organization, project.AgolaProjectRef)
 				if err != nil {
 					InternalServerError(w)
 				}
 				project.Archivied = false
+				organization.Projects[webHookMessage.Repository.Name] = project
 				service.Db.SaveOrganization(organization)
 			}
 		} else {
 			if projectExist && !project.Archivied {
-				err := service.AgolaApi.ArchiveProject(organization, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name))
+				err := service.AgolaApi.ArchiveProject(organization, project.AgolaProjectRef)
 				if err != nil {
 					InternalServerError(w)
 				}
 				project.Archivied = true
+				organization.Projects[webHookMessage.Repository.Name] = project
 				service.Db.SaveOrganization(organization)
 			}
 		}

@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -35,6 +36,8 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
+	fmt.Println("organizationRef:", organizationRef)
+
 	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
@@ -62,7 +65,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		log.Println("Repository created: ", webHookMessage.Repository.Name)
 		project := model.Project{GitRepoPath: webHookMessage.Repository.Name, Archivied: true, AgolaProjectRef: utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)}
 
-		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
+		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConfExists(gitSource, organization.Name, webHookMessage.Repository.Name)
 		if agolaConfExists {
 			projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 			project.AgolaProjectID = projectID
@@ -94,7 +97,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		log.Println("Repository push: ", webHookMessage.Repository.Name)
 
 		project, projectExist := organization.Projects[webHookMessage.Repository.Name]
-		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConf(gitSource, organization.Name, webHookMessage.Repository.Name)
+		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConfExists(gitSource, organization.Name, webHookMessage.Repository.Name)
 
 		if agolaConfExists {
 			if !projectExist {

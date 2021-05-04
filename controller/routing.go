@@ -64,6 +64,7 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 
 	setupAddUserEndpoint(apirouter.PathPrefix("/adduser").Subrouter(), ctrlUser)
 	setupRemoveUserEndpoint(apirouter.PathPrefix("/removeuser").Subrouter(), ctrlUser)
+	setupIsUserAdministratorEndpoint(apirouter.PathPrefix("/userinfo").Subrouter(), ctrlUser)
 
 	setupGetTriggersConfigEndpoint(apirouter.PathPrefix("/gettriggersconfig").Subrouter(), ctrlTrigger)
 	setupSaveTriggersConfigEndpoint(apirouter.PathPrefix("/savetriggersconfig").Subrouter(), ctrlTrigger)
@@ -149,6 +150,11 @@ func setupRemoveUserEndpoint(router *mux.Router, ctrl UserController) {
 	router.HandleFunc("/{email}", ctrl.RemoveUser).Methods("DELETE")
 }
 
+func setupIsUserAdministratorEndpoint(router *mux.Router, ctrl UserController) {
+	router.Use(handleLoggedUserRoutes)
+	router.HandleFunc("", ctrl.GetUserInfo).Methods("GET")
+}
+
 func setupGetTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
 	router.Use(handleRestrictedUserRoutes)
 	router.HandleFunc("", ctrl.GetTriggersConfig).Methods("GET")
@@ -157,6 +163,44 @@ func setupGetTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController)
 func setupSaveTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
 	router.Use(handleRestrictedUserRoutes)
 	router.HandleFunc("", ctrl.SaveTriggersConfig).Methods("POST")
+}
+
+func handleLoggedUserRoutes(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+
+		if tokenString == "" {
+			log.Println("Undefined Authorization")
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		parsedToken, err := jwt.ParseSigned(tokenString)
+		if err != nil {
+			log.Println("Failed to parse the token: ", err)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		claim := Claim{}
+		err = parsedToken.Claims(config.KeycloakPubKey, &claim)
+		if err != nil {
+			log.Println("Failed to claim JWT token: ", err)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		if claim.Expiry.Time().Before(time.Now().Add(time.Duration(-config.Config.Keycloak.TokenValidity) * time.Second)) {
+			log.Println("Your token was expired at: ", claim.Expiry.Time())
+			log.Println("The actual time is: ", time.Now())
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		r.Header.Set(XAuthEmail, claim.Email)
+
+		h.ServeHTTP(w, r)
+	})
 }
 
 func handleRestrictedUserRoutes(h http.Handler) http.Handler {

@@ -95,6 +95,12 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
+	mutex := utils.ReserveOrganizationMutex(org.AgolaOrganizationRef, service.CommonMutex)
+	mutex.Lock()
+
+	locked := true
+	defer utils.ReleaseOrganizationMutexDefer(org.AgolaOrganizationRef, service.CommonMutex, mutex, &locked)
+
 	agolaOrg, err := service.Db.GetOrganizationByAgolaRef(org.AgolaOrganizationRef)
 	if agolaOrg != nil {
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.PapagaioOrganizationExistsError}
@@ -140,6 +146,10 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	manager.StartOrganizationCheckout(service.Db, org, gitSource, service.AgolaApi, service.GitGateway)
+
+	mutex.Unlock()
+	utils.ReleaseOrganizationMutex(org.AgolaOrganizationRef, service.CommonMutex)
+	locked = false
 
 	response := dto.CreateOrganizationResponseDto{OrganizationURL: utils.GetOrganizationUrl(org), ErrorCode: dto.NoError}
 	JSONokResponse(w, response)

@@ -20,6 +20,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_agola"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_gitea"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
+	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 func TestCreateOrganizationOK(t *testing.T) {
@@ -29,6 +30,7 @@ func TestCreateOrganizationOK(t *testing.T) {
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
 
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
@@ -52,9 +54,10 @@ func TestCreateOrganizationOK(t *testing.T) {
 	setupCheckoutAllGitRepositoryEmptyMocks(giteaApi, organizationReqDto.Name)
 
 	serviceOrganization := service.OrganizationService{
-		Db:         db,
-		AgolaApi:   agolaApi,
-		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
 	}
 
 	router := mux.NewRouter()
@@ -90,6 +93,7 @@ func TestCreateOrganizationJustExistsInPapagaio(t *testing.T) {
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
 
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
@@ -107,9 +111,10 @@ func TestCreateOrganizationJustExistsInPapagaio(t *testing.T) {
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(&organizationModel, nil)
 
 	serviceOrganization := service.OrganizationService{
-		Db:         db,
-		AgolaApi:   agolaApi,
-		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
 	}
 
 	router := mux.NewRouter()
@@ -144,6 +149,7 @@ func TestCreateOrganizationJustExistsInAgola(t *testing.T) {
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
 
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
@@ -163,9 +169,10 @@ func TestCreateOrganizationJustExistsInAgola(t *testing.T) {
 	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), organizationReqDto.Name, 1).Return(nil)
 
 	serviceOrganization := service.OrganizationService{
-		Db:         db,
-		AgolaApi:   agolaApi,
-		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
 	}
 
 	router := mux.NewRouter()
@@ -200,6 +207,7 @@ func TestCreateOrganizationGitOrganizationNotFound(t *testing.T) {
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
 
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
@@ -215,9 +223,10 @@ func TestCreateOrganizationGitOrganizationNotFound(t *testing.T) {
 	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(false)
 
 	serviceOrganization := service.OrganizationService{
-		Db:         db,
-		AgolaApi:   agolaApi,
-		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
 	}
 
 	router := mux.NewRouter()
@@ -252,6 +261,7 @@ func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
 
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
@@ -274,9 +284,10 @@ func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 	setupCheckoutAllGitRepositoryEmptyMocks(giteaApi, organizationReqDto.Name)
 
 	serviceOrganization := service.OrganizationService{
-		Db:         db,
-		AgolaApi:   agolaApi,
-		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
 	}
 
 	router := mux.NewRouter()

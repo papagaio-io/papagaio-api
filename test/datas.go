@@ -3,7 +3,6 @@ package test
 import (
 	"fmt"
 
-	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/types"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
@@ -26,11 +25,11 @@ func MakeOrganizationMap() *map[string]model.Organization {
 		retVal[organizationName] = model.Organization{
 			Name:                 organizationName,
 			AgolaOrganizationRef: utils.ConvertToAgolaOrganizationRef(organizationName),
-			Visibility:           dto.Public,
+			Visibility:           types.Public,
 			GitSourceName:        "gitea",
 			UserEmailCreator:     "testuser",
 			BehaviourInclude:     "*",
-			BehaviourType:        dto.Wildcard,
+			BehaviourType:        types.Wildcard,
 			WebHookID:            i,
 		}
 	}

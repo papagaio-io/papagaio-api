@@ -15,6 +15,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/service"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_gitea"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
 func TestGetReportOK(t *testing.T) {
@@ -67,9 +68,9 @@ func assertOrganizationDto(t *testing.T, organization *model.Organization, organ
 	projectA.Branchs = sortBranchesDto(projectA.Branchs)
 	assert.Equal(t, projectA.Name, "test1")
 	assert.Equal(t, projectA.Branchs[0].Name, "master")
-	assert.Equal(t, projectA.Branchs[0].State, dto.RunStateSuccess)
+	assert.Equal(t, projectA.Branchs[0].State, types.RunStateSuccess)
 	assert.Equal(t, projectA.Branchs[1].Name, "test")
-	assert.Equal(t, projectA.Branchs[1].State, dto.RunStateFailed)
+	assert.Equal(t, projectA.Branchs[1].State, types.RunStateFailed)
 	assert.Equal(t, projectA.WorstReport.BranchName, "test")
 
 	projectB := organizationDto.Projects[1]
@@ -79,7 +80,7 @@ func assertOrganizationDto(t *testing.T, organization *model.Organization, organ
 	projectC := organizationDto.Projects[2]
 	assert.Equal(t, projectC.Name, "test3")
 	assert.Equal(t, projectC.Branchs[0].Name, "master")
-	assert.Equal(t, projectC.Branchs[0].State, dto.RunStateFailed)
+	assert.Equal(t, projectC.Branchs[0].State, types.RunStateFailed)
 	assert.Equal(t, projectC.WorstReport.BranchName, "master")
 
 	projectD := organizationDto.Projects[3]
@@ -88,7 +89,7 @@ func assertOrganizationDto(t *testing.T, organization *model.Organization, organ
 	projectE := organizationDto.Projects[4]
 	assert.Equal(t, projectE.Name, "test5")
 	assert.Equal(t, projectE.Branchs[0].Name, "master")
-	assert.Equal(t, projectE.Branchs[0].State, dto.RunStateNone)
+	assert.Equal(t, projectE.Branchs[0].State, types.RunStateNone)
 }
 
 func insertRunsData(organization *model.Organization) {
@@ -105,16 +106,16 @@ func insertRunsData(organization *model.Organization) {
 	projectA.PushNewRun(model.RunInfo{
 		ID:           "1",
 		Branch:       "master",
-		Phase:        model.RunPhaseFinished,
-		Result:       model.RunResultSuccess,
+		Phase:        types.RunPhaseFinished,
+		Result:       types.RunResultSuccess,
 		RunStartDate: now.AddDate(0, 0, -1),
 		RunEndDate:   now,
 	})
 	projectA.PushNewRun(model.RunInfo{
 		ID:           "2",
 		Branch:       "test",
-		Phase:        model.RunPhaseFinished,
-		Result:       model.RunResultFailed,
+		Phase:        types.RunPhaseFinished,
+		Result:       types.RunResultFailed,
 		RunStartDate: now.AddDate(0, 0, -2),
 		RunEndDate:   now,
 	})
@@ -129,8 +130,8 @@ func insertRunsData(organization *model.Organization) {
 	projectB.PushNewRun(model.RunInfo{
 		ID:           "1",
 		Branch:       "master",
-		Phase:        model.RunPhaseFinished,
-		Result:       model.RunResultSuccess,
+		Phase:        types.RunPhaseFinished,
+		Result:       types.RunResultSuccess,
 		RunStartDate: now.AddDate(0, 0, -1),
 		RunEndDate:   now,
 	})
@@ -145,8 +146,8 @@ func insertRunsData(organization *model.Organization) {
 	projectC.PushNewRun(model.RunInfo{
 		ID:           "1",
 		Branch:       "master",
-		Phase:        model.RunPhaseFinished,
-		Result:       model.RunResultFailed,
+		Phase:        types.RunPhaseFinished,
+		Result:       types.RunResultFailed,
 		RunStartDate: now.AddDate(0, 0, -1),
 		RunEndDate:   now,
 	})

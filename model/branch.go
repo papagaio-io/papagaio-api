@@ -1,5 +1,7 @@
 package model
 
+import "wecode.sorint.it/opensource/papagaio-api/types"
+
 type Branch struct {
 	Name           string    `json:"name"`
 	LastSuccessRun RunInfo   `json:"lastSuccessRun"`
@@ -10,15 +12,15 @@ type Branch struct {
 const lastBranchRunsSize int = 10
 
 func (branch *Branch) PushNewRun(runInfo RunInfo) {
-	if runInfo.Result != RunResultFailed && runInfo.Result != RunResultSuccess {
+	if runInfo.Result != types.RunResultFailed && runInfo.Result != types.RunResultSuccess {
 		return
 	}
 
-	if runInfo.Result == RunResultFailed {
+	if runInfo.Result == types.RunResultFailed {
 		if runInfo.RunStartDate.After(branch.LastFailedRun.RunStartDate) {
 			branch.LastFailedRun = runInfo
 		}
-	} else if runInfo.Result == RunResultSuccess {
+	} else if runInfo.Result == types.RunResultSuccess {
 		if runInfo.RunStartDate.After(branch.LastSuccessRun.RunStartDate) {
 			branch.LastSuccessRun = runInfo
 		}

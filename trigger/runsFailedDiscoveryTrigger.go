@@ -67,8 +67,8 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 						Branch:       run.GetBranchName(),
 						RunStartDate: run.StartTime,
 						RunEndDate:   run.EndTime,
-						Phase:        model.RunPhase(run.Phase),
-						Result:       model.RunResult(run.Result),
+						Phase:        types.RunPhase(run.Phase),
+						Result:       types.RunResult(run.Result),
 					}
 					project.PushNewRun(newRun)
 

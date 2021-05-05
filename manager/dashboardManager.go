@@ -6,6 +6,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
@@ -111,14 +112,14 @@ func GetBranchDto(branch model.Branch, project *model.Project, organization *mod
 	retVal := dto.BranchDto{Name: branch.Name}
 
 	if branch.LastRuns == nil || len(branch.LastRuns) == 0 {
-		retVal.State = dto.RunStateNone
+		retVal.State = types.RunStateNone
 	} else {
 		lastRun := branch.LastRuns[len(branch.LastRuns)-1]
 
-		if lastRun.Result == model.RunResultSuccess {
-			retVal.State = dto.RunStateSuccess
+		if lastRun.Result == types.RunResultSuccess {
+			retVal.State = types.RunStateSuccess
 		} else {
-			retVal.State = dto.RunStateFailed
+			retVal.State = types.RunStateFailed
 		}
 	}
 
@@ -146,7 +147,7 @@ func GetBranchReport(branch model.Branch, projectName string, organizationName s
 
 	failedRuns := uint(0)
 	for _, run := range branch.LastRuns {
-		if run.Result == model.RunResultFailed {
+		if run.Result == types.RunResultFailed {
 			failedRuns++
 		}
 	}

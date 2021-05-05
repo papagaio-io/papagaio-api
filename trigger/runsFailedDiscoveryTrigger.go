@@ -11,6 +11,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
@@ -112,7 +113,7 @@ func getUsersEmailMap(gitSource *model.GitSource, organization *model.Organizati
 	//Users owner of the organization and users owner of the repository
 	var usersRepoOwners *[]string
 
-	if gitSource.GitType == model.Gitea {
+	if gitSource.GitType == types.Gitea {
 		usersRepoOwners, _ = findGiteaUsersEmailRepositoryOwner(gitSource, organization.Name, gitRepoPath, gitGateway)
 	} else {
 		usersRepoOwners, _ = findGithubUsersRepositoryOwner(gitSource, organization.Name, gitRepoPath, gitGateway)

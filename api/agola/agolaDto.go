@@ -143,3 +143,24 @@ const (
 	RunTaskFetchPhaseNotStarted RunTaskFetchPhase = "notstarted"
 	RunTaskFetchPhaseFinished   RunTaskFetchPhase = "finished"
 )
+
+type RemoteSourceDto struct {
+	ID                  string `json:"id"`
+	Name                string `json:"name"`
+	AuthType            string `json:"auth_type"`
+	RegistrationEnabled bool   `json:"registration_enabled"`
+	LoginEnabled        bool   `json:"login_enabled"`
+}
+
+type UserDto struct {
+	ID             string             `json:"id"`
+	Username       string             `json:"username"`
+	LinkedAccounts []LinkedAccountDto `json:"linked_accounts"`
+}
+
+type LinkedAccountDto struct {
+	ID                  string `json:"id"`
+	RemoteSourceID      string `json:"remote_source_id"`
+	RemoteUserName      string `json:"remote_user_name"`
+	RemoteUserAvatarURL string `json:"remote_user_avatar_url"`
+}

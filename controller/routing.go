@@ -128,7 +128,7 @@ func setupAddGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {
 
 func setupUpdateGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {
 	router.Use(handleRestrictedAdminRoutes)
-	router.HandleFunc("", ctrl.UpdateGitSource).Methods("PUT")
+	router.HandleFunc("/{gitSourceName}", ctrl.UpdateGitSource).Methods("PUT")
 }
 
 func setupDeleteGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {

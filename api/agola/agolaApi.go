@@ -31,6 +31,8 @@ type AgolaApiInterface interface {
 	GetRun(runID string) (*RunDto, error)
 	GetTask(runID string, taskID string) (*TaskDto, error)
 	GetLogs(runID string, taskID string, step int) (string, error)
+	GetRemoteSource(agolaRemoteSource string) (*RemoteSourceDto, error)
+	GetUsers() (*[]UserDto, error)
 }
 
 type AgolaApi struct{}
@@ -345,4 +347,50 @@ func (agolaApi *AgolaApi) GetLogs(runID string, taskID string, step int) (string
 	logs, _ := ioutil.ReadAll(resp.Body)
 
 	return string(logs), err
+}
+
+func (agolaApi *AgolaApi) GetRemoteSource(agolaRemoteSource string) (*RemoteSourceDto, error) {
+	log.Println("GetRemoteSource start")
+
+	client := &http.Client{}
+	URLApi := getRemoteSourceUrl(agolaRemoteSource)
+
+	req, _ := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var jsonResponse RemoteSourceDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse, nil
+}
+
+func (agolaApi *AgolaApi) GetUsers() (*[]UserDto, error) {
+	log.Println("GetRemoteSource start")
+
+	client := &http.Client{}
+	URLApi := getUsersUrl()
+
+	req, _ := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var jsonResponse []UserDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse, nil
 }

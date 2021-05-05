@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"wecode.sorint.it/opensource/papagaio-api/api"
+	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/types"
 )
@@ -26,6 +27,11 @@ var addUGitSourceCmd = &cobra.Command{
 var removeGitSourceCmd = &cobra.Command{
 	Use: "remove",
 	Run: removeGitSource,
+}
+
+var updateGitSourceCmd = &cobra.Command{
+	Use: "update",
+	Run: updateGitSource,
 }
 
 var cfgGitSource configGitSourceCmd
@@ -45,6 +51,7 @@ func init() {
 	rootCmd.AddCommand(gitSourceCmd)
 	gitSourceCmd.AddCommand(addUGitSourceCmd)
 	gitSourceCmd.AddCommand(removeGitSourceCmd)
+	gitSourceCmd.AddCommand(updateGitSourceCmd)
 
 	AddCommonFlags(gitSourceCmd, &cfgGitSource.CommonConfig)
 
@@ -158,4 +165,59 @@ func removeGitSource(cmd *cobra.Command, args []string) {
 	}
 
 	cmd.Println("gitsource removed")
+}
+
+//TODO
+func updateGitSource(cmd *cobra.Command, args []string) {
+	if err := cfgGitSource.IsAdminUser(); err != nil {
+		cmd.PrintErrln(err.Error())
+		os.Exit(1)
+	}
+
+	if len(cfgGitSource.name) == 0 {
+		cmd.PrintErrln("name is empty or not valid")
+		os.Exit(1)
+	}
+
+	requestDto := dto.UpdateRemoteSourceRequestDto{}
+
+	if len(cfgGitSource.gitAPIURL) != 0 {
+		requestDto.GitAPIURL = &cfgGitSource.gitAPIURL
+	}
+	if len(cfgGitSource.gitToken) != 0 {
+		requestDto.GitToken = &cfgGitSource.gitToken
+	}
+	if len(cfgGitSource.gitType) != 0 {
+		if strings.Compare(cfgGitSource.gitType, "gitea") != 0 && strings.Compare(cfgGitSource.gitType, "github") != 0 {
+			cmd.PrintErrln("type must be gitea or github")
+			os.Exit(1)
+		}
+		requestDto.GitType = (*types.GitType)(&cfgGitSource.gitToken)
+	}
+	if len(cfgGitSource.agolaRemoteSource) != 0 {
+		requestDto.AgolaRemoteSource = &cfgGitSource.agolaRemoteSource
+	}
+	if len(cfgGitSource.agolaToken) != 0 {
+		requestDto.AgolaToken = &cfgGitSource.agolaToken
+	}
+	data, _ := json.Marshal(requestDto)
+
+	client := &http.Client{}
+	URLApi := cfgGitSource.gatewayURL + "/api/gitsource/" + cfgGitSource.name
+	reqBody := strings.NewReader(string(data))
+	req, _ := http.NewRequest("PUT", URLApi, reqBody)
+	req.Header.Add("Authorization", "token "+cfgGitSource.token)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		cmd.Println("Error:", err.Error())
+	} else {
+		if !api.IsResponseOK(resp.StatusCode) {
+			body, _ := ioutil.ReadAll(resp.Body)
+			cmd.PrintErrln("Somefing was wrong! " + string(body))
+			os.Exit(1)
+		}
+	}
+
+	cmd.Println("gitsource updated")
 }

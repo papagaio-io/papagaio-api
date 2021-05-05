@@ -8,8 +8,8 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 	agola "wecode.sorint.it/opensource/papagaio-api/api/agola"
-	dto "wecode.sorint.it/opensource/papagaio-api/dto"
 	model "wecode.sorint.it/opensource/papagaio-api/model"
+	types "wecode.sorint.it/opensource/papagaio-api/types"
 )
 
 // MockAgolaApiInterface is a mock of AgolaApiInterface interface
@@ -66,7 +66,7 @@ func (mr *MockAgolaApiInterfaceMockRecorder) CheckProjectExists(organization, pr
 }
 
 // CreateOrganization mocks base method
-func (m *MockAgolaApiInterface) CreateOrganization(organization *model.Organization, visibility dto.VisibilityType) (string, error) {
+func (m *MockAgolaApiInterface) CreateOrganization(organization *model.Organization, visibility types.VisibilityType) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrganization", organization, visibility)
 	ret0, _ := ret[0].(string)

@@ -4,13 +4,13 @@ import (
 	"strings"
 	"time"
 
-	"wecode.sorint.it/opensource/papagaio-api/dto"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
 type AgolaCreateORGDto struct {
-	ID         string             `json:"id"`
-	Name       string             `json:"name"`
-	Visibility dto.VisibilityType `json:"visibility"`
+	ID         string               `json:"id"`
+	Name       string               `json:"name"`
+	Visibility types.VisibilityType `json:"visibility"`
 }
 
 type RemoteSourcesDto struct {
@@ -18,20 +18,20 @@ type RemoteSourcesDto struct {
 }
 
 type CreateProjectRequestDto struct {
-	Name             string             `json:"name"`
-	ParentRef        string             `json:"parent_ref"`
-	Visibility       dto.VisibilityType `json:"visibility"`
-	RemoteSourceName string             `json:"remote_source_name"`
-	RepoPath         string             `json:"repo_path"`
+	Name             string               `json:"name"`
+	ParentRef        string               `json:"parent_ref"`
+	Visibility       types.VisibilityType `json:"visibility"`
+	RemoteSourceName string               `json:"remote_source_name"`
+	RepoPath         string               `json:"repo_path"`
 }
 
 type CreateProjectResponseDto struct {
-	ID               string             `json:"id"`
-	Name             string             `json:"name"`
-	Path             string             `json:"path"`
-	ParentPath       string             `json:"parent_path"`
-	Visibility       dto.VisibilityType `json:"visibility"`
-	GlobalVisibility string             `json:"global_visibility"`
+	ID               string               `json:"id"`
+	Name             string               `json:"name"`
+	Path             string               `json:"path"`
+	ParentPath       string               `json:"parent_path"`
+	Visibility       types.VisibilityType `json:"visibility"`
+	GlobalVisibility string               `json:"global_visibility"`
 }
 
 type OrganizationMembersResponseDto struct {

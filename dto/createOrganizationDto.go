@@ -5,18 +5,20 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
 type CreateOrganizationRequestDto struct {
-	Name       string         `json:"name"`
-	AgolaRef   string         `json:"agolaRef"`
-	Visibility VisibilityType `json:"visibility"`
+	Name       string               `json:"name"`
+	AgolaRef   string               `json:"agolaRef"`
+	Visibility types.VisibilityType `json:"visibility"`
 
 	GitSourceName string `json:"gitSourceName"`
 
-	BehaviourInclude string        `json:"behaviourInclude"`
-	BehaviourExclude string        `json:"behaviourExclude"`
-	BehaviourType    BehaviourType `json:"behaviourType"`
+	BehaviourInclude string              `json:"behaviourInclude"`
+	BehaviourExclude string              `json:"behaviourExclude"`
+	BehaviourType    types.BehaviourType `json:"behaviourType"`
 }
 
 var organizationRegexp = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9]*([-]?[a-zA-Z0-9]+)+$`)
@@ -32,45 +34,14 @@ func (org *CreateOrganizationRequestDto) IsValid() error {
 	return errors.New("fields not valid")
 }
 
-type BehaviourType string
-
-const (
-	Wildcard BehaviourType = "wildcard"
-	Regex    BehaviourType = "regex"
-	None     BehaviourType = "none"
-)
-
-func (bt BehaviourType) IsValid() error {
-	switch bt {
-	case Wildcard, Regex, None:
-		return nil
-	}
-	return errors.New("invalid visibility type")
-}
-
-type VisibilityType string
-
-const (
-	Public  VisibilityType = "public"
-	Private VisibilityType = "private"
-)
-
-func (vt VisibilityType) IsValid() error {
-	switch vt {
-	case Public, Private:
-		return nil
-	}
-	return errors.New("invalid visibility type")
-}
-
 func (org CreateOrganizationRequestDto) IsBehaviourValid() bool {
 	if org.BehaviourType.IsValid() != nil {
 		return false
 	}
 
-	if org.BehaviourType == None {
+	if org.BehaviourType == types.None {
 		return true
-	} else if org.BehaviourType == Regex {
+	} else if org.BehaviourType == types.Regex {
 		_, err := regexp.Compile(org.BehaviourInclude)
 		if err != nil {
 			if len(org.BehaviourExclude) > 0 {

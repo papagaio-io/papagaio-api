@@ -11,14 +11,14 @@ import (
 
 	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/config"
-	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
 type AgolaApiInterface interface {
 	CheckOrganizationExists(organization *model.Organization) (bool, string)
 	CheckProjectExists(organization *model.Organization, projectName string) (bool, string)
-	CreateOrganization(organization *model.Organization, visibility dto.VisibilityType) (string, error)
+	CreateOrganization(organization *model.Organization, visibility types.VisibilityType) (string, error)
 	DeleteOrganization(organization *model.Organization, agolaUserToken string) error
 	CreateProject(projectName string, agolaProjectRef string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error)
 	DeleteProject(organization *model.Organization, agolaProjectRef string, agolaUserToken string) error
@@ -80,7 +80,7 @@ func (agolaApi *AgolaApi) CheckProjectExists(organization *model.Organization, a
 	return projectExists, projectID
 }
 
-func (agolaApi *AgolaApi) CreateOrganization(organization *model.Organization, visibility dto.VisibilityType) (string, error) {
+func (agolaApi *AgolaApi) CreateOrganization(organization *model.Organization, visibility types.VisibilityType) (string, error) {
 	client := &http.Client{}
 	URLApi := getOrgUrl()
 	reqBody := strings.NewReader(`{"name": "` + organization.AgolaOrganizationRef + `", "visibility": "` + string(visibility) + `"}`)

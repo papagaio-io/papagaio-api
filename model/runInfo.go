@@ -5,35 +5,17 @@ import (
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/config"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
 type RunInfo struct {
-	ID           string    `json:"id"`
-	Branch       string    `json:"branch"`
-	RunStartDate time.Time `json:"runStartDate"`
-	RunEndDate   time.Time `json:"runEndDate,omitempty"`
-	Phase        RunPhase  `json:"phase"`
-	Result       RunResult `json:"result"`
+	ID           string          `json:"id"`
+	Branch       string          `json:"branch"`
+	RunStartDate time.Time       `json:"runStartDate"`
+	RunEndDate   time.Time       `json:"runEndDate,omitempty"`
+	Phase        types.RunPhase  `json:"phase"`
+	Result       types.RunResult `json:"result"`
 }
-
-type RunPhase string
-
-const (
-	RunPhaseSetupError RunPhase = "setuperror"
-	RunPhaseQueued     RunPhase = "queued"
-	RunPhaseCancelled  RunPhase = "cancelled"
-	RunPhaseRunning    RunPhase = "running"
-	RunPhaseFinished   RunPhase = "finished"
-)
-
-type RunResult string
-
-const (
-	RunResultUnknown RunResult = "unknown"
-	RunResultStopped RunResult = "stopped"
-	RunResultSuccess RunResult = "success"
-	RunResultFailed  RunResult = "failed"
-)
 
 const runURL string = "%s/org/%s/projects/%s.proj/runs/%s"
 

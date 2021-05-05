@@ -20,6 +20,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_agola"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_gitea"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
@@ -35,9 +36,9 @@ func TestCreateOrganizationOK(t *testing.T) {
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
 		AgolaRef:      "Test",
-		Visibility:    dto.Public,
+		Visibility:    types.Public,
 		GitSourceName: "gitea",
-		BehaviourType: dto.None,
+		BehaviourType: types.None,
 	}
 
 	gitSource := (*MakeGitSourceMap())[organizationReqDto.GitSourceName]
@@ -98,9 +99,9 @@ func TestCreateOrganizationJustExistsInPapagaio(t *testing.T) {
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
 		AgolaRef:      "Test",
-		Visibility:    dto.Public,
+		Visibility:    types.Public,
 		GitSourceName: "gitea",
-		BehaviourType: dto.None,
+		BehaviourType: types.None,
 	}
 
 	gitSource := (*MakeGitSourceMap())[organizationReqDto.GitSourceName]
@@ -154,9 +155,9 @@ func TestCreateOrganizationJustExistsInAgola(t *testing.T) {
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
 		AgolaRef:      "Test",
-		Visibility:    dto.Public,
+		Visibility:    types.Public,
 		GitSourceName: "gitea",
-		BehaviourType: dto.None,
+		BehaviourType: types.None,
 	}
 
 	gitSource := (*MakeGitSourceMap())[organizationReqDto.GitSourceName]
@@ -212,9 +213,9 @@ func TestCreateOrganizationGitOrganizationNotFound(t *testing.T) {
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
 		AgolaRef:      "Test",
-		Visibility:    dto.Public,
+		Visibility:    types.Public,
 		GitSourceName: "gitea",
-		BehaviourType: dto.None,
+		BehaviourType: types.None,
 	}
 
 	gitSource := (*MakeGitSourceMap())[organizationReqDto.GitSourceName]
@@ -266,9 +267,9 @@ func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 	organizationReqDto := dto.CreateOrganizationRequestDto{
 		Name:          "Test",
 		AgolaRef:      "Test",
-		Visibility:    dto.Public,
+		Visibility:    types.Public,
 		GitSourceName: "gitea",
-		BehaviourType: dto.None,
+		BehaviourType: types.None,
 	}
 
 	gitSource := (*MakeGitSourceMap())[organizationReqDto.GitSourceName]

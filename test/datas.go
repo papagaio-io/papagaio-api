@@ -5,14 +5,15 @@ import (
 
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 func MakeGitSourceMap() *map[string]model.GitSource {
 	retVal := make(map[string]model.GitSource)
 
-	retVal["gitea"] = model.GitSource{Name: "gitea", GitType: model.Gitea}
-	retVal["github"] = model.GitSource{Name: "github", GitType: model.Github}
+	retVal["gitea"] = model.GitSource{Name: "gitea", GitType: types.Gitea}
+	retVal["github"] = model.GitSource{Name: "github", GitType: types.Github}
 
 	return &retVal
 }

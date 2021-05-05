@@ -253,3 +253,33 @@ func (mr *MockAgolaApiInterfaceMockRecorder) GetLogs(runID, taskID, step interfa
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLogs", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetLogs), runID, taskID, step)
 }
+
+// GetRemoteSource mocks base method
+func (m *MockAgolaApiInterface) GetRemoteSource(agolaRemoteSource string) (*agola.RemoteSourceDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRemoteSource", agolaRemoteSource)
+	ret0, _ := ret[0].(*agola.RemoteSourceDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRemoteSource indicates an expected call of GetRemoteSource
+func (mr *MockAgolaApiInterfaceMockRecorder) GetRemoteSource(agolaRemoteSource interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteSource", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetRemoteSource), agolaRemoteSource)
+}
+
+// GetUsers mocks base method
+func (m *MockAgolaApiInterface) GetUsers() (*[]agola.UserDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsers")
+	ret0, _ := ret[0].(*[]agola.UserDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsers indicates an expected call of GetUsers
+func (mr *MockAgolaApiInterfaceMockRecorder) GetUsers() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetUsers))
+}

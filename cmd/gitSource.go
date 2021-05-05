@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
 var gitSourceCmd = &cobra.Command{
@@ -101,7 +102,7 @@ func addGitSource(cmd *cobra.Command, args []string) {
 
 	gitSource := model.GitSource{
 		Name:              cfgGitSource.name,
-		GitType:           model.GitType(cfgGitSource.gitType),
+		GitType:           types.GitType(cfgGitSource.gitType),
 		GitAPIURL:         cfgGitSource.gitAPIURL,
 		GitToken:          cfgGitSource.gitToken,
 		AgolaRemoteSource: cfgGitSource.agolaRemoteSource,

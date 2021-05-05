@@ -37,8 +37,10 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization)
 	agolaMembersMap := toMapMembers(&agolaMembers.Members)
 
+	agolaUsersMap := utils.GetUsersMapByRemotesource(agolaApi, gitSource.AgolaRemoteSource)
+
 	for _, gitMember := range gitTeamMembers {
-		agolaUserRef := utils.ConvertGiteaToAgolaUsername(gitMember.Username)
+		agolaUserRef := (*agolaUsersMap)[gitMember.Username]
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
@@ -49,7 +51,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	}
 
 	for _, gitMember := range gitTeamOwners {
-		agolaUserRef := utils.ConvertGiteaToAgolaUsername(gitMember.Username)
+		agolaUserRef := (*agolaUsersMap)[gitMember.Username]
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
@@ -62,7 +64,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	//Verifico i membri eliminati su git
 
 	for _, agolaMember := range agolaMembers.Members {
-		if findGiteaMemberByAgolaUserRef(gitTeamOwners, agolaMember.Username) == nil && findGiteaMemberByAgolaUserRef(gitTeamMembers, agolaMember.Username) == nil {
+		if findGiteaMemberByAgolaUserRef(gitTeamOwners, agolaUsersMap, agolaMember.Username) == nil && findGiteaMemberByAgolaUserRef(gitTeamMembers, agolaUsersMap, agolaMember.Username) == nil {
 			agolaApi.RemoveOrganizationMember(organization, agolaMember.Username)
 		}
 	}
@@ -70,11 +72,12 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	log.Println("SyncMembersForGitea end")
 }
 
-func findGiteaMemberByAgolaUserRef(gitMembers map[int]dto.UserTeamResponseDto, agolaUserRef string) *dto.UserTeamResponseDto {
+func findGiteaMemberByAgolaUserRef(gitMembers map[int]dto.UserTeamResponseDto, agolaUsersMap *map[string]string, agolaUserRef string) *dto.UserTeamResponseDto {
 	for _, gitMember := range gitMembers {
-		if strings.Compare(agolaUserRef, utils.ConvertGiteaToAgolaUsername(gitMember.Username)) == 0 {
+		if strings.Compare(agolaUserRef, (*agolaUsersMap)[gitMember.Username]) == 0 {
 			return &gitMember
 		}
+
 	}
 
 	return nil

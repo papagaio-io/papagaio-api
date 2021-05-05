@@ -17,6 +17,8 @@ const runsListPath string = "%s/api/v1alpha/runs?group=%s"
 const runPath string = "%s/api/v1alpha/runs/%s"
 const taskPath string = "%s/api/v1alpha/runs/%s/tasks/%s"
 const logsPath string = "%s/api/v1alpha/logs?runID=%s&taskID=%s&%s"
+const remoteSourcePath string = "%s/api/v1alpha/remotesources/%s"
+const usersPath string = "%s/api/v1alpha/users"
 
 func getOrganizationUrl(agolaOrganizationRef string) string {
 	return fmt.Sprintf(organizationPath, config.Config.Agola.AgolaAddr, agolaOrganizationRef)
@@ -79,4 +81,12 @@ func getLogsUrl(runID string, taskID string, step int) string {
 	}
 
 	return fmt.Sprintf(logsPath, config.Config.Agola.AgolaAddr, runID, taskID, stepParam)
+}
+
+func getRemoteSourceUrl(agolaRemoteSource string) string {
+	return fmt.Sprintf(remoteSourcePath, config.Config.Agola.AgolaAddr, agolaRemoteSource)
+}
+
+func getUsersUrl() string {
+	return fmt.Sprintf(usersPath, config.Config.Agola.AgolaAddr)
 }

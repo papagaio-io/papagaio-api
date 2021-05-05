@@ -76,15 +76,34 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var gitGitSource *model.GitSource
-	data, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(data, gitGitSource)
+	vars := mux.Vars(r)
+	gitSourceName := vars["gitSourceName"]
 
-	oldGitSource, _ := service.Db.GetGitSourceByName(gitGitSource.Name)
+	var req dto.UpdateRemoteSourceRequestDto
+	data, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(data, &req)
+
+	oldGitSource, _ := service.Db.GetGitSourceByName(gitSourceName)
 	if oldGitSource == nil {
 		NotFoundResponse(w)
 		return
 	}
 
-	service.Db.SaveGitSource(gitGitSource)
+	if req.AgolaRemoteSource != nil {
+		oldGitSource.AgolaRemoteSource = *req.AgolaRemoteSource
+	}
+	if req.AgolaToken != nil {
+		oldGitSource.AgolaToken = *req.AgolaToken
+	}
+	if req.GitAPIURL != nil {
+		oldGitSource.GitAPIURL = *req.GitAPIURL
+	}
+	if req.GitToken != nil {
+		oldGitSource.GitToken = *req.GitToken
+	}
+	if req.GitType != nil {
+		oldGitSource.GitType = *req.GitType
+	}
+
+	service.Db.SaveGitSource(oldGitSource)
 }

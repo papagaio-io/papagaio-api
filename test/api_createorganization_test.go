@@ -51,7 +51,7 @@ func TestCreateOrganizationOK(t *testing.T) {
 	agolaApi.EXPECT().CreateOrganization(gomock.Any(), organizationReqDto.Visibility).Return("123456", nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
-	setupSynkMembersUserTestMocks(agolaApi, giteaApi, organizationReqDto.Name)
+	setupSynkMembersUserTestMocks(agolaApi, giteaApi, organizationReqDto.Name, gitSource.AgolaRemoteSource)
 	setupCheckoutAllGitRepositoryEmptyMocks(giteaApi, organizationReqDto.Name)
 
 	serviceOrganization := service.OrganizationService{
@@ -281,7 +281,7 @@ func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 	agolaApi.EXPECT().CheckOrganizationExists(gomock.Any()).Return(true, "test123456")
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
-	setupSynkMembersUserTestMocks(agolaApi, giteaApi, organizationReqDto.Name)
+	setupSynkMembersUserTestMocks(agolaApi, giteaApi, organizationReqDto.Name, gitSource.AgolaRemoteSource)
 	setupCheckoutAllGitRepositoryEmptyMocks(giteaApi, organizationReqDto.Name)
 
 	serviceOrganization := service.OrganizationService{
@@ -316,7 +316,7 @@ func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 	assert.Equal(t, responseDto.ErrorCode, dto.NoError, "ErrorCode is not correct")
 }
 
-func setupSynkMembersUserTestMocks(agolaApi *mock_agola.MockAgolaApiInterface, giteaApi *mock_gitea.MockGiteaInterface, organizationName string) {
+func setupSynkMembersUserTestMocks(agolaApi *mock_agola.MockAgolaApiInterface, giteaApi *mock_gitea.MockGiteaInterface, organizationName string, remoteSource string) {
 	gitTeams := []gitDto.TeamResponseDto{
 		gitDto.TeamResponseDto{
 			ID:         1,
@@ -333,6 +333,23 @@ func setupSynkMembersUserTestMocks(agolaApi *mock_agola.MockAgolaApiInterface, g
 		},
 	}
 	giteaApi.EXPECT().GetTeamMembers(gomock.Any(), 1).Return(&gitTeamMembers, nil)
+
+	//
+	remoteSourceDto := agola.RemoteSourceDto{ID: "123456"}
+	agolaApi.EXPECT().GetRemoteSource("gitea").Return(&remoteSourceDto, nil)
+
+	users := []agola.UserDto{
+		{
+			Username: "usertest",
+			LinkedAccounts: []agola.LinkedAccountDto{
+				{RemoteUserName: "user.test", RemoteSourceID: remoteSourceDto.ID},
+			},
+		},
+	}
+
+	agolaApi.EXPECT().GetUsers().Return(&users, nil)
+
+	//
 
 	agolaApi.EXPECT().GetOrganizationMembers(gomock.Any()).Return(&agola.OrganizationMembersResponseDto{}, nil)
 	agolaApi.EXPECT().AddOrUpdateOrganizationMember(gomock.Any(), "usertest", "owner")

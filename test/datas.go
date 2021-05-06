@@ -11,8 +11,8 @@ import (
 func MakeGitSourceMap() *map[string]model.GitSource {
 	retVal := make(map[string]model.GitSource)
 
-	retVal["gitea"] = model.GitSource{Name: "gitea", GitType: types.Gitea}
-	retVal["github"] = model.GitSource{Name: "github", GitType: types.Github}
+	retVal["gitea"] = model.GitSource{Name: "gitea", GitType: types.Gitea, AgolaRemoteSource: "gitea"}
+	retVal["github"] = model.GitSource{Name: "github", GitType: types.Github, AgolaRemoteSource: "github"}
 
 	return &retVal
 }

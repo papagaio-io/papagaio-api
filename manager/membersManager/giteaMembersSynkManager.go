@@ -40,7 +40,11 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	agolaUsersMap := utils.GetUsersMapByRemotesource(agolaApi, gitSource.AgolaRemoteSource)
 
 	for _, gitMember := range gitTeamMembers {
-		agolaUserRef := (*agolaUsersMap)[gitMember.Username]
+		agolaUserRef, usersExists := (*agolaUsersMap)[gitMember.Username]
+		if !usersExists {
+			continue
+		}
+
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
@@ -51,7 +55,11 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	}
 
 	for _, gitMember := range gitTeamOwners {
-		agolaUserRef := (*agolaUsersMap)[gitMember.Username]
+		agolaUserRef, usersExists := (*agolaUsersMap)[gitMember.Username]
+		if !usersExists {
+			continue
+		}
+
 		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
 
 		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {

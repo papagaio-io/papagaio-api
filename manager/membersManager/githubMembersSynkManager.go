@@ -18,7 +18,11 @@ func SyncMembersForGithub(organization *model.Organization, gitSource *model.Git
 	agolaUsersMap := utils.GetUsersMapByRemotesource(agolaApi, gitSource.AgolaRemoteSource)
 
 	for _, gitMember := range *githubUsers {
-		agolaUserRef := (*agolaUsersMap)[gitMember.Username]
+		agolaUserRef, usersExists := (*agolaUsersMap)[gitMember.Username]
+		if !usersExists {
+			continue
+		}
+
 		agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, gitMember.Role)
 	}
 

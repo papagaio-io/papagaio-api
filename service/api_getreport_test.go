@@ -1,4 +1,4 @@
-package test
+package service
 
 import (
 	"net/http"
@@ -12,7 +12,7 @@ import (
 	gitDto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
-	"wecode.sorint.it/opensource/papagaio-api/service"
+	"wecode.sorint.it/opensource/papagaio-api/test"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_gitea"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
 	"wecode.sorint.it/opensource/papagaio-api/types"
@@ -25,18 +25,18 @@ func TestGetReportOK(t *testing.T) {
 	db := mock_repository.NewMockDatabase(ctl)
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
 
-	organization := (*MakeOrganizationList())[0]
+	organization := (*test.MakeOrganizationList())[0]
 	insertRunsData(&organization)
 	organizationList := make([]model.Organization, 0)
 	organizationList = append(organizationList, organization)
 
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	db.EXPECT().GetOrganizations().Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
 	giteaApi.EXPECT().GetOrganization(gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
 
-	serviceOrganization := service.OrganizationService{
+	serviceOrganization := OrganizationService{
 		Db:         db,
 		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
 	}
@@ -51,21 +51,21 @@ func TestGetReportOK(t *testing.T) {
 	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
 
 	var organizationsDto []dto.OrganizationDto
-	parseBody(resp, &organizationsDto)
+	test.ParseBody(resp, &organizationsDto)
 
 	assert.Check(t, len(organizationsDto) == 1)
 	assertOrganizationDto(t, &organization, &organizationsDto[0])
 }
 
 func assertOrganizationDto(t *testing.T, organization *model.Organization, organizationDto *dto.OrganizationDto) {
-	organizationDto.Projects = sortProjectsDto(organizationDto.Projects)
+	organizationDto.Projects = test.SortProjectsDto(organizationDto.Projects)
 
 	assert.Equal(t, organization.AgolaOrganizationRef, organizationDto.AgolaRef, "AgolaRef is not correct")
 	assert.Equal(t, organization.Name, organizationDto.Name, "Name is not correct")
 	assert.Equal(t, len(organization.Projects), len(organizationDto.Projects), "There are not all the projects")
 
 	projectA := organizationDto.Projects[0]
-	projectA.Branchs = sortBranchesDto(projectA.Branchs)
+	projectA.Branchs = test.SortBranchesDto(projectA.Branchs)
 	assert.Equal(t, projectA.Name, "test1")
 	assert.Equal(t, projectA.Branchs[0].Name, "master")
 	assert.Equal(t, projectA.Branchs[0].State, types.RunStateSuccess)

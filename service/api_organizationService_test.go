@@ -1,4 +1,4 @@
-package test
+package service
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"gotest.tools/assert"
 	"wecode.sorint.it/opensource/papagaio-api/model"
-	"wecode.sorint.it/opensource/papagaio-api/service"
+	"wecode.sorint.it/opensource/papagaio-api/test"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_agola"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
@@ -21,12 +21,12 @@ func TestGetOrganizationsOK(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	organizationsMock := MakeOrganizationList()
+	organizationsMock := test.MakeOrganizationList()
 
 	db := mock_repository.NewMockDatabase(ctl)
 	db.EXPECT().GetOrganizations().Return(organizationsMock, nil)
 
-	serviceOrganization := service.OrganizationService{
+	serviceOrganization := OrganizationService{
 		Db: db,
 	}
 
@@ -39,7 +39,7 @@ func TestGetOrganizationsOK(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	var organizations *[]model.Organization
-	parseBody(resp, organizations)
+	test.ParseBody(resp, organizations)
 }
 
 func TestAddExternalUser(t *testing.T) {
@@ -50,14 +50,14 @@ func TestAddExternalUser(t *testing.T) {
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
 
-	serviceOrganization := service.OrganizationService{
+	serviceOrganization := OrganizationService{
 		Db:          db,
 		AgolaApi:    agolaApi,
 		CommonMutex: &commonMutex,
 	}
 	user := model.User{Email: "user@email.com"}
 
-	org := (*MakeOrganizationList())[0]
+	org := (*test.MakeOrganizationList())[0]
 
 	db.EXPECT().GetOrganizationByAgolaRef(org.AgolaOrganizationRef).Return(&org, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
@@ -83,7 +83,7 @@ func TestAddExternalUserWhenOrganizationNotFound(t *testing.T) {
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
 
-	serviceOrganization := service.OrganizationService{
+	serviceOrganization := OrganizationService{
 		Db:          db,
 		AgolaApi:    agolaApi,
 		CommonMutex: &commonMutex,
@@ -115,7 +115,7 @@ func TestRemoveExternalUserOk(t *testing.T) {
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
 
-	serviceOrganization := service.OrganizationService{
+	serviceOrganization := OrganizationService{
 		Db:          db,
 		AgolaApi:    agolaApi,
 		CommonMutex: &commonMutex,
@@ -123,7 +123,7 @@ func TestRemoveExternalUserOk(t *testing.T) {
 	mail := "user@email.com"
 	user := model.User{Email: mail}
 
-	org := (*MakeOrganizationList())[0]
+	org := (*test.MakeOrganizationList())[0]
 	org.ExternalUsers = make(map[string]bool)
 	org.ExternalUsers[mail] = true
 

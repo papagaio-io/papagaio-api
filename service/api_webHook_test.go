@@ -1,4 +1,4 @@
-package test
+package service
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
-	"wecode.sorint.it/opensource/papagaio-api/service"
+	"wecode.sorint.it/opensource/papagaio-api/test"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_agola"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_gitea"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
@@ -24,8 +24,8 @@ func TestRepositoryCreatedWithAgolaConfigOK(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	repositoryRef := "repositoryTest"
 
@@ -45,7 +45,7 @@ func TestRepositoryCreatedWithAgolaConfigOK(t *testing.T) {
 	agolaApi.EXPECT().CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), gomock.Any(), gitSource.AgolaRemoteSource, gitSource.AgolaToken).Return("projectTestID", nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
-	serviceWebHook := service.WebHookService{
+	serviceWebHook := WebHookService{
 		Db:          db,
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		AgolaApi:    agolaApi,
@@ -76,8 +76,8 @@ func TestRepositoryCreatedWithoutAgolaConfigOK(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	repositoryRef := "repositoryTest"
 
@@ -96,7 +96,7 @@ func TestRepositoryCreatedWithoutAgolaConfigOK(t *testing.T) {
 	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), organization.Name, webHookMessage.Repository.Name).Return(false, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
-	serviceWebHook := service.WebHookService{
+	serviceWebHook := WebHookService{
 		Db:          db,
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		AgolaApi:    agolaApi,
@@ -127,8 +127,8 @@ func TestRepositoryDeletedOK(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	repositoryRef := "repositoryTest"
 	organization.Projects = make(map[string]model.Project)
@@ -148,7 +148,7 @@ func TestRepositoryDeletedOK(t *testing.T) {
 	agolaApi.EXPECT().DeleteProject(gomock.Any(), utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), gitSource.AgolaToken).Return(nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
-	serviceWebHook := service.WebHookService{
+	serviceWebHook := WebHookService{
 		Db:          db,
 		AgolaApi:    agolaApi,
 		CommonMutex: &commonMutex,
@@ -175,8 +175,8 @@ func TestRepositoryPushWithAgolaConfAndProjectNotExists(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	repositoryRef := "repositoryTest"
 
@@ -198,7 +198,7 @@ func TestRepositoryPushWithAgolaConfAndProjectNotExists(t *testing.T) {
 
 	setupBranchSynckMock(db, giteaApi, organization.Name, repositoryRef)
 
-	serviceWebHook := service.WebHookService{
+	serviceWebHook := WebHookService{
 		Db:          db,
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		AgolaApi:    agolaApi,
@@ -230,8 +230,8 @@ func TestRepositoryPushWithAgolaConfAndProjectArchivied(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	repositoryRef := "repositoryTest"
 	organization.Projects = make(map[string]model.Project)
@@ -255,7 +255,7 @@ func TestRepositoryPushWithAgolaConfAndProjectArchivied(t *testing.T) {
 
 	setupBranchSynckMock(db, giteaApi, organization.Name, repositoryRef)
 
-	serviceWebHook := service.WebHookService{
+	serviceWebHook := WebHookService{
 		Db:          db,
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		AgolaApi:    agolaApi,
@@ -287,8 +287,8 @@ func TestRepositoryPushWithAgolaConfAndProjectNotArchivied(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	repositoryRef := "repositoryTest"
 	organization.Projects = make(map[string]model.Project)
@@ -310,7 +310,7 @@ func TestRepositoryPushWithAgolaConfAndProjectNotArchivied(t *testing.T) {
 
 	setupBranchSynckMock(db, giteaApi, organization.Name, repositoryRef)
 
-	serviceWebHook := service.WebHookService{
+	serviceWebHook := WebHookService{
 		Db:          db,
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		AgolaApi:    agolaApi,
@@ -342,8 +342,8 @@ func TestRepositoryPushWithoutAgolaConfAndProjectArchivied(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	repositoryRef := "repositoryTest"
 	organization.Projects = make(map[string]model.Project)
@@ -365,7 +365,7 @@ func TestRepositoryPushWithoutAgolaConfAndProjectArchivied(t *testing.T) {
 
 	setupBranchSynckMock(db, giteaApi, organization.Name, repositoryRef)
 
-	serviceWebHook := service.WebHookService{
+	serviceWebHook := WebHookService{
 		Db:          db,
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		AgolaApi:    agolaApi,
@@ -397,8 +397,8 @@ func TestRepositoryPushWithoutAgolaConfAndProjectNotExists(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	repositoryRef := "repositoryTest"
 	organization.Projects = make(map[string]model.Project)
@@ -422,7 +422,7 @@ func TestRepositoryPushWithoutAgolaConfAndProjectNotExists(t *testing.T) {
 
 	setupBranchSynckMock(db, giteaApi, organization.Name, repositoryRef)
 
-	serviceWebHook := service.WebHookService{
+	serviceWebHook := WebHookService{
 		Db:          db,
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		AgolaApi:    agolaApi,

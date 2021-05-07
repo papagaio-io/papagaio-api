@@ -1,4 +1,4 @@
-package test
+package service
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"gotest.tools/assert"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
-	"wecode.sorint.it/opensource/papagaio-api/service"
+	"wecode.sorint.it/opensource/papagaio-api/test"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_agola"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_gitea"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
@@ -25,8 +25,8 @@ func TestDeleteOrganizationOK(t *testing.T) {
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
 	commonMutex := utils.NewEventMutex()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
@@ -34,7 +34,7 @@ func TestDeleteOrganizationOK(t *testing.T) {
 	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(nil)
 
-	serviceOrganization := service.OrganizationService{
+	serviceOrganization := OrganizationService{
 		Db:          db,
 		AgolaApi:    agolaApi,
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
@@ -62,15 +62,15 @@ func TestDeleteOrganizationInternalOnly(t *testing.T) {
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
 	commonMutex := utils.NewEventMutex()
 
-	organization := (*MakeOrganizationList())[0]
-	gitSource := (*MakeGitSourceMap())[organization.GitSourceName]
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(nil)
 
-	serviceOrganization := service.OrganizationService{
+	serviceOrganization := OrganizationService{
 		Db:          db,
 		AgolaApi:    agolaApi,
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
@@ -100,7 +100,7 @@ func TestDeleteOrganizationNotFound(t *testing.T) {
 
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organizationRefTest)).Return(nil, nil)
 
-	serviceOrganization := service.OrganizationService{
+	serviceOrganization := OrganizationService{
 		Db:          db,
 		CommonMutex: &commonMutex,
 	}

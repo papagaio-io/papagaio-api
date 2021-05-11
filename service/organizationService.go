@@ -220,15 +220,15 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	organizationName := vars["organizationName"]
+	organizationRef := vars["organizationRef"]
 
-	mutex := utils.ReserveOrganizationMutex(organizationName, service.CommonMutex)
+	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
 	locked := true
-	defer utils.ReleaseOrganizationMutexDefer(organizationName, service.CommonMutex, mutex, &locked)
+	defer utils.ReleaseOrganizationMutexDefer(organizationRef, service.CommonMutex, mutex, &locked)
 
-	organization, err := service.Db.GetOrganizationByAgolaRef(organizationName)
+	organization, err := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
 		return
@@ -245,7 +245,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	service.Db.SaveOrganization(organization)
 
 	mutex.Unlock()
-	utils.ReleaseOrganizationMutex(organizationName, service.CommonMutex)
+	utils.ReleaseOrganizationMutex(organizationRef, service.CommonMutex)
 	locked = false
 }
 
@@ -254,15 +254,15 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	organizationName := vars["organizationName"]
+	organizationRef := vars["organizationRef"]
 
-	mutex := utils.ReserveOrganizationMutex(organizationName, service.CommonMutex)
+	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
 	locked := true
-	defer utils.ReleaseOrganizationMutexDefer(organizationName, service.CommonMutex, mutex, &locked)
+	defer utils.ReleaseOrganizationMutexDefer(organizationRef, service.CommonMutex, mutex, &locked)
 
-	organization, err := service.Db.GetOrganizationByAgolaRef(organizationName)
+	organization, err := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
 		return
@@ -275,7 +275,7 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	service.Db.SaveOrganization(organization)
 
 	mutex.Unlock()
-	utils.ReleaseOrganizationMutex(organizationName, service.CommonMutex)
+	utils.ReleaseOrganizationMutex(organizationRef, service.CommonMutex)
 	locked = false
 }
 
@@ -299,9 +299,9 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	organizationName := vars["organizationName"]
+	organizationRef := vars["organizationRef"]
 
-	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationName)
+	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if organization == nil {
 		NotFoundResponse(w)
 		return
@@ -317,10 +317,10 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	organizationName := vars["organizationName"]
+	organizationRef := vars["organizationRef"]
 	projectName := vars["projectName"]
 
-	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationName)
+	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if organization == nil {
 		NotFoundResponse(w)
 		return

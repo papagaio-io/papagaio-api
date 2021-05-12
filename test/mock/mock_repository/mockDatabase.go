@@ -77,21 +77,6 @@ func (mr *MockDatabaseMockRecorder) SaveOrganization(organization interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveOrganization", reflect.TypeOf((*MockDatabase)(nil).SaveOrganization), organization)
 }
 
-// GetOrganizationByName mocks base method
-func (m *MockDatabase) GetOrganizationByName(organizationName string) (*model.Organization, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrganizationByName", organizationName)
-	ret0, _ := ret[0].(*model.Organization)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetOrganizationByName indicates an expected call of GetOrganizationByName
-func (mr *MockDatabaseMockRecorder) GetOrganizationByName(organizationName interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationByName", reflect.TypeOf((*MockDatabase)(nil).GetOrganizationByName), organizationName)
-}
-
 // GetOrganizationByAgolaRef mocks base method
 func (m *MockDatabase) GetOrganizationByAgolaRef(organizationName string) (*model.Organization, error) {
 	m.ctrl.T.Helper()

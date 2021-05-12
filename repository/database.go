@@ -14,7 +14,6 @@ type Database interface {
 	GetOrganizationsRef() ([]string, error)
 	GetOrganizations() (*[]model.Organization, error)
 	SaveOrganization(organization *model.Organization) error
-	GetOrganizationByName(organizationName string) (*model.Organization, error)
 	GetOrganizationByAgolaRef(organizationName string) (*model.Organization, error)
 	GetOrganizationById(organizationID string) (*model.Organization, error)
 	DeleteOrganization(organizationID string) error

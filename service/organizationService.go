@@ -66,11 +66,11 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	if req.IsValid() != nil {
-		UnprocessableEntityResponse(w, "Parameters have no correct values")
+		UnprocessableEntityResponse(w, "parameters have no correct values")
 		return
 	}
 
-	log.Println("Req CreateOrganizationDto: ", req)
+	log.Println("req CreateOrganizationDto: ", req)
 
 	org := &model.Organization{}
 	org.Name = req.Name
@@ -84,12 +84,14 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	//Some checks
 	gitSource, err := service.Db.GetGitSourceByName(org.GitSourceName)
 	if gitSource == nil || err != nil {
+		log.Println("failed to find gitSource", org.GitSourceName, "from db")
 		UnprocessableEntityResponse(w, "Gitsource non found")
 		return
 	}
 
 	gitOrgExists := service.GitGateway.CheckOrganizationExists(gitSource, org.Name)
-	if gitOrgExists == false {
+	if !gitOrgExists {
+		log.Println("failed to find organization", org.Name, "from git")
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.GitOrganizationNotFoundError}
 		JSONokResponse(w, response)
 		return
@@ -101,8 +103,9 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	locked := true
 	defer utils.ReleaseOrganizationMutexDefer(org.AgolaOrganizationRef, service.CommonMutex, mutex, &locked)
 
-	agolaOrg, err := service.Db.GetOrganizationByAgolaRef(org.AgolaOrganizationRef)
+	agolaOrg, _ := service.Db.GetOrganizationByAgolaRef(org.AgolaOrganizationRef)
 	if agolaOrg != nil {
+		log.Println("organization", org.AgolaOrganizationRef, "just exists")
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.PapagaioOrganizationExistsError}
 		JSONokResponse(w, response)
 		return
@@ -112,13 +115,14 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, org.Name, org.AgolaOrganizationRef)
 	if err != nil {
+		log.Println("failed to creare webhook")
 		InternalServerError(w)
 		return
 	}
 
 	agolaOrganizationExists, agolaOrganizationID := service.AgolaApi.CheckOrganizationExists(org)
 	if agolaOrganizationExists {
-		log.Println(org.Name, "just exists in Agola")
+		log.Println("organization", org.AgolaOrganizationRef, "just exists in Agola")
 		if !forceCreate {
 			service.GitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
 			response := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaOrganizationExistsError}
@@ -129,7 +133,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	} else {
 		org.ID, err = service.AgolaApi.CreateOrganization(org, org.Visibility)
 		if err != nil {
-			log.Println("Agola CreateOrganization error:", err)
+			log.Println("failed to create organization", org.AgolaOrganizationRef, "in agola:", err)
 			service.GitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
 			InternalServerError(w)
 			return
@@ -141,6 +145,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	err = service.Db.SaveOrganization(org)
 	if err != nil {
+		log.Println("failed to save organization in db")
 		InternalServerError(w)
 		return
 	}
@@ -337,14 +342,4 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	project := organization.Projects[projectName]
 
 	JSONokResponse(w, manager.GetProjectDto(&project, organization))
-}
-
-func contains(slice []string, item string) bool {
-	set := make(map[string]struct{}, len(slice))
-	for _, s := range slice {
-		set[s] = struct{}{}
-	}
-
-	_, ok := set[item]
-	return ok
 }

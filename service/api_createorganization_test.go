@@ -211,7 +211,7 @@ func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 
 func setupSynkMembersUserTestMocks(agolaApiInt *mock_agola.MockAgolaApiInterface, giteaApi *mock_gitea.MockGiteaInterface, organizationName string, remoteSource string) {
 	gitTeams := []gitDto.TeamResponseDto{
-		gitDto.TeamResponseDto{
+		{
 			ID:         1,
 			Name:       "Owners",
 			Permission: "owner",
@@ -220,7 +220,7 @@ func setupSynkMembersUserTestMocks(agolaApiInt *mock_agola.MockAgolaApiInterface
 	giteaApi.EXPECT().GetOrganizationTeams(gomock.Any(), organizationName).Return(&gitTeams, nil)
 
 	gitTeamMembers := []gitDto.UserTeamResponseDto{
-		gitDto.UserTeamResponseDto{
+		{
 			Username: "user.test",
 			Email:    "user.test@email.com",
 		},

@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"runtime"
-	"strconv"
 )
 
 func ConvertToJson(model interface{}) []byte {
@@ -24,7 +23,6 @@ func JSONokResponse(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data)
-	return
 }
 
 // MakeResponse prepare a response
@@ -40,7 +38,6 @@ func MakeResponse(w http.ResponseWriter, response interface{}, statusCode int) {
 	default:
 		InternalServerError(w)
 	}
-	return
 }
 
 // NotFoundResponse make a not found response with a error message
@@ -48,7 +45,6 @@ func NotFoundResponse(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusNotFound)
 	w.Write([]byte("No results"))
-	return
 }
 
 // UnprocessableEntityResponse make an unprocessable entity response with a specific message
@@ -56,7 +52,6 @@ func UnprocessableEntityResponse(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusUnprocessableEntity)
 	w.Write([]byte(message))
-	return
 }
 
 // InternalServerError log the caller code position and write to w 500 Internal Server Error
@@ -66,10 +61,4 @@ func InternalServerError(w http.ResponseWriter) {
 		log.Println(file, ":", line)
 	}
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-}
-
-func convertStringToUint(s string) uint {
-	var uint64 uint64
-	uint64, _ = strconv.ParseUint(s, 10, 64)
-	return uint(uint64)
 }

@@ -3,7 +3,6 @@ package agola
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -40,7 +39,7 @@ type AgolaApi struct{}
 func (agolaApi *AgolaApi) CheckOrganizationExists(organization *model.Organization) (bool, string) {
 	client := &http.Client{}
 	URLApi := getOrganizationUrl(organization.AgolaOrganizationRef)
-	fmt.Println("CheckOrganizationExists url:", URLApi)
+
 	req, err := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
@@ -207,7 +206,7 @@ func (agolaApi *AgolaApi) RemoveOrganizationMember(organization *model.Organizat
 	var err error
 	client := &http.Client{}
 	URLApi := getAddOrgMemberUrl(organization.AgolaOrganizationRef, agolaUserRef)
-	fmt.Println("url ", URLApi)
+
 	reqBody := strings.NewReader(`{}`)
 	req, err := http.NewRequest("DELETE", URLApi, reqBody)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)

@@ -16,6 +16,7 @@ func StartOrganizationSync(db repository.Database, tr utils.ConfigUtils, commonM
 	go syncOrganizationRun(db, tr, commonMutex, agolaApi, gitGateway)
 }
 
+//Synchronize projects and members of organizations
 func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	for {
 		log.Println("start members synk")
@@ -34,6 +35,7 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 				continue
 			}
 
+			//If organization deleted in Agola, delete in Papagaio
 			if agolaOrganizationExists, _ := agolaApi.CheckOrganizationExists(org); !agolaOrganizationExists {
 				gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
 				if gitSource != nil {

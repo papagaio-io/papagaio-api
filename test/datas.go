@@ -5,7 +5,6 @@ import (
 
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/types"
-	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 func MakeGitSourceMap() *map[string]model.GitSource {
@@ -24,7 +23,7 @@ func MakeOrganizationMap() *map[string]model.Organization {
 		organizationName := "Organization" + fmt.Sprint(i)
 		retVal[organizationName] = model.Organization{
 			Name:                 organizationName,
-			AgolaOrganizationRef: utils.ConvertToAgolaOrganizationRef(organizationName),
+			AgolaOrganizationRef: organizationName,
 			Visibility:           types.Public,
 			GitSourceName:        "gitea",
 			UserEmailCreator:     "testuser",

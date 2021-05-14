@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -59,7 +60,7 @@ func TestAddExternalUser(t *testing.T) {
 
 	org := (*test.MakeOrganizationList())[0]
 
-	db.EXPECT().GetOrganizationByAgolaRef(org.AgolaOrganizationRef).Return(&org, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 	router := mux.NewRouter()
 
@@ -91,7 +92,7 @@ func TestAddExternalUserWhenOrganizationNotFound(t *testing.T) {
 	user := model.User{Email: "user@email.com"}
 
 	organizationRefTest := "testnotfound"
-	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organizationRefTest)).Return(nil, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(nil, nil)
 
 	router := mux.NewRouter()
 
@@ -127,7 +128,7 @@ func TestRemoveExternalUserOk(t *testing.T) {
 	org.ExternalUsers = make(map[string]bool)
 	org.ExternalUsers[mail] = true
 
-	db.EXPECT().GetOrganizationByAgolaRef(org.AgolaOrganizationRef).Return(&org, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 	router := mux.NewRouter()
 
@@ -140,7 +141,43 @@ func TestRemoveExternalUserOk(t *testing.T) {
 	requestBody := strings.NewReader(string(data))
 	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode OK")
 	exist := org.ExternalUsers[mail]
 	assert.Check(t, !exist, "")
+}
+
+func TestRemoveExternalUserWhenAgolaRefNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		CommonMutex: &commonMutex,
+	}
+	mail := "user@email.com"
+	user := model.User{Email: mail}
+
+	org := (*test.MakeOrganizationList())[0]
+	org.ExternalUsers = make(map[string]bool)
+	org.ExternalUsers[mail] = true
+
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, errors.New(string("someError")))
+
+	router := mux.NewRouter()
+
+	router.HandleFunc("/{organizationName}", serviceOrganization.RemoveExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(user)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not OK")
 }

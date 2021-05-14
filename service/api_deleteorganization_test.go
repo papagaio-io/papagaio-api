@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -144,4 +145,140 @@ func TestDeleteOrganizationInternalonlyInvalidParam(t *testing.T) {
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not OK")
+}
+
+func TestDeleteOrganizationWhenAgolaRefNotFoundOnDB(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
+
+	organization := (*test.MakeOrganizationList())[0]
+
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, errors.New(string("someError")))
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "Organization not found on db")
+}
+
+func TestDeleteOrganizationWhenGitSourceNotFoundOnDB(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
+
+	organization := (*test.MakeOrganizationList())[0]
+
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Any()).Return(&gitSource, errors.New(string("someError")))
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "Organization not found on db")
+}
+
+func TestDeleteOrganizationWhenDeletingOrganizationInAgola(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
+
+	organization := (*test.MakeOrganizationList())[0]
+
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Any()).Return(&gitSource, nil)
+	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(errors.New(string("someError")))
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "Organization not found in Agola")
+}
+
+func TestDeleteOrganizationWhenInternalOnlyDeletingOrganizationError(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
+
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
+	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(nil)
+	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
+	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(errors.New(string("someError")))
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "Organization not found in Agola")
 }

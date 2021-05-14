@@ -190,12 +190,14 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 
 	organization, err := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if err != nil || organization == nil {
+		log.Println("organiztion", organizationRef, "not found in db")
 		NotFoundResponse(w)
 		return
 	}
 
 	gitSource, err := service.Db.GetGitSourceByName(organization.GitSourceName)
 	if err != nil || gitSource == nil {
+		log.Println("gitSource", organization.GitSourceName, "not found in db")
 		InternalServerError(w)
 		return
 	}

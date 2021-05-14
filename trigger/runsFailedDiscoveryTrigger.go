@@ -19,6 +19,10 @@ func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, common
 	go discoveryRunFails(db, tr, commonMutex, agolaApi, gitGateway)
 }
 
+/*
+Scan Agola project runs and store it for elaborating of reports.
+If find failed runs send email to users
+*/
 func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	for {
 		log.Println("Start discoveryRunFails")
@@ -40,7 +44,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 
 			gitSource, err := db.GetGitSourceByName(org.GitSourceName)
 			if gitSource == nil || err != nil || org.Projects == nil {
-				log.Println("discoveryRunFails gitsource not fount for", org.Name, "organization")
+				log.Println("discoveryRunFails gitsource not fount for", organizationRef, "organization")
 				continue
 			}
 
@@ -148,7 +152,7 @@ func makeSubject(organization *model.Organization, projectName string, failedRun
 }
 
 func getRunAgolaUrl(organization *model.Organization, projectName string, runID string) string {
-	return fmt.Sprintf(runAgolaPath, config.Config.Agola.AgolaAddr, organization, organization.AgolaOrganizationRef, projectName, runID)
+	return fmt.Sprintf(runAgolaPath, config.Config.Agola.AgolaAddr, organization.AgolaOrganizationRef, projectName, runID)
 }
 
 func makeBody(organization *model.Organization, projectName string, failedRun agola.RunDto, agolaApi agola.AgolaApiInterface) (string, error) {

@@ -16,10 +16,6 @@ func GetProjectUrl(organization *model.Organization, project *model.Project) str
 	return config.Config.Agola.AgolaAddr + "/org/" + organization.AgolaOrganizationRef + "/projects/" + project.AgolaProjectRef + ".proj"
 }
 
-func ConvertToAgolaOrganizationRef(organizationName string) string {
-	return strings.ReplaceAll(organizationName, ".", "")
-}
-
 func ConvertToAgolaProjectRef(projectName string) string {
 	return strings.ReplaceAll(projectName, ".", "")
 }

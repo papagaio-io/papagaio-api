@@ -140,7 +140,7 @@ func TestDeleteOrganizationInternalonlyInvalidParam(t *testing.T) {
 
 	client := ts.Client()
 
-	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "?internalonly=pippo")
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "?internalonly=invalid")
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not OK")

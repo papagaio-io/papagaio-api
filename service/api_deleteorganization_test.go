@@ -116,3 +116,32 @@ func TestDeleteOrganizationNotFound(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not correct")
 }
+func TestDeleteOrganizationInternalonlyInvalidParam(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	commonMutex := utils.NewEventMutex()
+
+	organization := (*test.MakeOrganizationList())[0]
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "?internalonly=pippo")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not OK")
+}

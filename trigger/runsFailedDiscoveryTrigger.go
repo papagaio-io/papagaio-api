@@ -90,7 +90,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 						}
 						subject := makeSubject(org, project.GitRepoPath, run)
 
-						sendConfirmEmail(emailMap, nil, subject, body)
+						utils.SendConfirmEmail(emailMap, nil, subject, body)
 					}
 				}
 

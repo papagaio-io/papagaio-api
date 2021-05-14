@@ -208,6 +208,39 @@ func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 
 	assert.Equal(t, responseDto.ErrorCode, dto.NoError, "ErrorCode is not correct")
 }
+func TestCreateOrganizationForceInvalidParam(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/?force=invalid", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not OK")
+}
+
+func TestCreateOrganizationInvalidAgolaRef(t *testing.T) {
+	setupMock(t)
+	organizationReqDto.AgolaRef = "invalidOrg."
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+
+	var responseDto dto.CreateOrganizationResponseDto
+	test.ParseBody(resp, &responseDto)
+
+	expected := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaRefNotValid}
+	assert.Equal(t, responseDto.ErrorCode, expected.ErrorCode, "AgolaRef is not valid")
+}
 
 func setupSynkMembersUserTestMocks(agolaApiInt *mock_agola.MockAgolaApiInterface, giteaApi *mock_gitea.MockGiteaInterface, organizationName string, remoteSource string) {
 	gitTeams := []gitDto.TeamResponseDto{

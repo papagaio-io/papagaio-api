@@ -29,6 +29,8 @@ type Configuration struct {
 	CmdConfig CmdConfig
 	//Timers
 	TriggersConfig TriggersConfig
+	// Email configuration
+	Email *EmailConfig
 }
 
 type TriggersConfig struct {
@@ -64,6 +66,21 @@ type KeycloakConfig struct {
 	Resource      string
 	PubKey        string
 	TokenValidity int `json:"Token-validity"`
+}
+
+type EmailConfig struct {
+	// Hostname/ip of the smtp server
+	SMTPServer *string
+	// Port of the smtp server
+	SMTPPort *int
+	// Username of the smtp server
+	Username *string
+	// Password of the smtp server
+	Password *string
+	// From
+	From *string
+	// Encryption
+	Encryption *string
 }
 
 // Config contains global configuration read with config.ReadConfig()

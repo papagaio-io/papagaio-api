@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -240,6 +241,126 @@ func TestCreateOrganizationInvalidAgolaRef(t *testing.T) {
 
 	expected := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaRefNotValid}
 	assert.Equal(t, responseDto.ErrorCode, expected.ErrorCode, "AgolaRef is not valid")
+}
+func TestCreateOrganizationParametersVisibilityInvalid(t *testing.T) {
+	setupMock(t)
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+	organizationReqDto.Visibility = "invalid"
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not OK")
+}
+
+func TestCreateOrganizationParametersBehaviourTypeInvalid(t *testing.T) {
+	setupMock(t)
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+	organizationReqDto.BehaviourType = "invalid"
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not OK")
+}
+
+func TestCreateOrganizationGitSourceInvalid(t *testing.T) {
+	setupMock(t)
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+
+	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(nil, nil)
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not OK")
+}
+
+func TestCreateOrganizationGitSourceAlreadyExists(t *testing.T) {
+	setupMock(t)
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+
+	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
+	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(false)
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+	assert.Equal(t, err, nil)
+
+	var responseDto dto.CreateOrganizationResponseDto
+	test.ParseBody(resp, &responseDto)
+
+	expected := dto.CreateOrganizationResponseDto{ErrorCode: dto.GitOrganizationNotFoundError}
+	assert.Equal(t, responseDto.ErrorCode, expected.ErrorCode, "Git Organization not found")
+}
+
+func TestCreateOrganizationWhenCreateWebhookFailed(t *testing.T) {
+	setupMock(t)
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+
+	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
+	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
+	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
+	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), gomock.Any()).Return(1, errors.New(string("someError")))
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
+}
+
+func TestCreateOrganizationWhenFailsToCreateInAgola(t *testing.T) {
+	setupMock(t)
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+
+	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
+	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
+	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
+	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), gomock.Any()).Return(1, nil)
+	agolaApiInt.EXPECT().CheckOrganizationExists(gomock.Any()).Return(false, "")
+	agolaApiInt.EXPECT().CreateOrganization(gomock.Any(), organizationReqDto.Visibility).Return("123456", errors.New(string("someError")))
+	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), organizationReqDto.Name, 1).Return(nil)
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
+}
+
+func TestCreateOrganizationWhenFailedToSaveOrgInDB(t *testing.T) {
+	setupMock(t)
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+
+	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
+	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
+	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
+	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), gomock.Any()).Return(1, nil)
+	agolaApiInt.EXPECT().CheckOrganizationExists(gomock.Any()).Return(false, "")
+	db.EXPECT().SaveOrganization(gomock.Any()).Return(errors.New(string("someError")))
+	agolaApiInt.EXPECT().CreateOrganization(gomock.Any(), organizationReqDto.Visibility).Return("123456", nil)
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "failed to save organization in db")
 }
 
 func setupSynkMembersUserTestMocks(agolaApiInt *mock_agola.MockAgolaApiInterface, giteaApi *mock_gitea.MockGiteaInterface, organizationName string, remoteSource string) {

@@ -33,7 +33,7 @@ func CheckoutAllGitRepository(db repository.Database, organization *model.Organi
 		project := model.Project{GitRepoPath: repo, Archivied: true, AgolaProjectRef: utils.ConvertToAgolaProjectRef(repo)}
 
 		if agolaConfExists {
-			projectID, err := agolaApi.CreateProject(repo, utils.ConvertToAgolaProjectRef(repo), organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
+			projectID, err := agolaApi.CreateProject(repo, project.AgolaProjectRef, organization, gitSource.AgolaRemoteSource, gitSource.AgolaToken)
 			project.AgolaProjectID = projectID
 			project.Archivied = false
 			if err != nil {
@@ -70,10 +70,10 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 			}
 		}
 		if !gitRepoExists {
-			agolaApi.DeleteProject(organization, utils.ConvertToAgolaOrganizationRef(projectName), gitSource.AgolaToken)
+			agolaApi.DeleteProject(organization, project.AgolaProjectRef, gitSource.AgolaToken)
 			delete(organization.Projects, projectName)
 		} else {
-			agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization, utils.ConvertToAgolaProjectRef(projectName))
+			agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization, project.AgolaProjectRef)
 			if !agolaExists && !project.Archivied {
 				delete(organization.Projects, projectName)
 			} else {
@@ -85,11 +85,9 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 
 	for _, repo := range *gitRepositoryList {
 		if !utils.EvaluateBehaviour(organization, repo) {
-			if _, ok := organization.Projects[repo]; ok {
-				delete(organization.Projects, repo)
-			}
+			delete(organization.Projects, repo)
 
-			agolaProjectRef := utils.ConvertToAgolaOrganizationRef(repo)
+			agolaProjectRef := utils.ConvertToAgolaProjectRef(repo)
 			if exists, _ := agolaApi.CheckProjectExists(organization, agolaProjectRef); exists {
 				agolaApi.DeleteProject(organization, agolaProjectRef, gitSource.AgolaToken)
 			}
@@ -110,7 +108,7 @@ func SynkGitRepositorys(db repository.Database, organization *model.Organization
 		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConfExists(gitSource, organization.Name, repo)
 		if !agolaConfExists {
 			if project, ok := organization.Projects[repo]; ok && !project.Archivied {
-				err := agolaApi.ArchiveProject(organization, utils.ConvertToAgolaProjectRef(repo))
+				err := agolaApi.ArchiveProject(organization, project.AgolaProjectRef)
 				if err == nil {
 					project.Archivied = true
 					organization.Projects[repo] = project

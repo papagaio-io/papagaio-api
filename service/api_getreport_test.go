@@ -92,6 +92,35 @@ func TestGetProjectReportOK(t *testing.T) {
 	assertProjectDto(t, &projectDto)
 }
 
+func TestGetProjectReportNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	organization := (*test.MakeOrganizationList())[0]
+	insertRunsData(&organization)
+
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+
+	serviceOrganization := OrganizationService{
+		Db:         db,
+		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}/{projectName}", serviceOrganization.GetProjectReport)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "/projectnotfound")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not correct")
+}
+
 func assertOrganizationDto(t *testing.T, organization *model.Organization, organizationDto *dto.OrganizationDto) {
 	organizationDto.Projects = test.SortProjectsDto(organizationDto.Projects)
 

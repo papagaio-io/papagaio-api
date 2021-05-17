@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/gorilla/mux"
 	"gotest.tools/assert"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	gitDto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
@@ -57,6 +58,40 @@ func TestGetReportOK(t *testing.T) {
 	assertOrganizationDto(t, &organization, &organizationsDto[0])
 }
 
+func TestGetProjectReportOK(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	organization := (*test.MakeOrganizationList())[0]
+	insertRunsData(&organization)
+
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+
+	serviceOrganization := OrganizationService{
+		Db:         db,
+		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}/{projectName}", serviceOrganization.GetProjectReport)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "/test1")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+
+	var projectDto dto.ProjectDto
+	test.ParseBody(resp, &projectDto)
+
+	assertProjectDto(t, &projectDto)
+}
+
 func assertOrganizationDto(t *testing.T, organization *model.Organization, organizationDto *dto.OrganizationDto) {
 	organizationDto.Projects = test.SortProjectsDto(organizationDto.Projects)
 
@@ -90,6 +125,17 @@ func assertOrganizationDto(t *testing.T, organization *model.Organization, organ
 	assert.Equal(t, projectE.Name, "test5")
 	assert.Equal(t, projectE.Branchs[0].Name, "master")
 	assert.Equal(t, projectE.Branchs[0].State, types.RunStateNone)
+}
+
+func assertProjectDto(t *testing.T, projectDto *dto.ProjectDto) {
+	projectDto.Branchs = test.SortBranchesDto(projectDto.Branchs)
+	assert.Equal(t, projectDto.Name, "test1")
+	assert.Equal(t, projectDto.Branchs[0].Name, "master")
+	assert.Equal(t, projectDto.Branchs[0].State, types.RunStateSuccess)
+	assert.Equal(t, projectDto.Branchs[1].Name, "test")
+	assert.Equal(t, projectDto.Branchs[1].State, types.RunStateFailed)
+	assert.Equal(t, projectDto.WorstReport.BranchName, "test")
+
 }
 
 func insertRunsData(organization *model.Organization) {

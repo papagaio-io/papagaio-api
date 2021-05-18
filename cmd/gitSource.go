@@ -56,7 +56,7 @@ func init() {
 	AddCommonFlags(gitSourceCmd, &cfgGitSource.CommonConfig)
 
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.name, "name", "", "gitSource name")
-	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitType, "type", "", "git type")
+	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitType, "type", "", "git type(gitea, github)")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitAPIURL, "git-api-url", "", "api url")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitToken, "git-token", "", "git token")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.agolaRemoteSource, "agola-remotesource", "", "Agola remotesource")

@@ -13,7 +13,7 @@ type CommonConfig struct {
 }
 
 func AddCommonFlags(cmd *cobra.Command, cfg *CommonConfig) {
-	cmd.PersistentFlags().StringVar(&cfg.gatewayURL, "gateway-url", config.Config.CmdConfig.DefaultGatewayURL, "papagaio gateway URL")
+	cmd.PersistentFlags().StringVar(&cfg.gatewayURL, "gateway-url", config.Config.CmdConfig.DefaultGatewayURL, "papagaio gateway URL(optional)")
 	cmd.PersistentFlags().StringVar(&cfg.token, "token", "", "token")
 }
 

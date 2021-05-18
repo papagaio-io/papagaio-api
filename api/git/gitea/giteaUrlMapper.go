@@ -13,6 +13,7 @@ const listBranchPath string = "%s/api/v1/repos/%s/%s/branches?token=%s"
 const listMetadataPath string = "%s/api/v1/repos/%s/%s/contents/%s?ref=%s&token=%s"
 const commitMetadataPath string = "%s/api/v1/repos/%s/%s/commits?sha=%s&page=1&limit=1&token=%s"
 const repositoryListPath string = "%s/api/v1/orgs/%s/repos?token=%s"
+const organizationsPath string = "%s/api/v1/user/orgs?token=%s"
 
 func getCreateWebHookUrl(gitApiUrl string, gitOrgRef string, gitToken string) string {
 	return fmt.Sprintf(createWebHookPath, gitApiUrl, gitOrgRef, gitToken)
@@ -52,4 +53,8 @@ func getListMetadataPath(gitApiUrl string, gitOrgRef string, repositoryRef strin
 
 func getCommitMetadataPath(gitApiUrl string, gitOrgRef string, repositoryRef string, commitSha string, token string) string {
 	return fmt.Sprintf(commitMetadataPath, gitApiUrl, gitOrgRef, repositoryRef, commitSha, token)
+}
+
+func getOrganizationsPath(gitApiUrl string, token string) string {
+	return fmt.Sprintf(organizationsPath, gitApiUrl, token)
 }

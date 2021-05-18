@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -109,6 +110,17 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.PapagaioOrganizationExistsError}
 		JSONokResponse(w, response)
 		return
+	} else {
+		organizations, _ := service.Db.GetOrganizationsByGitSource(org.GitSourceName)
+		for _, organization := range *organizations {
+			if strings.Compare(organization.Name, org.Name) == 0 {
+				log.Println("organization name", org.Name, "just present in papagaio with gitSource", org.GitSourceName)
+
+				response := dto.CreateOrganizationResponseDto{ErrorCode: dto.PapagaioOrganizationExistsError}
+				JSONokResponse(w, response)
+				return
+			}
+		}
 	}
 
 	org.UserEmailCreator = r.Header.Get(controller.XAuthEmail)

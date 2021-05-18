@@ -121,6 +121,21 @@ func (mr *MockDatabaseMockRecorder) DeleteOrganization(organizationID interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrganization", reflect.TypeOf((*MockDatabase)(nil).DeleteOrganization), organizationID)
 }
 
+// GetOrganizationsByGitSource mocks base method
+func (m *MockDatabase) GetOrganizationsByGitSource(gitSource string) (*[]model.Organization, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrganizationsByGitSource", gitSource)
+	ret0, _ := ret[0].(*[]model.Organization)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrganizationsByGitSource indicates an expected call of GetOrganizationsByGitSource
+func (mr *MockDatabaseMockRecorder) GetOrganizationsByGitSource(gitSource interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationsByGitSource", reflect.TypeOf((*MockDatabase)(nil).GetOrganizationsByGitSource), gitSource)
+}
+
 // GetGitSources mocks base method
 func (m *MockDatabase) GetGitSources() (*[]model.GitSource, error) {
 	m.ctrl.T.Helper()

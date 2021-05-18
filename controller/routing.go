@@ -59,6 +59,7 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 	setupAddGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
 	setupUpdateGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
 	setupDeleteGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
+	setupGetGitOrganizations(apirouter.PathPrefix("/gitOrganizations").Subrouter(), ctrlGitSource)
 
 	setupWebHookEndpoint(apirouter.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
 
@@ -133,7 +134,12 @@ func setupUpdateGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) 
 
 func setupDeleteGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) {
 	router.Use(handleRestrictedAdminRoutes)
-	router.HandleFunc("/{name}", ctrl.RemoveGitSource).Methods("DELETE")
+	router.HandleFunc("/{gitSourceName}", ctrl.RemoveGitSource).Methods("DELETE")
+}
+
+func setupGetGitOrganizations(router *mux.Router, ctrl GitSourceController) {
+	router.Use(handleRestrictedUserRoutes)
+	router.HandleFunc("/{gitSourceName}", ctrl.GetGitOrganizations).Methods("GET")
 }
 
 func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
@@ -293,12 +299,6 @@ func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
-
-			/*user, err := db.GetUserByEmail(claim.Email)
-			if user == nil {
-				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-				return
-			}*/
 
 			h.ServeHTTP(w, r)
 		}

@@ -144,3 +144,32 @@ func (db *AppDb) GetOrganizationByAgolaRef(agolaOrganizationRef string) (*model.
 func (db *AppDb) DeleteOrganization(organizationName string) error {
 	return db.DB.DropPrefix([]byte("org/" + organizationName))
 }
+
+func (db *AppDb) GetOrganizationsByGitSource(gitSourceName string) (*[]model.Organization, error) {
+	organizations := make([]model.Organization, 0)
+
+	dst := make([]byte, 0)
+	err := db.DB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = []byte("org/")
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+
+			var localOrganization model.Organization
+			dst, _ = item.ValueCopy(dst)
+			json.Unmarshal(dst, &localOrganization)
+			if strings.Compare(localOrganization.GitSourceName, gitSourceName) != 0 {
+				continue
+			}
+
+			organizations = append(organizations, localOrganization)
+		}
+
+		return nil
+	})
+
+	return &organizations, err
+}

@@ -55,7 +55,8 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	ctrlGitSource := service.GitSourceService{
-		Db: &db,
+		Db:         &db,
+		GitGateway: &gitGateway,
 	}
 
 	ctrlWebHook := service.WebHookService{

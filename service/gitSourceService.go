@@ -3,16 +3,19 @@ package service
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
 
 type GitSourceService struct {
-	Db repository.Database
+	Db         repository.Database
+	GitGateway *git.GitGateway
 }
 
 func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +59,7 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
-	gitSourceName := vars["name"]
+	gitSourceName := vars["gitSourceName"]
 	gitSource, _ := service.Db.GetGitSourceByName(gitSourceName)
 
 	if gitSource == nil {
@@ -106,4 +109,32 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 	}
 
 	service.Db.SaveGitSource(oldGitSource)
+}
+
+func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	gitSourceName := vars["gitSourceName"]
+	gitSource, _ := service.Db.GetGitSourceByName(gitSourceName)
+
+	log.Println("gitSourceName:", gitSourceName)
+
+	if gitSource == nil {
+		log.Println("gitSource", gitSourceName, "non trovato")
+		NotFoundResponse(w)
+		return
+	}
+
+	organizations, err := service.GitGateway.GetOrganizations(gitSource)
+	if err != nil {
+		log.Println("GitGateway GetOrganizations error:", err.Error())
+		InternalServerError(w)
+		return
+	}
+
+	if organizations != nil {
+		JSONokResponse(w, organizations)
+	}
 }

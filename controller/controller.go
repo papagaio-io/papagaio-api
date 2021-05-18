@@ -24,6 +24,7 @@ type GitSourceController interface {
 	AddGitSource(w http.ResponseWriter, r *http.Request)
 	RemoveGitSource(w http.ResponseWriter, r *http.Request)
 	UpdateGitSource(w http.ResponseWriter, r *http.Request)
+	GetGitOrganizations(w http.ResponseWriter, r *http.Request)
 }
 
 type UserController interface {

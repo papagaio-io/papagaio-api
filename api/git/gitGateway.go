@@ -100,3 +100,11 @@ func (gitGateway *GitGateway) GetOrganization(gitSource *model.GitSource, gitOrg
 		return gitGateway.GithubApi.GetOrganization(gitSource, gitOrgRef)
 	}
 }
+
+func (gitGateway *GitGateway) GetOrganizations(gitSource *model.GitSource) (*[]string, error) {
+	if gitSource.GitType == types.Gitea {
+		return gitGateway.GiteaApi.GetOrganizations(gitSource)
+	} else {
+		return gitGateway.GithubApi.GetOrganizations(gitSource)
+	}
+}

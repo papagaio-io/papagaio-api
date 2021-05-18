@@ -26,6 +26,7 @@ type GithubInterface interface {
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
 	GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto
+	GetOrganizations(gitSource *model.GitSource) (*[]string, error)
 }
 
 type GithubApi struct{}
@@ -231,6 +232,22 @@ func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, gitOrgRe
 	}
 
 	return &dto.OrganizationDto{Name: *org.Name, ID: int(*org.ID), AvatarURL: *org.AvatarURL}
+}
+
+func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource) (*[]string, error) {
+	client := getClient(gitSource)
+	organizations, _, err := client.Organizations.List(context.Background(), "", nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	retVal := make([]string, 0)
+	for _, org := range organizations {
+		retVal = append(retVal, *org.Login)
+	}
+
+	return &retVal, nil
 }
 
 func getClient(gitSource *model.GitSource) *github.Client {

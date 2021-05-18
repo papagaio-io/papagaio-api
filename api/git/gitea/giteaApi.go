@@ -27,6 +27,7 @@ type GiteaInterface interface {
 	GetBranches(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) map[string]bool
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
+	GetOrganizations(gitSource *model.GitSource) (*[]string, error)
 }
 
 type GiteaApi struct{}
@@ -308,4 +309,28 @@ func (giteaApi *GiteaApi) GetCommitMetadata(gitSource *model.GitSource, gitOrgRe
 	} else {
 		return nil, err
 	}
+}
+
+func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource) (*[]string, error) {
+	client := &http.Client{}
+
+	URLApi := getOrganizationsPath(gitSource.GitAPIURL, gitSource.GitToken)
+	req, _ := http.NewRequest("GET", URLApi, nil)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if api.IsResponseOK(resp.StatusCode) {
+		body, _ := ioutil.ReadAll(resp.Body)
+		var organizations []OrganizationResponseDto
+		json.Unmarshal(body, &organizations)
+
+		retVal := make([]string, 0)
+		for _, org := range organizations {
+			retVal = append(retVal, org.Username)
+		}
+
+		return &retVal, nil
+	}
+
+	return nil, err
 }

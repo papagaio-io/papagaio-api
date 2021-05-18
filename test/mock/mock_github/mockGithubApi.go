@@ -225,3 +225,18 @@ func (mr *MockGithubInterfaceMockRecorder) GetOrganization(gitSource, gitOrgRef 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganization", reflect.TypeOf((*MockGithubInterface)(nil).GetOrganization), gitSource, gitOrgRef)
 }
+
+// GetOrganizations mocks base method
+func (m *MockGithubInterface) GetOrganizations(gitSource *model.GitSource) (*[]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrganizations", gitSource)
+	ret0, _ := ret[0].(*[]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrganizations indicates an expected call of GetOrganizations
+func (mr *MockGithubInterfaceMockRecorder) GetOrganizations(gitSource interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizations", reflect.TypeOf((*MockGithubInterface)(nil).GetOrganizations), gitSource)
+}

@@ -59,7 +59,7 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 	setupAddGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
 	setupUpdateGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
 	setupDeleteGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
-	setupGetGitOrganizations(apirouter.PathPrefix("/gitOrganizations").Subrouter(), ctrlGitSource)
+	setupGetGitOrganizations(apirouter.PathPrefix("/gitorganizations").Subrouter(), ctrlGitSource)
 
 	setupWebHookEndpoint(apirouter.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
 

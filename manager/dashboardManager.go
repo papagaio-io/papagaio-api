@@ -103,7 +103,10 @@ func GetProjectDto(project *model.Project, organization *model.Organization) dto
 	if worstReport != nil && worstReport.SuccessRunsPercentage < 100 {
 		retVal.WorstReport = worstReport
 	}
-	retVal.ProjectUrl = utils.GetProjectUrl(organization, project)
+	//if the project exists in Agola
+	if len(project.AgolaProjectID) > 0 {
+		retVal.ProjectUrl = utils.GetProjectUrl(organization, project)
+	}
 
 	return retVal
 }

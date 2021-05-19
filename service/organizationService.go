@@ -91,6 +91,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	gitOrgExists := service.GitGateway.CheckOrganizationExists(gitSource, org.Name)
+	log.Println("gitOrgExists:", gitOrgExists)
 	if !gitOrgExists {
 		log.Println("failed to find organization", org.Name, "from git")
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.GitOrganizationNotFoundError}
@@ -133,6 +134,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	agolaOrganizationExists, agolaOrganizationID := service.AgolaApi.CheckOrganizationExists(org)
+	log.Println("agolaOrganizationExists:", agolaOrganizationExists)
 	if agolaOrganizationExists {
 		log.Println("organization", org.AgolaOrganizationRef, "just exists in Agola")
 		if !forceCreate {

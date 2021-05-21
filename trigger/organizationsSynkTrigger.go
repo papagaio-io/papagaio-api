@@ -35,15 +35,22 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 				continue
 			}
 
-			//If organization deleted in Agola, delete in Papagaio
+			//If organization deleted in Agola, recreate
 			if agolaOrganizationExists, _ := agolaApi.CheckOrganizationExists(org); !agolaOrganizationExists {
 				gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
-				if gitSource != nil {
-					gitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
+				if gitSource == nil {
+					log.Println("gitSource", org.GitSourceName, "not found")
+					continue
 				}
 
-				db.DeleteOrganization(organizationRef)
-				continue
+				orgID, err := agolaApi.CreateOrganization(org, org.Visibility)
+				if err != nil {
+					log.Println("failed to recreate organization", org.AgolaOrganizationRef, "in agola:", err)
+					continue
+				}
+
+				org.ID = orgID
+				db.SaveOrganization(org)
 			}
 
 			log.Println("start synk organization", org.Name)

@@ -9,6 +9,7 @@ import (
 )
 
 // @BasePath /api
+// @host papagaio-api.sorintdev.it
 
 // @securitydefinitions.oauth2.password OAuth2Password
 // @tokenUrl https://login.sorintdev.it/auth/realms/sorinttest/protocol/openid-connect/token

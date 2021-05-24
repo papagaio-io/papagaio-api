@@ -3,6 +3,7 @@
     "info": {
         "contact": {}
     },
+    "host": "papagaio-api.sorintdev.it",
     "basePath": "/api",
     "paths": {
         "/organizations": {

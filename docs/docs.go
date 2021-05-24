@@ -196,7 +196,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "",
-	Host:        "",
+	Host:        "papagaio-api.sorintdev.it",
 	BasePath:    "/api",
 	Schemes:     []string{},
 	Title:       "",

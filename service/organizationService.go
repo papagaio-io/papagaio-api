@@ -154,7 +154,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	log.Println("Organization created: ", org.ID)
+	log.Println("Organization created: ", org.AgolaOrganizationRef, " by:", org.UserEmailCreator)
 	log.Println("WebHook created: ", org.WebHookID)
 
 	err = service.Db.SaveOrganization(org)
@@ -234,6 +234,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	if err != nil {
 		InternalServerError(w)
 	}
+	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", organization.UserEmailCreator)
 }
 
 func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *http.Request) {

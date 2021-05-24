@@ -1,0 +1,109 @@
+basePath: /api
+definitions:
+  model.Branch:
+    properties:
+      lastFailedRun:
+        $ref: '#/definitions/model.RunInfo'
+      lastRuns:
+        items:
+          $ref: '#/definitions/model.RunInfo'
+        type: array
+      lastSuccessRun:
+        $ref: '#/definitions/model.RunInfo'
+      name:
+        type: string
+    type: object
+  model.Organization:
+    properties:
+      agolaOrganizationRef:
+        example: TestDemo
+        type: string
+      behaviourExclude:
+        type: string
+      behaviourInclude:
+        type: string
+      behaviourType:
+        example: none
+        type: string
+      externalUsers:
+        additionalProperties:
+          type: boolean
+        type: object
+      gitSourceName:
+        example: wecodedev
+        type: string
+      id:
+        type: string
+      name:
+        example: TestDemo
+        type: string
+      projects:
+        additionalProperties:
+          $ref: '#/definitions/model.Project'
+        type: object
+      userEmailCreator:
+        example: nome.cognome@sorint.it
+        type: string
+      visibility:
+        example: public
+        type: string
+      webHookId:
+        type: integer
+    type: object
+  model.Project:
+    properties:
+      agolaProjectID:
+        type: string
+      agolaProjectRef:
+        type: string
+      archivied:
+        type: boolean
+      branchs:
+        additionalProperties:
+          $ref: '#/definitions/model.Branch'
+        description: use branch name as key
+        type: object
+      gitRepoPath:
+        type: string
+    type: object
+  model.RunInfo:
+    properties:
+      branch:
+        type: string
+      id:
+        type: string
+      phase:
+        type: string
+      result:
+        type: string
+      runEndDate:
+        type: string
+      runStartDate:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /organizations:
+    get:
+      description: Return the list of organizations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.Organization'
+        "400":
+          description: bad request
+      security:
+      - OAuth2Password: []
+      summary: Return the list of organizations
+      tags:
+      - Organization
+securityDefinitions:
+  OAuth2Password:
+    flow: password
+    tokenUrl: https://login.sorintdev.it/auth/realms/sorinttest/protocol/openid-connect/token
+    type: oauth2
+swagger: "2.0"

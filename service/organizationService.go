@@ -25,6 +25,14 @@ type OrganizationService struct {
 	GitGateway  *git.GitGateway
 }
 
+// @Summary Return the list of organizations
+// @Description Return the list of organizations
+// @Tags Organization
+// @Produce  json
+// @Success 200 {object} model.Organization "ok"
+// @Failure 400 "bad request"-
+// @Router /organizations [get]
+// @Security OAuth2Password
 func (service *OrganizationService) GetOrganizations(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

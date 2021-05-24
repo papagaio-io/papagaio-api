@@ -1,0 +1,166 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "basePath": "/api",
+    "paths": {
+        "/organizations": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Return the list of organizations",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Return the list of organizations",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.Organization"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.Branch": {
+            "type": "object",
+            "properties": {
+                "lastFailedRun": {
+                    "$ref": "#/definitions/model.RunInfo"
+                },
+                "lastRuns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.RunInfo"
+                    }
+                },
+                "lastSuccessRun": {
+                    "$ref": "#/definitions/model.RunInfo"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Organization": {
+            "type": "object",
+            "properties": {
+                "agolaOrganizationRef": {
+                    "type": "string",
+                    "example": "TestDemo"
+                },
+                "behaviourExclude": {
+                    "type": "string"
+                },
+                "behaviourInclude": {
+                    "type": "string"
+                },
+                "behaviourType": {
+                    "type": "string",
+                    "example": "none"
+                },
+                "externalUsers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "gitSourceName": {
+                    "type": "string",
+                    "example": "wecodedev"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "TestDemo"
+                },
+                "projects": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/model.Project"
+                    }
+                },
+                "userEmailCreator": {
+                    "type": "string",
+                    "example": "nome.cognome@sorint.it"
+                },
+                "visibility": {
+                    "type": "string",
+                    "example": "public"
+                },
+                "webHookId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Project": {
+            "type": "object",
+            "properties": {
+                "agolaProjectID": {
+                    "type": "string"
+                },
+                "agolaProjectRef": {
+                    "type": "string"
+                },
+                "archivied": {
+                    "type": "boolean"
+                },
+                "branchs": {
+                    "description": "use branch name as key",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/model.Branch"
+                    }
+                },
+                "gitRepoPath": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RunInfo": {
+            "type": "object",
+            "properties": {
+                "branch": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "phase": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "runEndDate": {
+                    "type": "string"
+                },
+                "runStartDate": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "OAuth2Password": {
+            "type": "oauth2",
+            "flow": "password",
+            "tokenUrl": "https://login.sorintdev.it/auth/realms/sorinttest/protocol/openid-connect/token"
+        }
+    }
+}

@@ -10,7 +10,7 @@ podTemplate(
   label: 'node',
   containers: [
     containerTemplate(
-      image: 'docker',
+      image: 'registry.sorintdev.it/docker:20.10.6',
       name: 'docker',
       command: 'cat',
       ttyEnabled: true)
@@ -33,7 +33,7 @@ podTemplate(
           command: 'cat',
           ttyEnabled: true),
         containerTemplate(
-          image: 'docker',
+          image: 'registry.sorintdev.it/docker:20.10.6',
           name: 'docker',
           command: 'cat',
           ttyEnabled: true)
@@ -107,6 +107,7 @@ podTemplate(
 
               container('docker') {
                 stage('Docker Image and Push') {
+                  sh "docker login"
                   docker.withRegistry('https://registry.sorintdev.it', 'nexus') {
                     def img = docker.build(appName, '.')
                     if (branch == 'stable') {

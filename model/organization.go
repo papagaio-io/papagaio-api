@@ -6,17 +6,17 @@ import (
 
 type Organization struct {
 	ID                   string               `json:"id"`
-	Name                 string               `json:"name"`
-	AgolaOrganizationRef string               `json:"agolaOrganizationRef"`
-	UserEmailCreator     string               `json:"userEmailCreator"`
-	Visibility           types.VisibilityType `json:"visibility"`
+	Name                 string               `json:"name" example:"TestDemo"`
+	AgolaOrganizationRef string               `json:"agolaOrganizationRef" example:"TestDemo"`
+	UserEmailCreator     string               `json:"userEmailCreator" example:"nome.cognome@sorint.it"`
+	Visibility           types.VisibilityType `json:"visibility" example:"public"`
 
-	GitSourceName string `json:"gitSourceName"`
+	GitSourceName string `json:"gitSourceName" example:"wecodedev"`
 	WebHookID     int    `json:"webHookId"`
 
 	BehaviourInclude string              `json:"behaviourInclude"`
 	BehaviourExclude string              `json:"behaviourExclude"`
-	BehaviourType    types.BehaviourType `json:"behaviourType"`
+	BehaviourType    types.BehaviourType `json:"behaviourType" example:"none"`
 
 	Projects      map[string]Project `json:"projects"`
 	ExternalUsers map[string]bool    `json:"externalUsers"`

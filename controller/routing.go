@@ -11,6 +11,8 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
+
+	httpSwagger "github.com/swaggo/http-swagger" // http-swagger middleware
 )
 
 const XAuthEmail string = "X-Auth-Email"
@@ -43,6 +45,8 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 
 	apirouter := mux.NewRouter().PathPrefix("/api").Subrouter().UseEncodedPath()
 	router.PathPrefix("/api").Handler(apirouter)
+
+	router.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	setupPingRouter(router)
 

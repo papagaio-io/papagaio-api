@@ -12,8 +12,9 @@ func GetOrganizationUrl(organization *model.Organization) string {
 	return config.Config.Agola.AgolaAddr + "/org/" + organization.AgolaOrganizationRef
 }
 
-func GetProjectUrl(organization *model.Organization, project *model.Project) string {
-	return config.Config.Agola.AgolaAddr + "/org/" + organization.AgolaOrganizationRef + "/projects/" + project.AgolaProjectRef + ".proj"
+func GetProjectUrl(organization *model.Organization, project *model.Project) *string {
+	url := config.Config.Agola.AgolaAddr + "/org/" + organization.AgolaOrganizationRef + "/projects/" + project.AgolaProjectRef + ".proj"
+	return &url
 }
 
 func ConvertToAgolaProjectRef(projectName string) string {

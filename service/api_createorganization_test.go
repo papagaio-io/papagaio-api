@@ -32,6 +32,7 @@ var agolaApiInt *mock_agola.MockAgolaApiInterface
 var db *mock_repository.MockDatabase
 var gitSource model.GitSource
 var serviceOrganization OrganizationService
+var organizationList []model.Organization
 
 func setupMock(t *testing.T) {
 	ctl := gomock.NewController(t)
@@ -58,6 +59,10 @@ func setupMock(t *testing.T) {
 		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		CommonMutex: &commonMutex,
 	}
+	organization := (*test.MakeOrganizationList())[0]
+	insertRunsData(&organization)
+	organizationList = make([]model.Organization, 0)
+	organizationList = append(organizationList, organization)
 }
 
 func setupRouter() *mux.Router {
@@ -75,6 +80,7 @@ func setupRouter() *mux.Router {
 func TestCreateOrganizationOK(t *testing.T) {
 	setupMock(t)
 
+	db.EXPECT().GetOrganizationsByGitSource(organizationReqDto.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organizationReqDto.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
@@ -133,6 +139,7 @@ func TestCreateOrganizationJustExistsInPapagaio(t *testing.T) {
 func TestCreateOrganizationJustExistsInAgola(t *testing.T) {
 	setupMock(t)
 
+	db.EXPECT().GetOrganizationsByGitSource(organizationReqDto.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organizationReqDto.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
@@ -183,6 +190,7 @@ func TestCreateOrganizationGitOrganizationNotFound(t *testing.T) {
 func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 	setupMock(t)
 
+	db.EXPECT().GetOrganizationsByGitSource(organizationReqDto.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
 	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
@@ -308,6 +316,7 @@ func TestCreateOrganizationWhenCreateWebhookFailed(t *testing.T) {
 	ts := httptest.NewServer(setupRouter())
 	client := ts.Client()
 
+	db.EXPECT().GetOrganizationsByGitSource(organizationReqDto.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
 	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
@@ -326,6 +335,7 @@ func TestCreateOrganizationWhenFailsToCreateInAgola(t *testing.T) {
 	ts := httptest.NewServer(setupRouter())
 	client := ts.Client()
 
+	db.EXPECT().GetOrganizationsByGitSource(organizationReqDto.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
 	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
@@ -347,9 +357,15 @@ func TestCreateOrganizationWhenFailedToSaveOrgInDB(t *testing.T) {
 	ts := httptest.NewServer(setupRouter())
 	client := ts.Client()
 
+	organization := (*test.MakeOrganizationList())[0]
+	insertRunsData(&organization)
+	organizationList := make([]model.Organization, 0)
+	organizationList = append(organizationList, organization)
+
 	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
 	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
+	db.EXPECT().GetOrganizationsByGitSource(organizationReqDto.GitSourceName).Return(&organizationList, nil)
 	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), gomock.Any()).Return(1, nil)
 	agolaApiInt.EXPECT().CheckOrganizationExists(gomock.Any()).Return(false, "")
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(errors.New(string("someError")))
@@ -361,6 +377,39 @@ func TestCreateOrganizationWhenFailedToSaveOrgInDB(t *testing.T) {
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "failed to save organization in db")
+}
+
+func TestCreateOrganizationWhenOrgNameAlreadyExistsInPapagaio(t *testing.T) {
+	setupMock(t)
+
+	ts := httptest.NewServer(setupRouter())
+	client := ts.Client()
+
+	organization := (*test.MakeOrganizationList())[0]
+	organizationReqDto.Name = organization.Name
+	insertRunsData(&organization)
+	organizationList := make([]model.Organization, 0)
+	organizationList = append(organizationList, organization)
+
+	db.EXPECT().GetGitSourceByName(organizationReqDto.GitSourceName).Return(&gitSource, nil)
+	giteaApi.EXPECT().CheckOrganizationExists(gomock.Any(), organizationReqDto.Name).Return(true)
+	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
+	db.EXPECT().GetOrganizationsByGitSource(organizationReqDto.GitSourceName).Return(&organizationList, nil)
+	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), gomock.Any()).Return(1, nil)
+	agolaApiInt.EXPECT().CheckOrganizationExists(gomock.Any()).Return(false, "")
+	db.EXPECT().SaveOrganization(gomock.Any()).Return(errors.New(string("someError")))
+	agolaApiInt.EXPECT().CreateOrganization(gomock.Any(), organizationReqDto.Visibility).Return("123456", nil)
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	var responseDto dto.CreateOrganizationResponseDto
+	test.ParseBody(resp, &responseDto)
+
+	expected := dto.CreateOrganizationResponseDto{ErrorCode: dto.PapagaioOrganizationExistsError}
+	assert.Equal(t, responseDto.ErrorCode, expected.ErrorCode, "Organization exists in Papagaio")
 }
 
 func setupSynkMembersUserTestMocks(agolaApiInt *mock_agola.MockAgolaApiInterface, giteaApi *mock_gitea.MockGiteaInterface, organizationName string, remoteSource string) {

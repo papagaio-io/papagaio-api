@@ -120,6 +120,68 @@ func TestGetProjectReportNotFound(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not correct")
 }
+func TestGetOrganizationReportOk(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	organization := (*test.MakeOrganizationList())[0]
+	insertRunsData(&organization)
+	organizationList := make([]model.Organization, 0)
+	organizationList = append(organizationList, organization)
+
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&organization, nil)
+
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+
+	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
+
+	serviceOrganization := OrganizationService{
+		Db:         db,
+		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(serviceOrganization.GetOrganizationReport))
+	defer ts.Close()
+
+	client := ts.Client()
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+
+	var organizationsDto dto.OrganizationDto
+	test.ParseBody(resp, &organizationsDto)
+
+	assertOrganizationDto(t, &organization, &organizationsDto)
+
+}
+
+func TestGetOrganizationReportOrganizationNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+	db := mock_repository.NewMockDatabase(ctl)
+	organization := (*test.MakeOrganizationList())[0]
+	serviceOrganization := OrganizationService{
+		Db: db,
+	}
+
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(nil, nil)
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}", serviceOrganization.GetOrganizationReport)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "Organization not found")
+}
 
 func assertOrganizationDto(t *testing.T, organization *model.Organization, organizationDto *dto.OrganizationDto) {
 	organizationDto.Projects = test.SortProjectsDto(organizationDto.Projects)

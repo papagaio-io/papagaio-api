@@ -18,6 +18,14 @@ type GitSourceService struct {
 	GitGateway *git.GitGateway
 }
 
+// @Summary Return a list of gitsources
+// @Description Return a list of gitsources
+// @Tags GitSources
+// @Produce  json
+// @Success 200 {object} model.GitSource "ok"
+// @Failure 400 "bad request"
+// @Router /gitsources [get]
+// @Security OAuth2Password
 func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -36,6 +44,14 @@ func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Re
 	JSONokResponse(w, &gs)
 }
 
+// @Summary Add a GitSource
+// @Description Add a GitSource
+// @Tags GitSources
+// @Produce  json
+// @Success 200 {object} model.GitSource "ok"
+// @Failure 400 "bad request"
+// @Router /gitsource [post]
+// @Security OAuth2Password
 func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -54,6 +70,15 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 	JSONokResponse(w, gitGitSource.ID)
 }
 
+// @Summary Remove a GitSource
+// @Description Remove a GitSource
+// @Tags GitSources
+// @Produce  json
+// @Param gitSourceName path int true "Git Source Name"
+// @Success 200 {object} model.GitSource "ok"
+// @Failure 400 "bad request"
+// @Router /gitsource/{gitSourceName} [delete]
+// @Security OAuth2Password
 func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -75,6 +100,15 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 	}
 }
 
+// @Summary Update a GitSource
+// @Description Update a GitSource
+// @Tags GitSources
+// @Produce  json
+// @Param gitSourceName path int true "Git Source Name"
+// @Success 200 {object} model.GitSource "ok"
+// @Failure 400 "bad request"
+// @Router /gitsource/{gitSourceName} [put]
+// @Security OAuth2Password
 func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -111,6 +145,15 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 	service.Db.SaveGitSource(oldGitSource)
 }
 
+// @Summary List Git Organizations
+// @Description Return a list of Organizations by GitSource
+// @Tags GitSources
+// @Produce  json
+// @Param gitSourceName path int true "Git Source Name"
+// @Success 200 {object} model.GitSource "ok"
+// @Failure 400 "bad request"
+// @Router /gitsource/{gitSourceName} [get]
+// @Security OAuth2Password
 func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

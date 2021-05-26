@@ -6,6 +6,169 @@
     "host": "papagaio-api.sorintdev.it",
     "basePath": "/api",
     "paths": {
+        "/gitsource": {
+            "post": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Add a GitSource",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GitSources"
+                ],
+                "summary": "Add a GitSource",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.GitSource"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request"
+                    }
+                }
+            }
+        },
+        "/gitsource/{gitSourceName}": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Return a list of Organizations by GitSource",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GitSources"
+                ],
+                "summary": "List GitOrganizations",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Git Source Name",
+                        "name": "gitSourceName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.GitSource"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Update a GitSource",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GitSources"
+                ],
+                "summary": "Update a GitSource",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Git Source Name",
+                        "name": "gitSourceName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.GitSource"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Remove a GitSource",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GitSources"
+                ],
+                "summary": "Remove a GitSource",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Git Source Name",
+                        "name": "gitSourceName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.GitSource"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request"
+                    }
+                }
+            }
+        },
+        "/gitsources": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Return a list of gitsources",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GitSources"
+                ],
+                "summary": "Return a list of gitsources",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.GitSource"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request"
+                    }
+                }
+            }
+        },
         "/organizations": {
             "get": {
                 "security": [
@@ -50,6 +213,32 @@
                 },
                 "lastSuccessRun": {
                     "$ref": "#/definitions/model.RunInfo"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.GitSource": {
+            "type": "object",
+            "properties": {
+                "agolaRemoteSource": {
+                    "type": "string"
+                },
+                "agolaToken": {
+                    "type": "string"
+                },
+                "gitApiUrl": {
+                    "type": "string"
+                },
+                "gitToken": {
+                    "type": "string"
+                },
+                "gitType": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"

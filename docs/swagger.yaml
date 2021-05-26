@@ -13,6 +13,23 @@ definitions:
       name:
         type: string
     type: object
+  model.GitSource:
+    properties:
+      agolaRemoteSource:
+        type: string
+      agolaToken:
+        type: string
+      gitApiUrl:
+        type: string
+      gitToken:
+        type: string
+      gitType:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   model.Organization:
     properties:
       agolaOrganizationRef:
@@ -85,6 +102,107 @@ host: papagaio-api.sorintdev.it
 info:
   contact: {}
 paths:
+  /gitsource:
+    post:
+      description: Add a GitSource
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.GitSource'
+        "400":
+          description: bad request
+      security:
+      - OAuth2Password: []
+      summary: Add a GitSource
+      tags:
+      - GitSources
+  /gitsource/{gitSourceName}:
+    delete:
+      description: Remove a GitSource
+      parameters:
+      - description: Git Source Name
+        in: path
+        name: gitSourceName
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.GitSource'
+        "400":
+          description: bad request
+      security:
+      - OAuth2Password: []
+      summary: Remove a GitSource
+      tags:
+      - GitSources
+    get:
+      description: Return a list of Organizations by GitSource
+      parameters:
+      - description: Git Source Name
+        in: path
+        name: gitSourceName
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.GitSource'
+        "400":
+          description: bad request
+      security:
+      - OAuth2Password: []
+      summary: List GitOrganizations
+      tags:
+      - GitSources
+    put:
+      description: Update a GitSource
+      parameters:
+      - description: Git Source Name
+        in: path
+        name: gitSourceName
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.GitSource'
+        "400":
+          description: bad request
+      security:
+      - OAuth2Password: []
+      summary: Update a GitSource
+      tags:
+      - GitSources
+  /gitsources:
+    get:
+      description: Return a list of gitsources
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.GitSource'
+        "400":
+          description: bad request
+      security:
+      - OAuth2Password: []
+      summary: Return a list of gitsources
+      tags:
+      - GitSources
   /organizations:
     get:
       description: Return the list of organizations

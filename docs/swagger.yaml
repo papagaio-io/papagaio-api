@@ -1,5 +1,12 @@
 basePath: /api
 definitions:
+  dto.GitSourcesDto:
+    properties:
+      gitApiUrl:
+        type: string
+      name:
+        type: string
+    type: object
   model.Branch:
     properties:
       lastFailedRun:
@@ -121,9 +128,15 @@ paths:
       summary: Return the organization ref list
       tags:
       - Organization
-  /gitsource:
-    post:
-      description: Add a GitSource
+  /gitorganizations/{gitSourceName}:
+    get:
+      description: Return a list of all Organizations by GitSource
+      parameters:
+      - description: Git Source Name
+        in: path
+        name: gitSourceName
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -131,8 +144,32 @@ paths:
           description: ok
           schema:
             $ref: '#/definitions/model.GitSource'
-        "400":
-          description: bad request
+        "404":
+          description: not found
+      security:
+      - OAuth2Password: []
+      summary: List Git Organizations
+      tags:
+      - GitSources
+  /gitsource:
+    post:
+      description: Add a GitSource with the data provided in the body
+      parameters:
+      - description: Git Source information
+        in: body
+        name: gitSource
+        required: true
+        schema:
+          $ref: '#/definitions/model.GitSource'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.GitSource'
+        "422":
+          description: Already exists
       security:
       - OAuth2Password: []
       summary: Add a GitSource
@@ -146,7 +183,7 @@ paths:
         in: path
         name: gitSourceName
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -154,43 +191,21 @@ paths:
           description: ok
           schema:
             $ref: '#/definitions/model.GitSource'
-        "400":
-          description: bad request
+        "422":
+          description: Not found
       security:
       - OAuth2Password: []
       summary: Remove a GitSource
       tags:
       - GitSources
-    get:
-      description: Return a list of Organizations by GitSource
-      parameters:
-      - description: Git Source Name
-        in: path
-        name: gitSourceName
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ok
-          schema:
-            $ref: '#/definitions/model.GitSource'
-        "400":
-          description: bad request
-      security:
-      - OAuth2Password: []
-      summary: List Git Organizations
-      tags:
-      - GitSources
     put:
-      description: Update a GitSource
+      description: Update GitSource information
       parameters:
       - description: Git Source Name
         in: path
         name: gitSourceName
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -198,8 +213,8 @@ paths:
           description: ok
           schema:
             $ref: '#/definitions/model.GitSource'
-        "400":
-          description: bad request
+        "404":
+          description: not found
       security:
       - OAuth2Password: []
       summary: Update a GitSource
@@ -214,7 +229,7 @@ paths:
         "200":
           description: ok
           schema:
-            $ref: '#/definitions/model.GitSource'
+            $ref: '#/definitions/dto.GitSourcesDto'
         "400":
           description: bad request
       security:

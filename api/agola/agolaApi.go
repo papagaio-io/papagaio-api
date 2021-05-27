@@ -41,9 +41,13 @@ func (agolaApi *AgolaApi) GetOrganizations() (*[]OrganizationDto, error) {
 	client := &http.Client{}
 	URLApi := getOrganizationsUrl()
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -63,13 +67,17 @@ func (agolaApi *AgolaApi) CheckOrganizationExists(organization *model.Organizati
 	client := &http.Client{}
 	URLApi := getOrganizationUrl(organization.AgolaOrganizationRef)
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+	if err != nil {
+		return false, ""
+	}
+
 	defer resp.Body.Close()
 
 	var organizationID string
-	organizationExists := err == nil && api.IsResponseOK(resp.StatusCode)
+	organizationExists := api.IsResponseOK(resp.StatusCode)
 	if organizationExists {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var jsonResponse AgolaCreateORGDto
@@ -85,13 +93,17 @@ func (agolaApi *AgolaApi) CheckProjectExists(organization *model.Organization, a
 
 	client := &http.Client{}
 	URLApi := getProjectUrl(organization.AgolaOrganizationRef, agolaProjectRef)
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return false, ""
+	}
 	defer resp.Body.Close()
 
 	var projectID string
-	projectExists := err == nil && api.IsResponseOK(resp.StatusCode)
+	projectExists := api.IsResponseOK(resp.StatusCode)
 	if projectExists {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var jsonResponse CreateProjectResponseDto
@@ -106,9 +118,13 @@ func (agolaApi *AgolaApi) CreateOrganization(organization *model.Organization, v
 	client := &http.Client{}
 	URLApi := getOrgUrl()
 	reqBody := strings.NewReader(`{"name": "` + organization.AgolaOrganizationRef + `", "visibility": "` + string(visibility) + `"}`)
-	req, err := http.NewRequest("POST", URLApi, reqBody)
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return "", err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -127,9 +143,13 @@ func (agolaApi *AgolaApi) CreateOrganization(organization *model.Organization, v
 func (agolaApi *AgolaApi) DeleteOrganization(organization *model.Organization, agolaUserToken string) error {
 	client := &http.Client{}
 	URLApi := getOrganizationUrl(organization.AgolaOrganizationRef)
-	req, err := http.NewRequest("DELETE", URLApi, nil)
+	req, _ := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -165,9 +185,13 @@ func (agolaApi *AgolaApi) CreateProject(projectName string, agolaProjectRef stri
 	data, _ := json.Marshal(projectRequest)
 	reqBody := strings.NewReader(string(data))
 
-	req, err := http.NewRequest("POST", URLApi, reqBody)
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
 	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return "", err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -188,9 +212,13 @@ func (agolaApi *AgolaApi) DeleteProject(organization *model.Organization, agolaP
 
 	client := &http.Client{}
 	URLApi := getProjectUrl(organization.AgolaOrganizationRef, agolaProjectRef)
-	req, err := http.NewRequest("DELETE", URLApi, nil)
+	req, _ := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+agolaUserToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -210,9 +238,13 @@ func (agolaApi *AgolaApi) AddOrUpdateOrganizationMember(organization *model.Orga
 	client := &http.Client{}
 	URLApi := getAddOrgMemberUrl(organization.AgolaOrganizationRef, agolaUserRef)
 	reqBody := strings.NewReader(`{"role": "` + role + `"}`)
-	req, err := http.NewRequest("PUT", URLApi, reqBody)
+	req, _ := http.NewRequest("PUT", URLApi, reqBody)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -231,9 +263,13 @@ func (agolaApi *AgolaApi) RemoveOrganizationMember(organization *model.Organizat
 	URLApi := getAddOrgMemberUrl(organization.AgolaOrganizationRef, agolaUserRef)
 
 	reqBody := strings.NewReader(`{}`)
-	req, err := http.NewRequest("DELETE", URLApi, reqBody)
+	req, _ := http.NewRequest("DELETE", URLApi, reqBody)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -249,9 +285,13 @@ func (agolaApi *AgolaApi) GetOrganizationMembers(organization *model.Organizatio
 
 	client := &http.Client{}
 	URLApi := getOrganizationMembersUrl(organization.AgolaOrganizationRef)
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -287,9 +327,13 @@ func (agolaApi *AgolaApi) GetRuns(projectRef string, lastRun bool, phase string,
 	client := &http.Client{}
 	URLApi := getRunsListUrl(projectRef, lastRun, phase, startRunID, limit, asc)
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -310,9 +354,13 @@ func (agolaApi *AgolaApi) GetRun(runID string) (*RunDto, error) {
 
 	client := &http.Client{}
 	URLApi := getRunUrl(runID)
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -333,9 +381,13 @@ func (agolaApi *AgolaApi) GetTask(runID string, taskID string) (*TaskDto, error)
 
 	client := &http.Client{}
 	URLApi := getTaskUrl(runID, taskID)
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -356,9 +408,13 @@ func (agolaApi *AgolaApi) GetLogs(runID string, taskID string, step int) (string
 
 	client := &http.Client{}
 	URLApi := getLogsUrl(runID, taskID, step)
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return "", err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -379,7 +435,11 @@ func (agolaApi *AgolaApi) GetRemoteSource(agolaRemoteSource string) (*RemoteSour
 
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -402,7 +462,11 @@ func (agolaApi *AgolaApi) GetUsers() (*[]UserDto, error) {
 
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {

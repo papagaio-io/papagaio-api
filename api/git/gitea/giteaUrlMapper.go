@@ -12,7 +12,6 @@ const teamUsersListPath string = "%s/api/v1/teams/%s/members?token=%s"
 const listBranchPath string = "%s/api/v1/repos/%s/%s/branches?token=%s"
 const listMetadataPath string = "%s/api/v1/repos/%s/%s/contents/%s?ref=%s&token=%s"
 const commitMetadataPath string = "%s/api/v1/repos/%s/%s/commits?sha=%s&page=1&limit=1&token=%s"
-const repositoryListPath string = "%s/api/v1/orgs/%s/repos?token=%s"
 const organizationsPath string = "%s/api/v1/user/orgs?token=%s"
 
 func getCreateWebHookUrl(gitApiUrl string, gitOrgRef string, gitToken string) string {

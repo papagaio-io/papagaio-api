@@ -24,6 +24,37 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/agolarefs": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Return the organization ref list existing in Agola but not in Papagaio",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Return the organization ref list",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "bad request"
+                    }
+                }
+            }
+        },
         "/gitsource": {
             "post": {
                 "security": [
@@ -66,7 +97,7 @@ var doc = `{
                 "tags": [
                     "GitSources"
                 ],
-                "summary": "List GitOrganizations",
+                "summary": "List Git Organizations",
                 "parameters": [
                     {
                         "type": "integer",

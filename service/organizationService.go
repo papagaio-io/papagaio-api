@@ -369,6 +369,14 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	JSONokResponse(w, manager.GetProjectDto(&project, organization))
 }
 
+// @Summary Return the organization ref list
+// @Description Return the organization ref list existing in Agola but not in Papagaio
+// @Tags Organization
+// @Produce  json
+// @Success 200 {array} string "ok"
+// @Failure 400 "bad request"-
+// @Router /agolarefs [get]
+// @Security OAuth2Password
 func (service *OrganizationService) GetAgolaOrganizations(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

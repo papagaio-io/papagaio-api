@@ -102,6 +102,25 @@ host: papagaio-api.sorintdev.it
 info:
   contact: {}
 paths:
+  /agolarefs:
+    get:
+      description: Return the organization ref list existing in Agola but not in Papagaio
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: bad request
+      security:
+      - OAuth2Password: []
+      summary: Return the organization ref list
+      tags:
+      - Organization
   /gitsource:
     post:
       description: Add a GitSource
@@ -161,7 +180,7 @@ paths:
           description: bad request
       security:
       - OAuth2Password: []
-      summary: List GitOrganizations
+      summary: List Git Organizations
       tags:
       - GitSources
     put:

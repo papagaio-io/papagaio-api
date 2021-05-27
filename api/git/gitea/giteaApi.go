@@ -47,14 +47,15 @@ func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, gitOrgRef st
 	data, _ := json.Marshal(webHookRequest)
 
 	reqBody := strings.NewReader(string(data))
-	req, err := http.NewRequest("POST", URLApi, reqBody)
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
 	req.Header.Add("content-type", "application/json")
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 
 	if err != nil {
 		return -1, err
 	}
+	defer resp.Body.Close()
+
 	if !api.IsResponseOK(resp.StatusCode) {
 		respMessage, _ := ioutil.ReadAll(resp.Body)
 		return -1, errors.New(string(respMessage))
@@ -75,6 +76,10 @@ func (giteaApi *GiteaApi) DeleteWebHook(gitSource *model.GitSource, gitOrgRef st
 
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -90,8 +95,12 @@ func (giteaApi *GiteaApi) GetRepositories(gitSource *model.GitSource, gitOrgRef 
 
 	URLApi := getGetListRepositoryUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -117,7 +126,11 @@ func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, gitOrgRef 
 
 	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
 	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil
+	}
 	defer resp.Body.Close()
 
 	if api.IsResponseOK(resp.StatusCode) {
@@ -138,7 +151,11 @@ func (giteaApi *GiteaApi) CheckOrganizationExists(gitSource *model.GitSource, gi
 	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
 
 	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return false
+	}
 	defer resp.Body.Close()
 
 	return api.IsResponseOK(resp.StatusCode)
@@ -149,8 +166,12 @@ func (giteaApi *GiteaApi) GetRepositoryTeams(gitSource *model.GitSource, gitOrgR
 
 	URLApi := getRepositoryTeamsListUrl(gitSource.GitAPIURL, gitOrgRef, repositoryRef, gitSource.GitToken)
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -171,8 +192,12 @@ func (giteaApi *GiteaApi) GetOrganizationTeams(gitSource *model.GitSource, gitOr
 
 	URLApi := getOrganizationTeamsListUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -193,8 +218,12 @@ func (giteaApi *GiteaApi) GetTeamMembers(gitSource *model.GitSource, teamId int)
 
 	URLApi := getTeamUsersListUrl(gitSource.GitAPIURL, fmt.Sprint(teamId), gitSource.GitToken)
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -225,8 +254,12 @@ func (giteaApi *GiteaApi) getBranches(gitSource *model.GitSource, gitOrgRef stri
 	client := &http.Client{}
 	URLApi := getListBranchPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, gitSource.GitToken)
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -246,8 +279,12 @@ func (giteaApi *GiteaApi) getRepositoryAgolaMetadata(gitSource *model.GitSource,
 	client := &http.Client{}
 	URLApi := getListMetadataPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, ".agola", branchName, gitSource.GitToken)
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -290,8 +327,12 @@ func (giteaApi *GiteaApi) GetCommitMetadata(gitSource *model.GitSource, gitOrgRe
 
 	URLApi := getCommitMetadataPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, commitSha, gitSource.GitToken)
 
-	req, err := http.NewRequest("GET", URLApi, nil)
+	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if !api.IsResponseOK(resp.StatusCode) {
@@ -317,6 +358,10 @@ func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource) (*[]strin
 	URLApi := getOrganizationsPath(gitSource.GitAPIURL, gitSource.GitToken)
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	if api.IsResponseOK(resp.StatusCode) {

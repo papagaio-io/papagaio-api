@@ -22,7 +22,7 @@ type GitSourceService struct {
 // @Description Return a list of gitsources
 // @Tags GitSources
 // @Produce  json
-// @Success 200 {object} model.GitSource "ok"
+// @Success 200 {object} dto.GitSourcesDto "ok"
 // @Failure 400 "bad request"
 // @Router /gitsources [get]
 // @Security OAuth2Password
@@ -45,11 +45,12 @@ func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Re
 }
 
 // @Summary Add a GitSource
-// @Description Add a GitSource
+// @Description Add a GitSource with the data provided in the body
 // @Tags GitSources
 // @Produce  json
+// @Param gitSource body model.GitSource true "Git Source information"
 // @Success 200 {object} model.GitSource "ok"
-// @Failure 400 "bad request"
+// @Failure 422 "Already exists"
 // @Router /gitsource [post]
 // @Security OAuth2Password
 func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Request) {
@@ -74,9 +75,9 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 // @Description Remove a GitSource
 // @Tags GitSources
 // @Produce  json
-// @Param gitSourceName path int true "Git Source Name"
+// @Param gitSourceName path string true "Git Source Name"
 // @Success 200 {object} model.GitSource "ok"
-// @Failure 400 "bad request"
+// @Failure 422 "Not found"
 // @Router /gitsource/{gitSourceName} [delete]
 // @Security OAuth2Password
 func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.Request) {
@@ -101,12 +102,12 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 }
 
 // @Summary Update a GitSource
-// @Description Update a GitSource
+// @Description Update GitSource information
 // @Tags GitSources
 // @Produce  json
-// @Param gitSourceName path int true "Git Source Name"
+// @Param gitSourceName path string true "Git Source Name"
 // @Success 200 {object} model.GitSource "ok"
-// @Failure 400 "bad request"
+// @Failure 404 "not found"
 // @Router /gitsource/{gitSourceName} [put]
 // @Security OAuth2Password
 func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.Request) {
@@ -146,13 +147,13 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 }
 
 // @Summary List Git Organizations
-// @Description Return a list of Organizations by GitSource
+// @Description Return a list of all Organizations by GitSource
 // @Tags GitSources
 // @Produce  json
-// @Param gitSourceName path int true "Git Source Name"
+// @Param gitSourceName path string true "Git Source Name"
 // @Success 200 {object} model.GitSource "ok"
-// @Failure 400 "bad request"
-// @Router /gitsource/{gitSourceName} [get]
+// @Failure 404 "not found"
+// @Router /gitorganizations/{gitSourceName} [get]
 // @Security OAuth2Password
 func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

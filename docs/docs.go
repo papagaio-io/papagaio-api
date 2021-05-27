@@ -55,42 +55,14 @@ var doc = `{
                 }
             }
         },
-        "/gitsource": {
-            "post": {
-                "security": [
-                    {
-                        "OAuth2Password": []
-                    }
-                ],
-                "description": "Add a GitSource",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "GitSources"
-                ],
-                "summary": "Add a GitSource",
-                "responses": {
-                    "200": {
-                        "description": "ok",
-                        "schema": {
-                            "$ref": "#/definitions/model.GitSource"
-                        }
-                    },
-                    "400": {
-                        "description": "bad request"
-                    }
-                }
-            }
-        },
-        "/gitsource/{gitSourceName}": {
+        "/gitorganizations/{gitSourceName}": {
             "get": {
                 "security": [
                     {
                         "OAuth2Password": []
                     }
                 ],
-                "description": "Return a list of Organizations by GitSource",
+                "description": "Return a list of all Organizations by GitSource",
                 "produces": [
                     "application/json"
                 ],
@@ -100,7 +72,7 @@ var doc = `{
                 "summary": "List Git Organizations",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Git Source Name",
                         "name": "gitSourceName",
                         "in": "path",
@@ -114,18 +86,59 @@ var doc = `{
                             "$ref": "#/definitions/model.GitSource"
                         }
                     },
-                    "400": {
-                        "description": "bad request"
+                    "404": {
+                        "description": "not found"
                     }
                 }
-            },
+            }
+        },
+        "/gitsource": {
+            "post": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Add a GitSource with the data provided in the body",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GitSources"
+                ],
+                "summary": "Add a GitSource",
+                "parameters": [
+                    {
+                        "description": "Git Source information",
+                        "name": "gitSource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.GitSource"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.GitSource"
+                        }
+                    },
+                    "422": {
+                        "description": "Already exists"
+                    }
+                }
+            }
+        },
+        "/gitsource/{gitSourceName}": {
             "put": {
                 "security": [
                     {
                         "OAuth2Password": []
                     }
                 ],
-                "description": "Update a GitSource",
+                "description": "Update GitSource information",
                 "produces": [
                     "application/json"
                 ],
@@ -135,7 +148,7 @@ var doc = `{
                 "summary": "Update a GitSource",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Git Source Name",
                         "name": "gitSourceName",
                         "in": "path",
@@ -149,8 +162,8 @@ var doc = `{
                             "$ref": "#/definitions/model.GitSource"
                         }
                     },
-                    "400": {
-                        "description": "bad request"
+                    "404": {
+                        "description": "not found"
                     }
                 }
             },
@@ -170,7 +183,7 @@ var doc = `{
                 "summary": "Remove a GitSource",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Git Source Name",
                         "name": "gitSourceName",
                         "in": "path",
@@ -184,8 +197,8 @@ var doc = `{
                             "$ref": "#/definitions/model.GitSource"
                         }
                     },
-                    "400": {
-                        "description": "bad request"
+                    "422": {
+                        "description": "Not found"
                     }
                 }
             }
@@ -209,7 +222,7 @@ var doc = `{
                     "200": {
                         "description": "ok",
                         "schema": {
-                            "$ref": "#/definitions/model.GitSource"
+                            "$ref": "#/definitions/dto.GitSourcesDto"
                         }
                     },
                     "400": {
@@ -248,6 +261,17 @@ var doc = `{
         }
     },
     "definitions": {
+        "dto.GitSourcesDto": {
+            "type": "object",
+            "properties": {
+                "gitApiUrl": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Branch": {
             "type": "object",
             "properties": {

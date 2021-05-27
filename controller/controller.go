@@ -13,6 +13,7 @@ type OrganizationController interface {
 	GetReport(w http.ResponseWriter, r *http.Request)
 	GetOrganizationReport(w http.ResponseWriter, r *http.Request)
 	GetProjectReport(w http.ResponseWriter, r *http.Request)
+	GetAgolaOrganizations(w http.ResponseWriter, r *http.Request)
 }
 
 type WebHookController interface {

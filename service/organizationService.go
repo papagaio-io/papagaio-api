@@ -368,3 +368,26 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 
 	JSONokResponse(w, manager.GetProjectDto(&project, organization))
 }
+
+func (service *OrganizationService) GetAgolaOrganizations(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	organizations, err := service.AgolaApi.GetOrganizations()
+	if err != nil {
+		InternalServerError(w)
+		return
+	}
+
+	agolaRefList := make([]string, 0)
+	if organizations != nil {
+		for _, agolaOrganization := range *organizations {
+			dbOrganization, _ := service.Db.GetOrganizationByAgolaRef(agolaOrganization.Name)
+			if dbOrganization == nil {
+				agolaRefList = append(agolaRefList, agolaOrganization.Name)
+			}
+		}
+	}
+
+	JSONokResponse(w, agolaRefList)
+}

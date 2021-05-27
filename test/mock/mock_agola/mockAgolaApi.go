@@ -283,3 +283,18 @@ func (mr *MockAgolaApiInterfaceMockRecorder) GetUsers() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetUsers))
 }
+
+// GetOrganizations mocks base method
+func (m *MockAgolaApiInterface) GetOrganizations() (*[]agola.OrganizationDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrganizations")
+	ret0, _ := ret[0].(*[]agola.OrganizationDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrganizations indicates an expected call of GetOrganizations
+func (mr *MockAgolaApiInterfaceMockRecorder) GetOrganizations() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizations", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetOrganizations))
+}

@@ -19,6 +19,11 @@ const taskPath string = "%s/api/v1alpha/runs/%s/tasks/%s"
 const logsPath string = "%s/api/v1alpha/logs?runID=%s&taskID=%s&%s"
 const remoteSourcePath string = "%s/api/v1alpha/remotesources/%s"
 const usersPath string = "%s/api/v1alpha/users"
+const organizationsPath = "%s/api/v1alpha/orgs"
+
+func getOrganizationsUrl() string {
+	return fmt.Sprintf(organizationsPath, config.Config.Agola.AgolaAddr)
+}
 
 func getOrganizationUrl(agolaOrganizationRef string) string {
 	return fmt.Sprintf(organizationPath, config.Config.Agola.AgolaAddr, agolaOrganizationRef)

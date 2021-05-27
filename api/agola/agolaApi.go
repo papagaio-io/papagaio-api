@@ -32,9 +32,32 @@ type AgolaApiInterface interface {
 	GetLogs(runID string, taskID string, step int) (string, error)
 	GetRemoteSource(agolaRemoteSource string) (*RemoteSourceDto, error)
 	GetUsers() (*[]UserDto, error)
+	GetOrganizations() (*[]OrganizationDto, error)
 }
 
 type AgolaApi struct{}
+
+func (agolaApi *AgolaApi) GetOrganizations() (*[]OrganizationDto, error) {
+	client := &http.Client{}
+	URLApi := getOrganizationsUrl()
+
+	req, err := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var jsonResponse []OrganizationDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse, err
+}
 
 func (agolaApi *AgolaApi) CheckOrganizationExists(organization *model.Organization) (bool, string) {
 	client := &http.Client{}

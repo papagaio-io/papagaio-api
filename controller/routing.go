@@ -58,6 +58,7 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 	setupReportEndpoint(apirouter.PathPrefix("/report").Subrouter(), ctrlOrganization)
 	setupOrganizationReportEndpoint(apirouter.PathPrefix("/report").Subrouter(), ctrlOrganization)
 	setupProjectReportEndpoint(apirouter.PathPrefix("/report").Subrouter(), ctrlOrganization)
+	setupGetAgolaRefs(apirouter.PathPrefix("/agolarefs").Subrouter(), ctrlOrganization)
 
 	setupGetGitSourcesEndpoint(apirouter.PathPrefix("/gitsources").Subrouter(), ctrlGitSource)
 	setupAddGitSourceEndpoint(apirouter.PathPrefix("/gitsource").Subrouter(), ctrlGitSource)
@@ -173,6 +174,11 @@ func setupGetTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController)
 func setupSaveTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
 	router.Use(handleRestrictedUserRoutes)
 	router.HandleFunc("", ctrl.SaveTriggersConfig).Methods("POST")
+}
+
+func setupGetAgolaRefs(router *mux.Router, ctrl OrganizationController) {
+	router.Use(handleRestrictedAllRoutes)
+	router.HandleFunc("", ctrl.GetAgolaOrganizations).Methods("GET")
 }
 
 func handleLoggedUserRoutes(h http.Handler) http.Handler {

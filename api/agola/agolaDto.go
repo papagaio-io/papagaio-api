@@ -164,3 +164,9 @@ type LinkedAccountDto struct {
 	RemoteUserName      string `json:"remote_user_name"`
 	RemoteUserAvatarURL string `json:"remote_user_avatar_url"`
 }
+
+type OrganizationDto struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Visibility string `json:"visibility"`
+}

@@ -30,3 +30,8 @@ papagaio user add
   -h, --help                 help for user
       --token string         token
 example: papagaio user add --email {userEmail} --token {papagaioAdminToken}
+
+# Swagger
+
+* Use command line "swag init" to update swaw autogenerate files
+* URL: /swagger/index.html or /swagger/

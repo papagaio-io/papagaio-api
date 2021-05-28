@@ -1,11 +1,114 @@
 basePath: /api
 definitions:
+  dto.BranchDto:
+    properties:
+      lastFailedRunDate:
+        type: string
+      lastFailedRunURL:
+        type: string
+      lastRunDuration:
+        type: integer
+      lastSuccessRunDate:
+        type: string
+      lastSuccessRunURL:
+        type: string
+      name:
+        type: string
+      report:
+        $ref: '#/definitions/dto.ReportDto'
+      state:
+        description: state of last run
+        type: string
+    type: object
+  dto.CreateOrganizationRequestDto:
+    properties:
+      agolaRef:
+        type: string
+      behaviourExclude:
+        type: string
+      behaviourInclude:
+        type: string
+      behaviourType:
+        type: string
+      gitSourceName:
+        type: string
+      name:
+        type: string
+      visibility:
+        type: string
+    type: object
+  dto.CreateOrganizationResponseDto:
+    properties:
+      errorCode:
+        type: string
+      organizationURL:
+        type: string
+    type: object
   dto.GitSourcesDto:
     properties:
       gitApiUrl:
         type: string
       name:
         type: string
+    type: object
+  dto.OrganizationDto:
+    properties:
+      agolaRef:
+        type: string
+      avatarUrl:
+        type: string
+      id:
+        type: string
+      lastFailedRunDate:
+        type: string
+      lastFailedRunURL:
+        type: string
+      lastRunDuration:
+        type: integer
+      lastSuccessRunDate:
+        type: string
+      lastSuccessRunURL:
+        type: string
+      organizationName:
+        type: string
+      organizationURL:
+        type: string
+      projects:
+        items:
+          $ref: '#/definitions/dto.ProjectDto'
+        type: array
+      visibility:
+        type: string
+      worstReport:
+        $ref: '#/definitions/dto.ReportDto'
+    type: object
+  dto.ProjectDto:
+    properties:
+      branchs:
+        items:
+          $ref: '#/definitions/dto.BranchDto'
+        type: array
+      projectName:
+        type: string
+      projectURL:
+        type: string
+      worstReport:
+        $ref: '#/definitions/dto.ReportDto'
+    type: object
+  dto.ReportDto:
+    properties:
+      branchName:
+        type: string
+      failedRuns:
+        type: integer
+      organizationName:
+        type: string
+      projectName:
+        type: string
+      successRunsPercentage:
+        type: integer
+      totalRuns:
+        type: integer
     type: object
   model.Branch:
     properties:
@@ -109,6 +212,35 @@ host: papagaio-api.sorintdev.it
 info:
   contact: {}
 paths:
+  /addexternaluser/{organizationRef}:
+    post:
+      description: Add an external user
+      parameters:
+      - description: Organization name
+        in: path
+        name: organizationRef
+        required: true
+        type: string
+      - description: external user email
+        in: body
+        name: email
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.Organization'
+        "404":
+          description: not found
+      security:
+      - OAuth2Password: []
+      summary: Add External User
+      tags:
+      - Organization
   /agolarefs:
     get:
       description: Return the organization ref list existing in Agola but not in Papagaio
@@ -126,6 +258,93 @@ paths:
       security:
       - OAuth2Password: []
       summary: Return the organization ref list
+      tags:
+      - Organization
+  /createorganization:
+    post:
+      description: Create an organization in Papagaio and in Agola. If already exists
+        on Agola and you want to use the same organization then use the query parameter
+        force
+      parameters:
+      - description: ?force
+        in: query
+        name: force
+        type: string
+      - description: Organization information
+        in: body
+        name: organization
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOrganizationRequestDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/dto.CreateOrganizationResponseDto'
+        "400":
+          description: bad request
+      security:
+      - OAuth2Password: []
+      summary: Create a new Organization in Papagaio/Agola
+      tags:
+      - Organization
+  /deleteexternaluser/{organizationRef}:
+    delete:
+      description: Delete an external user
+      parameters:
+      - description: Organization name
+        in: path
+        name: organizationRef
+        required: true
+        type: string
+      - description: external user email
+        in: body
+        name: email
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.Organization'
+        "404":
+          description: not found
+      security:
+      - OAuth2Password: []
+      summary: Delete External User
+      tags:
+      - Organization
+  /deleteorganization{organizationRef}:
+    delete:
+      description: Delete an organization in Papagaio and in Agola. Its possible to
+        delete only in Papagaio using the parameter internalonly.
+      parameters:
+      - description: Organization Name
+        in: path
+        name: organizationRef
+        required: true
+        type: string
+      - description: ?internalonly
+        in: query
+        name: internalonly
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/model.Organization'
+        "500":
+          description: Not found
+      security:
+      - OAuth2Password: []
+      summary: Delete Organization
       tags:
       - Organization
   /gitorganizations/{gitSourceName}:
@@ -246,12 +465,69 @@ paths:
         "200":
           description: ok
           schema:
-            $ref: '#/definitions/model.Organization'
+            items:
+              $ref: '#/definitions/model.Organization'
+            type: array
         "400":
           description: bad request
       security:
       - OAuth2Password: []
       summary: Return the list of organizations
+      tags:
+      - Organization
+  /report:
+    get:
+      description: Obtain a full report of all organizations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            items:
+              $ref: '#/definitions/dto.OrganizationDto'
+            type: array
+      security:
+      - OAuth2Password: []
+      summary: Get Report
+      tags:
+      - Organization
+  /report/{organizationRef}:
+    get:
+      description: Obtain a report of a specific organization
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            items:
+              $ref: '#/definitions/dto.OrganizationDto'
+            type: array
+        "404":
+          description: not found
+      security:
+      - OAuth2Password: []
+      summary: Get Report from a specific organization
+      tags:
+      - Organization
+  /report/{organizationRef}/{projectName}:
+    get:
+      description: Obtain a report of a specific organization/project
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            items:
+              $ref: '#/definitions/dto.OrganizationDto'
+            type: array
+        "404":
+          description: not found
+      security:
+      - OAuth2Password: []
+      summary: Get Report from a specific organization/project
       tags:
       - Organization
 securityDefinitions:

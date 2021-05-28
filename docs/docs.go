@@ -24,6 +24,52 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/addexternaluser/{organizationRef}": {
+            "post": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Add an external user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Add External User",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization name",
+                        "name": "organizationRef",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "external user email",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.Organization"
+                        }
+                    },
+                    "404": {
+                        "description": "not found"
+                    }
+                }
+            }
+        },
         "/agolarefs": {
             "get": {
                 "security": [
@@ -51,6 +97,140 @@ var doc = `{
                     },
                     "400": {
                         "description": "bad request"
+                    }
+                }
+            }
+        },
+        "/createorganization": {
+            "post": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Create an organization in Papagaio and in Agola. If already exists on Agola and you want to use the same organization then use the query parameter force",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Create a new Organization in Papagaio/Agola",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "?force",
+                        "name": "force",
+                        "in": "query"
+                    },
+                    {
+                        "description": "Organization information",
+                        "name": "organization",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateOrganizationRequestDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateOrganizationResponseDto"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request"
+                    }
+                }
+            }
+        },
+        "/deleteexternaluser/{organizationRef}": {
+            "delete": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Delete an external user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Delete External User",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization name",
+                        "name": "organizationRef",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "external user email",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.Organization"
+                        }
+                    },
+                    "404": {
+                        "description": "not found"
+                    }
+                }
+            }
+        },
+        "/deleteorganization{organizationRef}": {
+            "delete": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Delete an organization in Papagaio and in Agola. Its possible to delete only in Papagaio using the parameter internalonly.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Delete Organization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization Name",
+                        "name": "organizationRef",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "?internalonly",
+                        "name": "internalonly",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/model.Organization"
+                        }
+                    },
+                    "500": {
+                        "description": "Not found"
                     }
                 }
             }
@@ -250,7 +430,10 @@ var doc = `{
                     "200": {
                         "description": "ok",
                         "schema": {
-                            "$ref": "#/definitions/model.Organization"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Organization"
+                            }
                         }
                     },
                     "400": {
@@ -258,9 +441,166 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/report": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Obtain a full report of all organizations",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Get Report",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.OrganizationDto"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/report/{organizationRef}": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Obtain a report of a specific organization",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Get Report from a specific organization",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.OrganizationDto"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found"
+                    }
+                }
+            }
+        },
+        "/report/{organizationRef}/{projectName}": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Obtain a report of a specific organization/project",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Get Report from a specific organization/project",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.OrganizationDto"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found"
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.BranchDto": {
+            "type": "object",
+            "properties": {
+                "lastFailedRunDate": {
+                    "type": "string"
+                },
+                "lastFailedRunURL": {
+                    "type": "string"
+                },
+                "lastRunDuration": {
+                    "type": "integer"
+                },
+                "lastSuccessRunDate": {
+                    "type": "string"
+                },
+                "lastSuccessRunURL": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "report": {
+                    "$ref": "#/definitions/dto.ReportDto"
+                },
+                "state": {
+                    "description": "state of last run",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateOrganizationRequestDto": {
+            "type": "object",
+            "properties": {
+                "agolaRef": {
+                    "type": "string"
+                },
+                "behaviourExclude": {
+                    "type": "string"
+                },
+                "behaviourInclude": {
+                    "type": "string"
+                },
+                "behaviourType": {
+                    "type": "string"
+                },
+                "gitSourceName": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "visibility": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateOrganizationResponseDto": {
+            "type": "object",
+            "properties": {
+                "errorCode": {
+                    "type": "string"
+                },
+                "organizationURL": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.GitSourcesDto": {
             "type": "object",
             "properties": {
@@ -269,6 +609,96 @@ var doc = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.OrganizationDto": {
+            "type": "object",
+            "properties": {
+                "agolaRef": {
+                    "type": "string"
+                },
+                "avatarUrl": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lastFailedRunDate": {
+                    "type": "string"
+                },
+                "lastFailedRunURL": {
+                    "type": "string"
+                },
+                "lastRunDuration": {
+                    "type": "integer"
+                },
+                "lastSuccessRunDate": {
+                    "type": "string"
+                },
+                "lastSuccessRunURL": {
+                    "type": "string"
+                },
+                "organizationName": {
+                    "type": "string"
+                },
+                "organizationURL": {
+                    "type": "string"
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProjectDto"
+                    }
+                },
+                "visibility": {
+                    "type": "string"
+                },
+                "worstReport": {
+                    "$ref": "#/definitions/dto.ReportDto"
+                }
+            }
+        },
+        "dto.ProjectDto": {
+            "type": "object",
+            "properties": {
+                "branchs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.BranchDto"
+                    }
+                },
+                "projectName": {
+                    "type": "string"
+                },
+                "projectURL": {
+                    "type": "string"
+                },
+                "worstReport": {
+                    "$ref": "#/definitions/dto.ReportDto"
+                }
+            }
+        },
+        "dto.ReportDto": {
+            "type": "object",
+            "properties": {
+                "branchName": {
+                    "type": "string"
+                },
+                "failedRuns": {
+                    "type": "integer"
+                },
+                "organizationName": {
+                    "type": "string"
+                },
+                "projectName": {
+                    "type": "string"
+                },
+                "successRunsPercentage": {
+                    "type": "integer"
+                },
+                "totalRuns": {
+                    "type": "integer"
                 }
             }
         },

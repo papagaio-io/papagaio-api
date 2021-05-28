@@ -29,7 +29,7 @@ type OrganizationService struct {
 // @Description Return the list of organizations
 // @Tags Organization
 // @Produce  json
-// @Success 200 {object} model.Organization "ok"
+// @Success 200 {array} model.Organization "ok"
 // @Failure 400 "bad request"-
 // @Router /organizations [get]
 // @Security OAuth2Password
@@ -46,6 +46,16 @@ func (service *OrganizationService) GetOrganizations(w http.ResponseWriter, r *h
 	JSONokResponse(w, org)
 }
 
+// @Summary Create a new Organization in Papagaio/Agola
+// @Description Create an organization in Papagaio and in Agola. If already exists on Agola and you want to use the same organization then use the query parameter force
+// @Tags Organization
+// @Produce  json
+// @Param force query string false "?force"
+// @Param organization body dto.CreateOrganizationRequestDto true "Organization information"
+// @Success 200 {object} dto.CreateOrganizationResponseDto "ok"
+// @Failure 400 "bad request"-
+// @Router /createorganization [post]
+// @Security OAuth2Password
 func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -182,6 +192,16 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	JSONokResponse(w, response)
 }
 
+// @Summary Delete Organization
+// @Description Delete an organization in Papagaio and in Agola. Its possible to delete only in Papagaio using the parameter internalonly.
+// @Tags Organization
+// @Produce  json
+// @Param organizationRef path string true "Organization Name"
+// @Param internalonly query string false "?internalonly"
+// @Success 200 {object} model.Organization "ok"
+// @Failure 500 "Not found"
+// @Router /deleteorganization{organizationRef} [delete]
+// @Security OAuth2Password
 func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -245,6 +265,16 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", organization.UserEmailCreator)
 }
 
+// @Summary Add External User
+// @Description Add an external user
+// @Tags Organization
+// @Produce  json
+// @Param organizationRef path string true "Organization name"
+// @Param email body string true "external user email"
+// @Success 200 {object} model.Organization "ok"
+// @Failure 404 "not found"
+// @Router /addexternaluser/{organizationRef} [post]
+// @Security OAuth2Password
 func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -279,6 +309,16 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	locked = false
 }
 
+// @Summary Delete External User
+// @Description Delete an external user
+// @Tags Organization
+// @Produce  json
+// @Param organizationRef path string true "Organization name"
+// @Param email body string true "external user email"
+// @Success 200 {object} model.Organization "ok"
+// @Failure 404 "not found"
+// @Router /deleteexternaluser/{organizationRef} [delete]
+// @Security OAuth2Password
 func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -309,6 +349,13 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	locked = false
 }
 
+// @Summary Get Report
+// @Description Obtain a full report of all organizations
+// @Tags Organization
+// @Produce  json
+// @Success 200 {array} dto.OrganizationDto "ok"
+// @Router /report [get]
+// @Security OAuth2Password
 func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -324,6 +371,14 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 	JSONokResponse(w, retVal)
 }
 
+// @Summary Get Report from a specific organization
+// @Description Obtain a report of a specific organization
+// @Tags Organization
+// @Produce  json
+// @Success 200 {array} dto.OrganizationDto "ok"
+// @Failure 404 "not found"
+// @Router /report/{organizationRef} [get]
+// @Security OAuth2Password
 func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -342,6 +397,14 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 	JSONokResponse(w, manager.GetOrganizationDto(organization, gitsource, service.GitGateway))
 }
 
+// @Summary Get Report from a specific organization/project
+// @Description Obtain a report of a specific organization/project
+// @Tags Organization
+// @Produce  json
+// @Success 200 {array} dto.OrganizationDto "ok"
+// @Failure 404 "not found"
+// @Router /report/{organizationRef}/{projectName} [get]
+// @Security OAuth2Password
 func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -374,7 +437,7 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 // @Tags Organization
 // @Produce  json
 // @Success 200 {array} string "ok"
-// @Failure 400 "bad request"-
+// @Failure 400 "bad request"
 // @Router /agolarefs [get]
 // @Security OAuth2Password
 func (service *OrganizationService) GetAgolaOrganizations(w http.ResponseWriter, r *http.Request) {

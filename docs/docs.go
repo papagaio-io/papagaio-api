@@ -235,6 +235,34 @@ var doc = `{
                 }
             }
         },
+        "/gettriggersconfig": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Get trigger timers",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Triggers"
+                ],
+                "summary": "Return time triggers",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.ConfigTriggersDto"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/gitorganizations/{gitSourceName}": {
             "get": {
                 "security": [
@@ -402,7 +430,10 @@ var doc = `{
                     "200": {
                         "description": "ok",
                         "schema": {
-                            "$ref": "#/definitions/dto.GitSourcesDto"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.GitSourcesDto"
+                            }
                         }
                     },
                     "400": {
@@ -531,6 +562,34 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/savetriggersconfig": {
+            "post": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Save trigger timers",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Triggers"
+                ],
+                "summary": "Save time triggers",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.ConfigTriggersDto"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -561,6 +620,17 @@ var doc = `{
                 "state": {
                     "description": "state of last run",
                     "type": "string"
+                }
+            }
+        },
+        "dto.ConfigTriggersDto": {
+            "type": "object",
+            "properties": {
+                "organizationsDefaultTriggerTime": {
+                    "type": "integer"
+                },
+                "runFailedDefaultTriggerTime": {
+                    "type": "integer"
                 }
             }
         },

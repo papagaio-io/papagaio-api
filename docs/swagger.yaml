@@ -20,6 +20,13 @@ definitions:
         description: state of last run
         type: string
     type: object
+  dto.ConfigTriggersDto:
+    properties:
+      organizationsDefaultTriggerTime:
+        type: integer
+      runFailedDefaultTriggerTime:
+        type: integer
+    type: object
   dto.CreateOrganizationRequestDto:
     properties:
       agolaRef:
@@ -347,6 +354,23 @@ paths:
       summary: Delete Organization
       tags:
       - Organization
+  /gettriggersconfig:
+    get:
+      description: Get trigger timers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            items:
+              $ref: '#/definitions/dto.ConfigTriggersDto'
+            type: array
+      security:
+      - OAuth2Password: []
+      summary: Return time triggers
+      tags:
+      - Triggers
   /gitorganizations/{gitSourceName}:
     get:
       description: Return a list of all Organizations by GitSource
@@ -448,7 +472,9 @@ paths:
         "200":
           description: ok
           schema:
-            $ref: '#/definitions/dto.GitSourcesDto'
+            items:
+              $ref: '#/definitions/dto.GitSourcesDto'
+            type: array
         "400":
           description: bad request
       security:
@@ -530,6 +556,23 @@ paths:
       summary: Get Report from a specific organization/project
       tags:
       - Organization
+  /savetriggersconfig:
+    post:
+      description: Save trigger timers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            items:
+              $ref: '#/definitions/dto.ConfigTriggersDto'
+            type: array
+      security:
+      - OAuth2Password: []
+      summary: Save time triggers
+      tags:
+      - Triggers
 securityDefinitions:
   OAuth2Password:
     flow: password

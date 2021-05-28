@@ -22,7 +22,7 @@ type GitSourceService struct {
 // @Description Return a list of gitsources
 // @Tags GitSources
 // @Produce  json
-// @Success 200 {object} dto.GitSourcesDto "ok"
+// @Success 200 {array} dto.GitSourcesDto "ok"
 // @Failure 400 "bad request"
 // @Router /gitsources [get]
 // @Security OAuth2Password

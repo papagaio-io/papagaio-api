@@ -14,6 +14,13 @@ type TriggersService struct {
 	Tr utils.ConfigUtils
 }
 
+// @Summary Return time triggers
+// @Description Get trigger timers
+// @Tags Triggers
+// @Produce  json
+// @Success 200 {array} dto.ConfigTriggersDto "ok"
+// @Router /gettriggersconfig [get]
+// @Security OAuth2Password
 func (service *TriggersService) GetTriggersConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -23,6 +30,13 @@ func (service *TriggersService) GetTriggersConfig(w http.ResponseWriter, r *http
 	JSONokResponse(w, dto)
 }
 
+// @Summary Save time triggers
+// @Description Save trigger timers
+// @Tags Triggers
+// @Produce  json
+// @Success 200 {array} dto.ConfigTriggersDto "ok"
+// @Router /savetriggersconfig [post]
+// @Security OAuth2Password
 func (service *TriggersService) SaveTriggersConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

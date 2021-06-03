@@ -31,11 +31,6 @@ podTemplate(
           image: 'sonarsource/sonar-scanner-cli',
           name: 'sonar-scanner',
           command: 'cat',
-          ttyEnabled: true),
-        containerTemplate(
-          image: 'registry.sorintdev.it/docker:20.10.6',
-          name: 'docker',
-          command: 'cat',
           ttyEnabled: true)
         ],
       volumes: [

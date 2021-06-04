@@ -133,7 +133,8 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 	if !isOwner {
 		log.Println("User", user.UserID, "is not owner")
-		InternalServerError(w) //TODO rifare con un messaggio di errore specifico
+		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		JSONokResponse(w, response)
 		return
 	}
 
@@ -146,9 +147,10 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 
 		agolaUserRef := utils.GetAgolaUserRefByGitUsername(service.AgolaApi, gitSource.AgolaRemoteSource, userInfo.Login)
-		if agolaUserRef == nil { //TODO ritornare un messaggio invece che errore generico
+		if agolaUserRef == nil {
 			log.Println("User not found in Agola")
-			InternalServerError(w)
+			response := dto.CreateOrganizationResponseDto{ErrorCode: dto.UserAgolaRefNotFoundError}
+			JSONokResponse(w, response)
 			return
 		}
 

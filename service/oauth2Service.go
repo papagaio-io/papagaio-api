@@ -105,6 +105,11 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userInfo, err := service.GitGateway.GetUserInfo(gitSource, tempUser)
+	if err != nil {
+		log.Println("Failed to get userinfo")
+		InternalServerError(w)
+		return
+	}
 
 	//Create new user if not exists and update token
 	user, _ := service.Db.GetUserByGitSourceNameAndID(gitSourceName, uint64(userInfo.ID))
@@ -113,6 +118,7 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 			GitSourceName: gitSourceName,
 			ID:            uint64(userInfo.ID),
 			Email:         userInfo.Email,
+			IsAdmin:       userInfo.IsAdmin,
 		}
 	}
 	user.Oauth2AccessToken = accessToken.AccessToken

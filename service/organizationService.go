@@ -209,6 +209,8 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
+	log.Println("DeleteOrganization:", organizationRef)
+
 	internalonlyQuery, ok := r.URL.Query()["internalonly"]
 	internalonly := false
 	if ok {

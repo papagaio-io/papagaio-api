@@ -125,7 +125,17 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	//TODO verificare se l'utente è owner della organization, altrimenti ritorno un errore
+	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, org.Name)
+	if err != nil {
+		log.Println("Error from IsUserOwner:", err)
+		InternalServerError(w)
+		return
+	}
+	if !isOwner {
+		log.Println("User", user.UserID, "is not owner")
+		InternalServerError(w) //TODO rifare con un messaggio di errore specifico
+		return
+	}
 
 	if user.AgolaUserRef == nil { //Se diverso da nil l'utente è registrato su Agola
 		userInfo, err := service.GitGateway.GetUserInfo(gitSource, user)
@@ -260,10 +270,10 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 32)
-	user, _ := service.Db.GetUserByUserId(uint(userId))
-	if user == nil {
-		log.Println("User", userId, "not found")
+	userIdRequest, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 32)
+	userRequest, _ := service.Db.GetUserByUserId(uint(userIdRequest))
+	if userRequest == nil {
+		log.Println("User", userRequest, "not found")
 		InternalServerError(w)
 		return
 	}
@@ -288,43 +298,34 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	//TODO verificare se l'utente è owner della organization, altrimenti ritorno errore
+	isOwner, err := service.GitGateway.IsUserOwner(gitSource, userRequest, organization.Name)
+	if err != nil {
+		log.Println("Error from IsUserOwner:", err)
+		InternalServerError(w)
+		return
+	}
+	if !isOwner {
+		log.Println("User", userRequest.UserID, "is not owner")
+		InternalServerError(w) //TODO rifare con un messaggio di errore specifico
+		return
+	}
 
-	if user.AgolaUserRef == nil { //Se diverso da nil l'utente è registrato su Agola
-		userInfo, err := service.GitGateway.GetUserInfo(gitSource, user)
-		if err != nil || userInfo == nil {
-			log.Println("Error on getting user info from git:", err)
-			InternalServerError(w)
-			return
-		}
-
-		agolaUserRef := utils.GetAgolaUserRefByGitUsername(service.AgolaApi, gitSource.AgolaRemoteSource, userInfo.Login)
-		if agolaUserRef == nil { //TODO ritornare un messaggio invece che errore generico
-			log.Println("User not found in Agola")
-			InternalServerError(w)
-			return
-		}
-
-		user.AgolaUserRef = agolaUserRef
-		err = service.AgolaApi.CreateUserToken(user)
-		if err != nil {
-			log.Println("Error in CreateUserToken:", err)
-			InternalServerError(w)
-			return
-		}
-
-		service.Db.SaveUser(user)
+	userCreator, _ := service.Db.GetUserByUserId(organization.UserIDCreator)
+	if userCreator == nil {
+		log.Println("User creator", organization.UserIDCreator, "not found")
+		InternalServerError(w)
+		return
 	}
 
 	if !internalonly {
-		err = service.AgolaApi.DeleteOrganization(organization, user)
+		err = service.AgolaApi.DeleteOrganization(organization, userCreator)
 		if err != nil {
 			InternalServerError(w)
 			return
 		}
 	}
 
-	service.GitGateway.DeleteWebHook(gitSource, user, organization.Name, organization.WebHookID)
+	service.GitGateway.DeleteWebHook(gitSource, userCreator, organization.Name, organization.WebHookID)
 	err = service.Db.DeleteOrganization(organization.AgolaOrganizationRef)
 
 	mutex.Unlock()
@@ -334,7 +335,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	if err != nil {
 		InternalServerError(w)
 	}
-	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", user.UserID)
+	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", userIdRequest)
 }
 
 // @Summary Add External User

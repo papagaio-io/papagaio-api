@@ -102,12 +102,19 @@ func (gitGateway *GitGateway) GetOrganization(gitSource *model.GitSource, user *
 	}
 }
 
-//TODO ritornare solo le organizations dove l'utente sia owner
 func (gitGateway *GitGateway) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error) {
 	if gitSource.GitType == types.Gitea {
 		return gitGateway.GiteaApi.GetOrganizations(gitSource, user)
 	} else {
 		return gitGateway.GithubApi.GetOrganizations(gitSource, user)
+	}
+}
+
+func (gitGateway *GitGateway) IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error) {
+	if gitSource.GitType == types.Gitea {
+		return gitGateway.GiteaApi.IsUserOwner(gitSource, user, gitOrgRef)
+	} else {
+		return gitGateway.GithubApi.IsUserOwner(gitSource, user, gitOrgRef)
 	}
 }
 

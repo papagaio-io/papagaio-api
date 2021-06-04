@@ -32,6 +32,7 @@ type GiteaInterface interface {
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
 	GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error)
+	IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error)
 
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
 
@@ -382,13 +383,32 @@ func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource, user *mod
 
 		retVal := make([]string, 0)
 		for _, org := range organizations {
-			retVal = append(retVal, org.Username)
+			isUserOwner, _ := giteaApi.IsUserOwner(gitSource, user, org.Username)
+			if isUserOwner {
+				retVal = append(retVal, org.Username)
+			}
 		}
 
 		return &retVal, nil
 	}
 
 	return nil, err
+}
+
+func (giteaApi *GiteaApi) IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error) {
+	teams, _ := giteaApi.GetOrganizationTeams(gitSource, user, gitOrgRef)
+	for _, team := range *teams {
+		if team.HasOwnerPermission() {
+			members, _ := giteaApi.GetTeamMembers(gitSource, user, team.ID)
+			for _, member := range *members {
+				if member.ID == int(user.ID) {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
 }
 
 func (giteaApi *GiteaApi) GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error) {

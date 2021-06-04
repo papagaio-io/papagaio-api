@@ -211,6 +211,21 @@ func (mr *MockGiteaInterfaceMockRecorder) GetOrganizations(gitSource, user inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizations", reflect.TypeOf((*MockGiteaInterface)(nil).GetOrganizations), gitSource, user)
 }
 
+// IsUserOwner mocks base method
+func (m *MockGiteaInterface) IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsUserOwner", gitSource, user, gitOrgRef)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsUserOwner indicates an expected call of IsUserOwner
+func (mr *MockGiteaInterfaceMockRecorder) IsUserOwner(gitSource, user, gitOrgRef interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUserOwner", reflect.TypeOf((*MockGiteaInterface)(nil).IsUserOwner), gitSource, user, gitOrgRef)
+}
+
 // GetUserInfo mocks base method
 func (m *MockGiteaInterface) GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error) {
 	m.ctrl.T.Helper()

@@ -1,22 +1,19 @@
 package model
 
-import (
-	"errors"
-	"regexp"
-)
+import "time"
 
 type User struct {
+	UserID        *uint  `json:"userId"`
+	GitSourceName string `json:"gitSourceName"`
+
+	ID    uint64 `json:"id"`
 	Email string `json:"email"`
-	//Role  string `json:"role"`
-}
 
-const constMailRegex = "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+	Oauth2AccessToken          string    `json:"oauth2_access_token"`
+	Oauth2RefreshToken         string    `json:"oauth2_refresh_token"`
+	Oauth2AccessTokenExpiresAt time.Time `json:"oauth_2_access_token_expires_at"`
 
-var emailRegex = regexp.MustCompile(constMailRegex)
-
-func (user User) IsValid() error {
-	if !emailRegex.MatchString(user.Email) {
-		return errors.New("invalid email format")
-	}
-	return nil
+	AgolaUserName  *string `json:"agolaUserName"`
+	AgolaTokenName *string `json:"agolaTokenName"`
+	AgolaToken     *string `json:"agolaToken"`
 }

@@ -15,6 +15,10 @@
        "DefaultGatewayURL": "http://localhost:8080"
     },
     "AdminToken": "admintoken",
+    "TokenSigning": {
+      "Method": "hmac",
+      "Key": "supersecretsigningkey"
+    },
     "LogHttpRequest": true,
     "DisableKeycloakAuthentication": false,
     "DisableSSLCertificateValidation": true,

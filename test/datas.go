@@ -26,7 +26,7 @@ func MakeOrganizationMap() *map[string]model.Organization {
 			AgolaOrganizationRef: organizationName,
 			Visibility:           types.Public,
 			GitSourceName:        "gitea",
-			UserEmailCreator:     "testuser",
+			UserIDCreator:        1,
 			BehaviourInclude:     "*",
 			BehaviourType:        types.Wildcard,
 			WebHookID:            i,

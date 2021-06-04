@@ -39,12 +39,9 @@ var cfgGitSource configGitSourceCmd
 type configGitSourceCmd struct {
 	CommonConfig
 
-	name              string
-	gitType           string
-	gitAPIURL         string
-	gitToken          string
-	agolaRemoteSource string
-	agolaToken        string
+	name      string
+	gitType   string
+	gitAPIURL string
 }
 
 func init() {
@@ -58,9 +55,6 @@ func init() {
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.name, "name", "", "gitSource name")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitType, "type", "", "git type(gitea, github)")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitAPIURL, "git-api-url", "", "api url")
-	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitToken, "git-token", "", "git token")
-	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.agolaRemoteSource, "agola-remotesource", "", "Agola remotesource")
-	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.agolaToken, "agola-token", "", "Agola token")
 }
 
 func addGitSource(cmd *cobra.Command, args []string) {
@@ -92,28 +86,10 @@ func addGitSource(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if len(cfgGitSource.gitToken) == 0 {
-		cmd.PrintErrln("git-token not valid")
-		os.Exit(1)
-	}
-
-	if len(cfgGitSource.agolaRemoteSource) == 0 {
-		cmd.PrintErrln("agola-remotesource not valid")
-		os.Exit(1)
-	}
-
-	if len(cfgGitSource.agolaToken) == 0 {
-		cmd.PrintErrln("agola-token not valid")
-		os.Exit(1)
-	}
-
 	gitSource := model.GitSource{
-		Name:              cfgGitSource.name,
-		GitType:           types.GitType(cfgGitSource.gitType),
-		GitAPIURL:         cfgGitSource.gitAPIURL,
-		GitToken:          cfgGitSource.gitToken,
-		AgolaRemoteSource: cfgGitSource.agolaRemoteSource,
-		AgolaToken:        cfgGitSource.agolaToken,
+		Name:      cfgGitSource.name,
+		GitType:   types.GitType(cfgGitSource.gitType),
+		GitAPIURL: cfgGitSource.gitAPIURL,
 	}
 	data, _ := json.Marshal(gitSource)
 
@@ -184,21 +160,12 @@ func updateGitSource(cmd *cobra.Command, args []string) {
 	if len(cfgGitSource.gitAPIURL) != 0 {
 		requestDto.GitAPIURL = &cfgGitSource.gitAPIURL
 	}
-	if len(cfgGitSource.gitToken) != 0 {
-		requestDto.GitToken = &cfgGitSource.gitToken
-	}
 	if len(cfgGitSource.gitType) != 0 {
 		if strings.Compare(cfgGitSource.gitType, "gitea") != 0 && strings.Compare(cfgGitSource.gitType, "github") != 0 {
 			cmd.PrintErrln("type must be gitea or github")
 			os.Exit(1)
 		}
-		requestDto.GitType = (*types.GitType)(&cfgGitSource.gitToken)
-	}
-	if len(cfgGitSource.agolaRemoteSource) != 0 {
-		requestDto.AgolaRemoteSource = &cfgGitSource.agolaRemoteSource
-	}
-	if len(cfgGitSource.agolaToken) != 0 {
-		requestDto.AgolaToken = &cfgGitSource.agolaToken
+		requestDto.GitType = (*types.GitType)(&cfgGitSource.gitType)
 	}
 	data, _ := json.Marshal(requestDto)
 

@@ -1,9 +1,15 @@
 package dto
 
+import "strings"
+
 type TeamResponseDto struct {
 	ID         int    `json:"id"`
 	Name       string `json:"name"`
 	Permission string `json:"permission"`
+}
+
+func (team *TeamResponseDto) HasOwnerPermission() bool {
+	return strings.Compare(team.Permission, "owner") == 0
 }
 
 type UserTeamResponseDto struct {

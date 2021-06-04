@@ -35,6 +35,7 @@ type GithubInterface interface {
 	GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
 	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto
 	GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error)
+	IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error)
 
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
 
@@ -259,10 +260,24 @@ func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *m
 
 	retVal := make([]string, 0)
 	for _, org := range organizations {
-		retVal = append(retVal, *org.Login)
+		isUserOwner, _ := githubApi.IsUserOwner(gitSource, user, *org.Login)
+		if isUserOwner {
+			retVal = append(retVal, *org.Login)
+		}
 	}
 
 	return &retVal, nil
+}
+
+func (githubApi *GithubApi) IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error) {
+	githubUsers, _ := githubApi.GetOrganizationMembers(gitSource, user, gitOrgRef)
+	for _, u := range *githubUsers {
+		if u.ID == int(user.ID) {
+			return u.HasOwnerPermission(), nil
+		}
+	}
+
+	return false, nil
 }
 
 func (githubApi *GithubApi) GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error) {

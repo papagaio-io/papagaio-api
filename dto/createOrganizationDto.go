@@ -75,4 +75,6 @@ const (
 	PapagaioOrganizationExistsError CreateOrganizationResponseStatusCode = "ORG_PAPAGAIO_EXISTS"
 	GitOrganizationNotFoundError    CreateOrganizationResponseStatusCode = "ORG_GIT_NOT_FOUND"
 	AgolaRefNotValid                CreateOrganizationResponseStatusCode = "AGOLA_REF_NOT_VALID"
+	UserNotOwnerError               CreateOrganizationResponseStatusCode = "USER_NOT_OWNER"
+	UserAgolaRefNotFoundError       CreateOrganizationResponseStatusCode = "USER_AGOLAREF_NOT_FOUND"
 )

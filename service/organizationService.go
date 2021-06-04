@@ -102,7 +102,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	org := &model.Organization{}
 	org.Name = req.Name
 	org.AgolaOrganizationRef = req.AgolaRef
-	org.GitSourceName = req.GitSourceName
+	org.GitSourceName = user.GitSourceName
 	org.Visibility = req.Visibility
 	org.BehaviourType = req.BehaviourType
 	org.BehaviourInclude = req.BehaviourInclude
@@ -126,6 +126,32 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	//TODO verificare se l'utente è owner della organization, altrimenti ritorno un errore
+
+	if user.AgolaUserRef == nil { //Se diverso da nil l'utente è registrato su Agola
+		userInfo, err := service.GitGateway.GetUserInfo(gitSource, user)
+		if err != nil || userInfo == nil {
+			log.Println("Error on getting user info from git:", err)
+			InternalServerError(w)
+			return
+		}
+
+		agolaUserRef := utils.GetAgolaUserRefByGitUsername(service.AgolaApi, gitSource.AgolaRemoteSource, userInfo.Login)
+		if agolaUserRef == nil { //TODO ritornare un messaggio invece che errore generico
+			log.Println("User not found in Agola")
+			InternalServerError(w)
+			return
+		}
+
+		user.AgolaUserRef = agolaUserRef
+		err = service.AgolaApi.CreateUserToken(user)
+		if err != nil {
+			log.Println("Error in CreateUserToken:", err)
+			InternalServerError(w)
+			return
+		}
+
+		service.Db.SaveUser(user)
+	}
 
 	mutex := utils.ReserveOrganizationMutex(org.AgolaOrganizationRef, service.CommonMutex)
 	mutex.Lock()
@@ -255,23 +281,39 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	//TODO verificare se l'utente è owner della organization, altrimenti ritorno errore
-
-	if user.AgolaUserName == nil { //Se diverso da nil l'utente è registrato su Agola
-		//TODO verifico se l'utente è registrato su Agola, con questo remotesource, altrimenti ritorno errore
-
-		//TODO
-		//Se l'utente è registrato su Agola salvo lo username in user.AgolaUserName
-		//Creo il token per l'utente e lo salvo con il nome del token
-
-		service.Db.SaveUser(user)
-	}
-
 	gitSource, err := service.Db.GetGitSourceByName(organization.GitSourceName)
 	if err != nil || gitSource == nil {
 		log.Println("gitSource", organization.GitSourceName, "not found in db")
 		InternalServerError(w)
 		return
+	}
+
+	//TODO verificare se l'utente è owner della organization, altrimenti ritorno errore
+
+	if user.AgolaUserRef == nil { //Se diverso da nil l'utente è registrato su Agola
+		userInfo, err := service.GitGateway.GetUserInfo(gitSource, user)
+		if err != nil || userInfo == nil {
+			log.Println("Error on getting user info from git:", err)
+			InternalServerError(w)
+			return
+		}
+
+		agolaUserRef := utils.GetAgolaUserRefByGitUsername(service.AgolaApi, gitSource.AgolaRemoteSource, userInfo.Login)
+		if agolaUserRef == nil { //TODO ritornare un messaggio invece che errore generico
+			log.Println("User not found in Agola")
+			InternalServerError(w)
+			return
+		}
+
+		user.AgolaUserRef = agolaUserRef
+		err = service.AgolaApi.CreateUserToken(user)
+		if err != nil {
+			log.Println("Error in CreateUserToken:", err)
+			InternalServerError(w)
+			return
+		}
+
+		service.Db.SaveUser(user)
 	}
 
 	if !internalonly {

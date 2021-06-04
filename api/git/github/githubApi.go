@@ -278,7 +278,9 @@ func (githubApi *GithubApi) GetUserInfo(gitSource *model.GitSource, user *model.
 		Login:     *userInfo.Login,
 		Email:     *userInfo.Email,
 		FullName:  *userInfo.Name,
-		AvatarURL: *userInfo.AvatarURL}
+		AvatarURL: *userInfo.AvatarURL,
+		IsAdmin:   *userInfo.SiteAdmin,
+	}
 
 	return response, nil
 }

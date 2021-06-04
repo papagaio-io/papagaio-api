@@ -13,7 +13,7 @@ type User struct {
 	Oauth2RefreshToken         string    `json:"oauth2_refresh_token"`
 	Oauth2AccessTokenExpiresAt time.Time `json:"oauth_2_access_token_expires_at"`
 
-	AgolaUserName  *string `json:"agolaUserName"`
+	AgolaUserRef   *string `json:"agolaUserRef"`
 	AgolaTokenName *string `json:"agolaTokenName"`
 	AgolaToken     *string `json:"agolaToken"`
 }

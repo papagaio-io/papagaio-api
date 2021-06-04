@@ -298,3 +298,17 @@ func (mr *MockAgolaApiInterfaceMockRecorder) GetOrganizations() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizations", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetOrganizations))
 }
+
+// CreateUserToken mocks base method
+func (m *MockAgolaApiInterface) CreateUserToken(user *model.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUserToken", user)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateUserToken indicates an expected call of CreateUserToken
+func (mr *MockAgolaApiInterfaceMockRecorder) CreateUserToken(user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserToken", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateUserToken), user)
+}

@@ -170,3 +170,11 @@ type OrganizationDto struct {
 	Name       string `json:"name"`
 	Visibility string `json:"visibility"`
 }
+
+type TokenRequestDto struct {
+	TokenName string `json:"token_name"`
+}
+
+type TokenResponseDto struct {
+	Token string `json:"token"`
+}

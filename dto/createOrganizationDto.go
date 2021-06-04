@@ -14,8 +14,6 @@ type CreateOrganizationRequestDto struct {
 	AgolaRef   string               `json:"agolaRef"`
 	Visibility types.VisibilityType `json:"visibility"`
 
-	GitSourceName string `json:"gitSourceName"`
-
 	BehaviourInclude string              `json:"behaviourInclude"`
 	BehaviourExclude string              `json:"behaviourExclude"`
 	BehaviourType    types.BehaviourType `json:"behaviourType"`
@@ -28,7 +26,7 @@ func (org *CreateOrganizationRequestDto) IsAgolaRefValid() bool {
 }
 
 func (org *CreateOrganizationRequestDto) IsValid() error {
-	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.GitSourceName) > 0 && len(org.AgolaRef) > 0 && !strings.Contains(org.AgolaRef, ".") {
+	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.AgolaRef) > 0 && !strings.Contains(org.AgolaRef, ".") {
 		return nil
 	}
 	return errors.New("fields not valid")

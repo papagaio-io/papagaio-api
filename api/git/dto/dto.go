@@ -49,4 +49,5 @@ type UserInfoDto struct {
 	Email     string `json:"email"`
 	FullName  string `json:"full_name"`
 	AvatarURL string `json:"avatar_url"`
+	IsAdmin   bool   `json:"is_admin"`
 }

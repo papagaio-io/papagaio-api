@@ -42,8 +42,8 @@ func serve(cmd *cobra.Command, args []string) {
 
 	db := repository.NewAppDb(config.Config)
 	tr := utils.ConfigUtils{Db: &db}
-	agolaApi := agola.AgolaApi{}
-	gitGateway := git.GitGateway{GiteaApi: &gitea.GiteaApi{}, GithubApi: &github.GithubApi{}}
+	agolaApi := agola.AgolaApi{Db: &db}
+	gitGateway := git.GitGateway{GiteaApi: &gitea.GiteaApi{Db: &db}, GithubApi: &github.GithubApi{Db: &db}}
 
 	commonMutex := utils.NewEventMutex()
 

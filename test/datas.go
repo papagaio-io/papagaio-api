@@ -7,6 +7,12 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
+func MakeUser() *model.User {
+	userId := uint(1)
+	agolaUserRef := "AgolaUserRef"
+	return &model.User{UserID: &userId, GitSourceName: "gitea", ID: 1, Email: "email", AgolaUserRef: &agolaUserRef}
+}
+
 func MakeGitSourceMap() *map[string]model.GitSource {
 	retVal := make(map[string]model.GitSource)
 

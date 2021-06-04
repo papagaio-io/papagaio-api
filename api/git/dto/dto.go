@@ -33,3 +33,20 @@ type OrganizationDto struct {
 	AvatarURL string
 	ID        int
 }
+
+type AccessTokenRequestDto struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	GrantType    string `json:"grant_type"`
+	RefreshToken string `json:"refresh_token"`
+	Code         string `json:"code"`
+	RedirectURL  string `json:"redirect_uri"`
+}
+
+type UserInfoDto struct {
+	ID        int64  `json:"id"`
+	Login     string `json:"login"`
+	Email     string `json:"email"`
+	FullName  string `json:"full_name"`
+	AvatarURL string `json:"avatar_url"`
+}

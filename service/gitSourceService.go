@@ -5,9 +5,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
@@ -130,14 +132,8 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 	if req.AgolaRemoteSource != nil {
 		oldGitSource.AgolaRemoteSource = *req.AgolaRemoteSource
 	}
-	if req.AgolaToken != nil {
-		oldGitSource.AgolaToken = *req.AgolaToken
-	}
 	if req.GitAPIURL != nil {
 		oldGitSource.GitAPIURL = *req.GitAPIURL
-	}
-	if req.GitToken != nil {
-		oldGitSource.GitToken = *req.GitToken
 	}
 	if req.GitType != nil {
 		oldGitSource.GitType = *req.GitType
@@ -171,7 +167,15 @@ func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *h
 		return
 	}
 
-	organizations, err := service.GitGateway.GetOrganizations(gitSource)
+	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 32)
+	user, _ := service.Db.GetUserByUserId(uint(userId))
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
+	organizations, err := service.GitGateway.GetOrganizations(gitSource, user)
 	if err != nil {
 		log.Println("GitGateway GetOrganizations error:", err.Error())
 		InternalServerError(w)

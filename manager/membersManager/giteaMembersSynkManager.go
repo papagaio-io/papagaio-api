@@ -12,15 +12,15 @@ import (
 )
 
 //Sincronizzo i membri della organization tra gitea e agola
-func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
+func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, user *model.User) {
 	log.Println("SyncMembersForGitea start")
 
-	gitTeams, _ := gitGateway.GetOrganizationTeams(gitSource, organization.Name)
+	gitTeams, _ := gitGateway.GetOrganizationTeams(gitSource, user, organization.Name)
 	gitTeamOwners := make(map[int]dto.UserTeamResponseDto)
 	gitTeamMembers := make(map[int]dto.UserTeamResponseDto)
 
 	for _, team := range *gitTeams {
-		teamMembers, _ := gitGateway.GetTeamMembers(gitSource, organization.Name, team.ID)
+		teamMembers, _ := gitGateway.GetTeamMembers(gitSource, user, organization.Name, team.ID)
 
 		var teamToCheck *map[int]dto.UserTeamResponseDto
 		if strings.Compare(team.Permission, "owner") == 0 {

@@ -75,6 +75,14 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 	}
 
+	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 32)
+	user, _ := service.Db.GetUserByUserId(uint(userId))
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	var req *dto.CreateOrganizationRequestDto
 	json.NewDecoder(r.Body).Decode(&req)
 
@@ -108,7 +116,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	gitOrgExists := service.GitGateway.CheckOrganizationExists(gitSource, org.Name)
+	gitOrgExists := service.GitGateway.CheckOrganizationExists(gitSource, user, org.Name)
 	log.Println("gitOrgExists:", gitOrgExists)
 	if !gitOrgExists {
 		log.Println("failed to find organization", org.Name, "from git")
@@ -116,6 +124,8 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		JSONokResponse(w, response)
 		return
 	}
+
+	//TODO verificare se l'utente è owner della organization, altrimenti ritorno un errore
 
 	mutex := utils.ReserveOrganizationMutex(org.AgolaOrganizationRef, service.CommonMutex)
 	mutex.Lock()
@@ -142,9 +152,9 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	org.UserEmailCreator = r.Header.Get(controller.XAuthEmail)
+	org.UserIDCreator = *user.UserID
 
-	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, org.Name, org.AgolaOrganizationRef)
+	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, user, org.Name, org.AgolaOrganizationRef)
 	if err != nil {
 		log.Println("failed to creare webhook")
 		InternalServerError(w)
@@ -156,7 +166,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	if agolaOrganizationExists {
 		log.Println("organization", org.AgolaOrganizationRef, "just exists in Agola")
 		if !forceCreate {
-			service.GitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
+			service.GitGateway.DeleteWebHook(gitSource, user, org.Name, org.WebHookID)
 			response := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaOrganizationExistsError}
 			JSONokResponse(w, response)
 			return
@@ -166,13 +176,13 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		org.ID, err = service.AgolaApi.CreateOrganization(org, org.Visibility)
 		if err != nil {
 			log.Println("failed to create organization", org.AgolaOrganizationRef, "in agola:", err)
-			service.GitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
+			service.GitGateway.DeleteWebHook(gitSource, user, org.Name, org.WebHookID)
 			InternalServerError(w)
 			return
 		}
 	}
 
-	log.Println("Organization created: ", org.AgolaOrganizationRef, " by:", org.UserEmailCreator)
+	log.Println("Organization created: ", org.AgolaOrganizationRef, " by:", org.UserIDCreator)
 	log.Println("WebHook created: ", org.WebHookID)
 
 	err = service.Db.SaveOrganization(org)
@@ -182,7 +192,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	manager.StartOrganizationCheckout(service.Db, org, gitSource, service.AgolaApi, service.GitGateway)
+	manager.StartOrganizationCheckout(service.Db, user, org, gitSource, service.AgolaApi, service.GitGateway)
 
 	mutex.Unlock()
 	utils.ReleaseOrganizationMutex(org.AgolaOrganizationRef, service.CommonMutex)
@@ -224,6 +234,14 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		}
 	}
 
+	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 32)
+	user, _ := service.Db.GetUserByUserId(uint(userId))
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
@@ -237,6 +255,18 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
+	//TODO verificare se l'utente è owner della organization, altrimenti ritorno errore
+
+	if user.AgolaUserName == nil { //Se diverso da nil l'utente è registrato su Agola
+		//TODO verifico se l'utente è registrato su Agola, con questo remotesource, altrimenti ritorno errore
+
+		//TODO
+		//Se l'utente è registrato su Agola salvo lo username in user.AgolaUserName
+		//Creo il token per l'utente e lo salvo con il nome del token
+
+		service.Db.SaveUser(user)
+	}
+
 	gitSource, err := service.Db.GetGitSourceByName(organization.GitSourceName)
 	if err != nil || gitSource == nil {
 		log.Println("gitSource", organization.GitSourceName, "not found in db")
@@ -245,14 +275,14 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	}
 
 	if !internalonly {
-		err = service.AgolaApi.DeleteOrganization(organization, gitSource.AgolaToken)
+		err = service.AgolaApi.DeleteOrganization(organization, user)
 		if err != nil {
 			InternalServerError(w)
 			return
 		}
 	}
 
-	service.GitGateway.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)
+	service.GitGateway.DeleteWebHook(gitSource, user, organization.Name, organization.WebHookID)
 	err = service.Db.DeleteOrganization(organization.AgolaOrganizationRef)
 
 	mutex.Unlock()
@@ -262,7 +292,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	if err != nil {
 		InternalServerError(w)
 	}
-	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", organization.UserEmailCreator)
+	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", user.UserID)
 }
 
 // @Summary Add External User
@@ -365,7 +395,8 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 	retVal := make([]dto.OrganizationDto, 0)
 	for _, organization := range *organizations {
 		gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
-		retVal = append(retVal, manager.GetOrganizationDto(&organization, gitsource, service.GitGateway))
+		user, _ := service.Db.GetUserByUserId(organization.UserIDCreator)
+		retVal = append(retVal, manager.GetOrganizationDto(user, &organization, gitsource, service.GitGateway))
 	}
 
 	JSONokResponse(w, retVal)
@@ -393,8 +424,9 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 	}
 
 	gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
+	user, _ := service.Db.GetUserByUserId(organization.UserIDCreator)
 
-	JSONokResponse(w, manager.GetOrganizationDto(organization, gitsource, service.GitGateway))
+	JSONokResponse(w, manager.GetOrganizationDto(user, organization, gitsource, service.GitGateway))
 }
 
 // @Summary Get Report from a specific organization/project

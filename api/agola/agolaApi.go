@@ -11,6 +11,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
@@ -33,9 +34,15 @@ type AgolaApiInterface interface {
 	GetRemoteSource(agolaRemoteSource string) (*RemoteSourceDto, error)
 	GetUsers() (*[]UserDto, error)
 	GetOrganizations() (*[]OrganizationDto, error)
+
+	CreateUserToken(user *model.User) error
 }
 
-type AgolaApi struct{}
+type AgolaApi struct {
+	Db repository.Database
+}
+
+const baseTokenName string = "papagaioToken"
 
 func (agolaApi *AgolaApi) GetOrganizations() (*[]OrganizationDto, error) {
 	client := &http.Client{}
@@ -479,4 +486,54 @@ func (agolaApi *AgolaApi) GetUsers() (*[]UserDto, error) {
 	json.Unmarshal(body, &jsonResponse)
 
 	return &jsonResponse, nil
+}
+
+func (agolaApi *AgolaApi) CreateUserToken(user *model.User) error {
+	log.Println("RefreshUserToken user", user.AgolaUserRef)
+
+	if user.UserID == nil {
+		log.Println("UserID is nil")
+		return errors.New("UsersID is nil")
+	}
+	if user.AgolaUserRef == nil {
+		log.Println("AgolaUserRef is nil")
+		return errors.New("AgolaUserRef is nil")
+	}
+
+	if user.AgolaTokenName == nil {
+		tokenName := baseTokenName
+		user.AgolaTokenName = &tokenName
+	}
+
+	client := &http.Client{}
+	URLApi := getCreateTokenUrl(*user.AgolaUserRef)
+
+	tokenRequest := &TokenRequestDto{
+		TokenName: *user.AgolaTokenName,
+	}
+	data, _ := json.Marshal(tokenRequest)
+	reqBody := strings.NewReader(string(data))
+
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var jsonResponse TokenResponseDto
+	json.Unmarshal(body, &jsonResponse)
+
+	user.AgolaToken = &jsonResponse.Token
+	agolaApi.Db.SaveUser(user)
+
+	return nil
 }

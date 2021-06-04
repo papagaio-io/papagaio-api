@@ -21,6 +21,8 @@ const remoteSourcePath string = "%s/api/v1alpha/remotesources/%s"
 const usersPath string = "%s/api/v1alpha/users"
 const organizationsPath = "%s/api/v1alpha/orgs"
 
+const createTokenPath = "%s/api/v1alpha/users/%s/tokens"
+
 func getOrganizationsUrl() string {
 	return fmt.Sprintf(organizationsPath, config.Config.Agola.AgolaAddr)
 }
@@ -94,4 +96,8 @@ func getRemoteSourceUrl(agolaRemoteSource string) string {
 
 func getUsersUrl() string {
 	return fmt.Sprintf(usersPath, config.Config.Agola.AgolaAddr)
+}
+
+func getCreateTokenUrl(agolaUserName string) string {
+	return fmt.Sprintf(createTokenPath, config.Config.Agola.AgolaAddr, agolaUserName)
 }

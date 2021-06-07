@@ -308,7 +308,8 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	}
 	if !isOwner {
 		log.Println("User", userRequest.UserID, "is not owner")
-		InternalServerError(w) //TODO rifare con un messaggio di errore specifico
+		response := dto.DeleteOrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		JSONokResponse(w, response)
 		return
 	}
 
@@ -336,8 +337,12 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 
 	if err != nil {
 		InternalServerError(w)
+		return
 	}
 	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", userIdRequest)
+
+	response := dto.DeleteOrganizationResponseDto{ErrorCode: dto.NoError}
+	JSONokResponse(w, response)
 }
 
 // @Summary Add External User

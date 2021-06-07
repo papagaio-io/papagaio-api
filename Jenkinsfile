@@ -11,7 +11,7 @@ podTemplate(
     containers: [
         containerTemplate(
             name: 'docker',
-            image: 'registry.sorintdev.it/docker:20.10.6',
+            image: 'docker:20.10.6',
             command: 'cat',
             ttyEnabled: true)
     ],
@@ -101,14 +101,15 @@ podTemplate(
             }
 
             container('docker') {
-                stage('Docker Image and Push') {
-                    sh "docker login"
-                    docker.withRegistry('https://registry.sorintdev.it', 'nexus') {
+                stage('Docker') {
+                    docker.withRegistry('', 'hub') {
                         def img = docker.build(appName, '.')
-                        if (branch == 'stable') {
-                            img.push("${version}")
-                        } else {
-                            img.push("latest")
+                        docker.withRegistry('https://registry.sorintdev.it', 'nexus') {
+                            if (branch == 'stable') {
+                                img.push("${version}")
+                            } else {
+                                img.push("latest")
+                            }
                         }
                     }
                 }

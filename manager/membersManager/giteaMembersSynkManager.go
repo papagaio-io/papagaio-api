@@ -72,6 +72,8 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	//Verifico i membri eliminati su git
 
 	for _, agolaMember := range agolaOrganizationMembers.Members {
+		log.Println("Check user in git:", agolaMember)
+
 		if findGiteaMemberByAgolaUserRef(gitTeamOwners, agolaUsersMap, agolaMember.Username) == nil && findGiteaMemberByAgolaUserRef(gitTeamMembers, agolaUsersMap, agolaMember.Username) == nil {
 			agolaApi.RemoveOrganizationMember(organization, agolaMember.Username)
 		}

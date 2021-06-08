@@ -280,7 +280,7 @@ func (agolaApi *AgolaApi) RemoveOrganizationMember(organization *model.Organizat
 
 	if !api.IsResponseOK(resp.StatusCode) {
 		respMessage, _ := ioutil.ReadAll(resp.Body)
-		log.Println("RemoveOrganizationMember respMessage:", respMessage)
+		log.Println("RemoveOrganizationMember respMessage:", string(respMessage))
 		return errors.New(string(respMessage))
 	}
 

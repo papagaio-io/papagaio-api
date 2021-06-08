@@ -155,7 +155,7 @@ func updateGitSource(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	requestDto := dto.UpdateRemoteSourceRequestDto{}
+	requestDto := dto.UpdateGitSourceRequestDto{}
 
 	if len(cfgGitSource.gitAPIURL) != 0 {
 		requestDto.GitAPIURL = &cfgGitSource.gitAPIURL

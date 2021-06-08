@@ -17,6 +17,7 @@ const listMetadataPath string = "%s/api/v1/repos/%s/%s/contents/%s?ref=%s"
 const commitMetadataPath string = "%s/api/v1/repos/%s/%s/commits?sha=%s&page=1&limit=1"
 const organizationsPath string = "%s/api/v1/user/orgs"
 const userInfoPath string = "%s/api/vi/user"
+const createOauth2AppPath string = "%s/api/vi/user/applications/oauth2"
 
 const oauth2AuthorizePath string = "%s/login/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=&state=%s"
 const oauth2AccessTokenPath string = "%s/login/oauth/access_token"
@@ -75,4 +76,8 @@ func GetOauth2AuthorizeUrl(gitApiUrl string, gitClientId string, redirectUrl str
 
 func getOauth2AccessTokenUrl(gitApiUrl string) string {
 	return fmt.Sprintf(oauth2AccessTokenPath, gitApiUrl)
+}
+
+func getCreateOauth2AppUrl(gitApiUrl string) string {
+	return fmt.Sprintf(createOauth2AppPath, gitApiUrl)
 }

@@ -312,3 +312,32 @@ func (mr *MockAgolaApiInterfaceMockRecorder) CreateUserToken(user interface{}) *
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserToken", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateUserToken), user)
 }
+
+// GetRemoteSources mocks base method
+func (m *MockAgolaApiInterface) GetRemoteSources() (*[]agola.RemoteSourceDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRemoteSources")
+	ret0, _ := ret[0].(*[]agola.RemoteSourceDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRemoteSources indicates an expected call of GetRemoteSources
+func (mr *MockAgolaApiInterfaceMockRecorder) GetRemoteSources() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteSources", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetRemoteSources))
+}
+
+// CreateRemoteSource mocks base method
+func (m *MockAgolaApiInterface) CreateRemoteSource(remoteSourceName, gitType, apiUrl, oauth2ClientId, oauth2ClientSecret string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateRemoteSource", remoteSourceName, gitType, apiUrl, oauth2ClientId, oauth2ClientSecret)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateRemoteSource indicates an expected call of CreateRemoteSource
+func (mr *MockAgolaApiInterfaceMockRecorder) CreateRemoteSource(remoteSourceName, gitType, apiUrl, oauth2ClientId, oauth2ClientSecret interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRemoteSource", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateRemoteSource), remoteSourceName, gitType, apiUrl, oauth2ClientId, oauth2ClientSecret)
+}

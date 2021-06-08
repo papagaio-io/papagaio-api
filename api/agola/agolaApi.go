@@ -36,6 +36,8 @@ type AgolaApiInterface interface {
 	GetOrganizations() (*[]OrganizationDto, error)
 
 	CreateUserToken(user *model.User) error
+	GetRemoteSources() (*[]RemoteSourceDto, error)
+	CreateRemoteSource(remoteSourceName string, gitType string, apiUrl string, oauth2ClientId string, oauth2ClientSecret string) error
 }
 
 type AgolaApi struct {
@@ -534,6 +536,69 @@ func (agolaApi *AgolaApi) CreateUserToken(user *model.User) error {
 
 	user.AgolaToken = &jsonResponse.Token
 	agolaApi.Db.SaveUser(user)
+
+	return nil
+}
+
+func (agolaApi *AgolaApi) GetRemoteSources() (*[]RemoteSourceDto, error) {
+	log.Println("GetRemoteSources start")
+
+	client := &http.Client{}
+	URLApi := getRemoteSourcesUrl()
+
+	req, _ := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var jsonResponse []RemoteSourceDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse, nil
+}
+
+func (agolaApi *AgolaApi) CreateRemoteSource(remoteSourceName string, gitType string, apiUrl string, oauth2ClientId string, oauth2ClientSecret string) error {
+	log.Println("CreateRemoteSource start")
+
+	client := &http.Client{}
+	URLApi := getRemoteSourcesUrl()
+
+	projectRequest := &CreateRemoteSourceRequestDto{
+		Name:                remoteSourceName,
+		APIURL:              apiUrl,
+		Type:                gitType,
+		AuthType:            "oauth2",
+		SkipSSHHostKeyCheck: true,
+		SkipVerify:          false,
+		Oauth2ClientID:      oauth2ClientId,
+		Oauth2ClientSecret:  oauth2ClientSecret,
+	}
+	data, _ := json.Marshal(projectRequest)
+	reqBody := strings.NewReader(string(data))
+
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
+	}
 
 	return nil
 }

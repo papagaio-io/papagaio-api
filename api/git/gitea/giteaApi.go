@@ -35,6 +35,7 @@ type GiteaInterface interface {
 	IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error)
 
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
+	CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*CreateOauth2AppResponseDto, error)
 
 	GetOauth2AccessToken(gitSource *model.GitSource, code string) (*oauth2.Token, error)
 	RefreshToken(gitSource *model.GitSource, refreshToken string) (*oauth2.Token, error)
@@ -484,6 +485,39 @@ func (giteaApi *GiteaApi) RefreshToken(gitSource *model.GitSource, refreshToken 
 	}
 
 	return nil, err
+}
+
+func (giteaApi *GiteaApi) CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*CreateOauth2AppResponseDto, error) {
+	client, _ := giteaApi.getClient(gitSource, user)
+	URLApi := getCreateOauth2AppUrl(gitSource.GitAPIURL)
+
+	createOauth2AppRequest := CreateOauth2AppRequestDto{
+		Name:         "Agola",
+		RedirectUris: []string{config.Config.Agola.AgolaAddr + "/oauth2/callback"},
+	}
+	data, _ := json.Marshal(createOauth2AppRequest)
+
+	reqBody := strings.NewReader(string(data))
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("content-type", "application/json")
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var response CreateOauth2AppResponseDto
+	json.Unmarshal(body, &response)
+
+	return &response, err
 }
 
 ///////////////

@@ -234,6 +234,8 @@ func (agolaApi *AgolaApi) DeleteProject(organization *model.Organization, agolaP
 func (agolaApi *AgolaApi) AddOrUpdateOrganizationMember(organization *model.Organization, agolaUserRef string, role string) error {
 	log.Println("AddOrUpdateOrganizationMember start")
 
+	log.Println("AddOrUpdateOrganizationMember", agolaUserRef, "for", organization.Name, "with role:", role)
+
 	var err error
 	client := &http.Client{}
 	URLApi := getAddOrgMemberUrl(organization.AgolaOrganizationRef, agolaUserRef)
@@ -258,6 +260,8 @@ func (agolaApi *AgolaApi) AddOrUpdateOrganizationMember(organization *model.Orga
 }
 
 func (agolaApi *AgolaApi) RemoveOrganizationMember(organization *model.Organization, agolaUserRef string) error {
+	log.Println("RemoveOrganizationMember", organization.Name, "with agolaUserRef", agolaUserRef)
+
 	var err error
 	client := &http.Client{}
 	URLApi := getAddOrgMemberUrl(organization.AgolaOrganizationRef, agolaUserRef)
@@ -272,8 +276,11 @@ func (agolaApi *AgolaApi) RemoveOrganizationMember(organization *model.Organizat
 	}
 	defer resp.Body.Close()
 
+	log.Println("RemoveOrganizationMember StatusCode:", resp.StatusCode)
+
 	if !api.IsResponseOK(resp.StatusCode) {
 		respMessage, _ := ioutil.ReadAll(resp.Body)
+		log.Println("RemoveOrganizationMember respMessage:", respMessage)
 		return errors.New(string(respMessage))
 	}
 

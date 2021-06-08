@@ -3,8 +3,8 @@ package model
 import "time"
 
 type User struct {
-	UserID        *uint  `json:"userId"`
-	GitSourceName string `json:"gitSourceName"`
+	UserID        *uint64 `json:"userId"`
+	GitSourceName string  `json:"gitSourceName"`
 
 	ID      uint64 `json:"id"`
 	Email   string `json:"email"`

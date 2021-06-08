@@ -76,7 +76,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 32)
-	user, _ := service.Db.GetUserByUserId(uint(userId))
+	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")
 		InternalServerError(w)
@@ -273,7 +273,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	}
 
 	userIdRequest, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 32)
-	userRequest, _ := service.Db.GetUserByUserId(uint(userIdRequest))
+	userRequest, _ := service.Db.GetUserByUserId(userIdRequest)
 	if userRequest == nil {
 		log.Println("User", userRequest, "not found")
 		InternalServerError(w)

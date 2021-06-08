@@ -225,8 +225,8 @@ func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *h
 		return
 	}
 
-	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 32)
-	user, _ := service.Db.GetUserByUserId(uint(userId))
+	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 64)
+	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")
 		InternalServerError(w)

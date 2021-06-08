@@ -8,7 +8,7 @@ import (
 )
 
 func MakeUser() *model.User {
-	userId := uint(1)
+	userId := uint64(1)
 	agolaUserRef := "AgolaUserRef"
 	return &model.User{UserID: &userId, GitSourceName: "gitea", ID: 1, Email: "email", AgolaUserRef: &agolaUserRef}
 }

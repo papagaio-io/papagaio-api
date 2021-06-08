@@ -10,7 +10,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
-func (db *AppDb) GetUserByUserId(userId uint) (*model.User, error) {
+func (db *AppDb) GetUserByUserId(userId uint64) (*model.User, error) {
 	var user *model.User
 
 	dst := make([]byte, 0)
@@ -74,7 +74,17 @@ func (db *AppDb) GetUserByGitSourceNameAndID(gitSourceName string, id uint64) (*
 
 func (db *AppDb) SaveUser(user *model.User) (*model.User, error) {
 	if user.UserID == nil {
-		//TODO autoincrement
+		seq, err := db.DB.GetSequence([]byte("sequence/user"), 100000)
+		if err != nil {
+			return nil, err
+		}
+
+		id, err := seq.Next()
+		seq.Release()
+		if err != nil {
+			return nil, err
+		}
+		user.UserID = &id
 	}
 
 	key := "user/" + fmt.Sprint(*user.UserID)

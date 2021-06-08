@@ -197,7 +197,7 @@ func handleLoggedUserRoutes(h http.Handler) http.Handler {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		userId := claims["sub"].(uint)
+		userId := claims["sub"].(uint64)
 
 		exp := claims["sub"].(int64)
 		expTime := time.Unix(exp, 0)
@@ -255,7 +255,7 @@ func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 			}
 
 			claims := token.Claims.(jwt.MapClaims)
-			userId := claims["sub"].(uint)
+			userId := claims["sub"].(uint64)
 
 			exp := claims["sub"].(int64)
 			expTime := time.Unix(exp, 0)

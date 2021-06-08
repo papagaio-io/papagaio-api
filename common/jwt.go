@@ -25,7 +25,7 @@ func GenerateOauth2JWTToken(sd *TokenSigningData, remoteSourceName string) (stri
 }
 
 //Token fornito al front-end come risposta nella callback(login)
-func GenerateLoginJWTToken(sd *TokenSigningData, userID uint) (string, error) {
+func GenerateLoginJWTToken(sd *TokenSigningData, userID uint64) (string, error) {
 	return GenerateGenericJWTToken(sd, jwt.MapClaims{
 		"sub": userID,
 		"exp": time.Now().Add(sd.Duration).Unix(),

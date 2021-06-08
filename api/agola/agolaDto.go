@@ -39,9 +39,8 @@ type OrganizationMembersResponseDto struct {
 }
 
 type MemberDto struct {
-	ID       string   `json:"id"`
-	Username string   `json:"username"`
-	Role     RoleType `json:"role"`
+	User UserDto  `json:"user"`
+	Role RoleType `json:"role"`
 }
 
 type RoleType string

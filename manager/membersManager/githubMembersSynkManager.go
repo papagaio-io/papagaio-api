@@ -28,8 +28,8 @@ func SyncMembersForGithub(organization *model.Organization, gitSource *model.Git
 
 	//Verifico i membri eliminati su git
 	for _, agolaMember := range agolaMembers.Members {
-		if findGithubMemberByAgolaUserRef(githubUsers, agolaUsersMap, agolaMember.Username) == nil {
-			agolaApi.RemoveOrganizationMember(organization, agolaMember.Username)
+		if findGithubMemberByAgolaUserRef(githubUsers, agolaUsersMap, agolaMember.User.Username) == nil {
+			agolaApi.RemoveOrganizationMember(organization, agolaMember.User.Username)
 		}
 	}
 }

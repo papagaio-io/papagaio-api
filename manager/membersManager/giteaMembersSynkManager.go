@@ -74,8 +74,8 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	for _, agolaMember := range agolaOrganizationMembers.Members {
 		log.Println("Check user in git:", agolaMember)
 
-		if findGiteaMemberByAgolaUserRef(gitTeamOwners, agolaUsersMap, agolaMember.Username) == nil && findGiteaMemberByAgolaUserRef(gitTeamMembers, agolaUsersMap, agolaMember.Username) == nil {
-			agolaApi.RemoveOrganizationMember(organization, agolaMember.Username)
+		if findGiteaMemberByAgolaUserRef(gitTeamOwners, agolaUsersMap, agolaMember.User.Username) == nil && findGiteaMemberByAgolaUserRef(gitTeamMembers, agolaUsersMap, agolaMember.User.Username) == nil {
+			agolaApi.RemoveOrganizationMember(organization, agolaMember.User.Username)
 		}
 	}
 
@@ -96,7 +96,7 @@ func findGiteaMemberByAgolaUserRef(gitMembers map[int]dto.UserTeamResponseDto, a
 func toMapMembers(members *[]agola.MemberDto) *map[string]agola.MemberDto {
 	membersMap := make(map[string]agola.MemberDto)
 	for _, member := range *members {
-		membersMap[member.Username] = member
+		membersMap[member.User.Username] = member
 	}
 	return &membersMap
 }

@@ -135,8 +135,8 @@ func GetBranchDto(branch model.Branch, project *model.Project, organization *mod
 		retVal.LastSuccessRunURL = runUrl
 	}
 
-	lastFailedRun := project.GetLastFailedRun()
-	if lastFailedRun != nil {
+	lastFailedRun := branch.LastFailedRun
+	if !lastFailedRun.RunEndDate.IsZero() {
 		retVal.LastFailedRunDate = &lastFailedRun.RunStartDate
 		runUrl := lastFailedRun.GetURL(organization, project)
 		retVal.LastFailedRunURL = runUrl

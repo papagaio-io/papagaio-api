@@ -26,7 +26,7 @@ func (project *Project) GetLastRun() RunInfo {
 	return lastRun
 }
 
-func (project *Project) GetLastSuccessRun() *RunInfo {
+/*func (project *Project) GetLastSuccessRun() *RunInfo {
 	var lastSuccessRun *RunInfo = nil
 
 	if project.Branchs != nil {
@@ -38,9 +38,9 @@ func (project *Project) GetLastSuccessRun() *RunInfo {
 	}
 
 	return lastSuccessRun
-}
+}*/
 
-func (project *Project) GetLastFailedRun() *RunInfo {
+/*func (project *Project) GetLastFailedRun() *RunInfo {
 	var lastFailedRun *RunInfo = nil
 
 	if project.Branchs != nil {
@@ -52,7 +52,7 @@ func (project *Project) GetLastFailedRun() *RunInfo {
 	}
 
 	return lastFailedRun
-}
+}*/
 
 func (project *Project) PushNewRun(runInfo RunInfo) {
 	if project.Branchs == nil {

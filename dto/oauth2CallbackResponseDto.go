@@ -6,6 +6,6 @@ import (
 
 type OauthCallbackResponseDto struct {
 	Token    string             `json:"token"`
-	UserID   uint               `json:"userId"`
+	UserID   uint64             `json:"userId"`
 	UserInfo gitDto.UserInfoDto `json:"userInfo"`
 }

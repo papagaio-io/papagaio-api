@@ -30,7 +30,7 @@ type Database interface {
 	GetRunFailedTriggerTime() int
 	SaveRunFailedTriggerTime(val int)
 
-	GetUserByUserId(userId uint) (*model.User, error)
+	GetUserByUserId(userId uint64) (*model.User, error)
 	GetUserByGitSourceNameAndID(gitSourceName string, id uint64) (*model.User, error)
 	SaveUser(user *model.User) (*model.User, error)
 	DeleteUser(userId uint) error

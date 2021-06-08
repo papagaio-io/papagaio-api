@@ -262,7 +262,7 @@ func (mr *MockDatabaseMockRecorder) SaveRunFailedTriggerTime(val interface{}) *g
 }
 
 // GetUserByUserId mocks base method
-func (m *MockDatabase) GetUserByUserId(userId uint) (*model.User, error) {
+func (m *MockDatabase) GetUserByUserId(userId uint64) (*model.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserByUserId", userId)
 	ret0, _ := ret[0].(*model.User)

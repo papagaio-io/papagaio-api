@@ -18,20 +18,20 @@ type UpdateGitSourceRequestDto struct {
 	AgolaRemoteSource *string        `json:"agolaRemoteSource"`
 }
 
-type CreateGitSourceDto struct {
+type CreateGitSourceRequestDto struct {
 	Name      string        `json:"name"`
 	GitType   types.GitType `json:"gitType"`
 	GitAPIURL string        `json:"gitApiUrl"`
 
-	GitClientID string `json:"gitClientId"`
-	GitSecret   string `json:"gitSecret"`
+	GitClientID     string `json:"gitClientId"`
+	GitClientSecret string `json:"gitClientSecret"`
 
-	AgolaRemoteSource *string `json:"agolaRemoteSource"`
-	AgolaClientID     *string `json:"agolaClientId"`
-	AgolaSecret       *string `json:"agolaSecret"`
+	AgolaRemoteSourceName *string `json:"agolaRemoteSourceName"`
+	AgolaClientID         *string `json:"agolaClientId"`
+	AgolaClientSecret     *string `json:"agolaClientSecret"`
 }
 
-func (gitSource *CreateGitSourceDto) IsValid() error {
+func (gitSource *CreateGitSourceRequestDto) IsValid() error {
 	if len(gitSource.Name) == 0 {
 		return errors.New("name is empty")
 	}
@@ -51,12 +51,12 @@ func (gitSource *CreateGitSourceDto) IsValid() error {
 		return errors.New("gitClientId is empty")
 	}
 
-	if len(gitSource.GitSecret) == 0 {
+	if len(gitSource.GitClientSecret) == 0 {
 		return errors.New("gitSecret is empty")
 	}
 
-	if gitSource.AgolaRemoteSource == nil {
-		if gitSource.AgolaClientID == nil || gitSource.AgolaSecret == nil {
+	if gitSource.AgolaRemoteSourceName == nil {
+		if gitSource.AgolaClientID == nil || gitSource.AgolaClientSecret == nil {
 			return errors.New("agolaRemoteSource or oauth2 application must be specified")
 		}
 	}

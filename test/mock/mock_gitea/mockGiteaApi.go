@@ -9,6 +9,7 @@ import (
 	oauth2 "golang.org/x/oauth2"
 	reflect "reflect"
 	dto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
+	gitea "wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
 	model "wecode.sorint.it/opensource/papagaio-api/model"
 )
 
@@ -239,6 +240,21 @@ func (m *MockGiteaInterface) GetUserInfo(gitSource *model.GitSource, user *model
 func (mr *MockGiteaInterfaceMockRecorder) GetUserInfo(gitSource, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserInfo", reflect.TypeOf((*MockGiteaInterface)(nil).GetUserInfo), gitSource, user)
+}
+
+// CreateAgolaApp mocks base method
+func (m *MockGiteaInterface) CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*gitea.CreateOauth2AppResponseDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAgolaApp", gitSource, user)
+	ret0, _ := ret[0].(*gitea.CreateOauth2AppResponseDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateAgolaApp indicates an expected call of CreateAgolaApp
+func (mr *MockGiteaInterfaceMockRecorder) CreateAgolaApp(gitSource, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAgolaApp", reflect.TypeOf((*MockGiteaInterface)(nil).CreateAgolaApp), gitSource, user)
 }
 
 // GetOauth2AccessToken mocks base method

@@ -34,8 +34,8 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		}
 	}
 
-	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization)
-	agolaMembersMap := toMapMembers(&agolaMembers.Members)
+	agolaOrganizationMembers, _ := agolaApi.GetOrganizationMembers(organization)
+	agolaOrganizationMembersMap := toMapMembers(&agolaOrganizationMembers.Members)
 
 	agolaUsersMap := utils.GetUsersMapByRemotesource(agolaApi, gitSource.AgolaRemoteSource)
 
@@ -45,9 +45,9 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 			continue
 		}
 
-		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
+		agolaUserRole := (*agolaOrganizationMembersMap)[agolaUserRef].Role
 
-		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
+		if _, ok := (*agolaOrganizationMembersMap)[agolaUserRef]; !ok {
 			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "member")
 		} else if agolaUserRole == agola.Member {
 			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "owner")
@@ -60,9 +60,9 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 			continue
 		}
 
-		agolaUserRole := (*agolaMembersMap)[agolaUserRef].Role
+		agolaUserRole := (*agolaOrganizationMembersMap)[agolaUserRef].Role
 
-		if _, ok := (*agolaMembersMap)[agolaUserRef]; !ok {
+		if _, ok := (*agolaOrganizationMembersMap)[agolaUserRef]; !ok {
 			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "owner")
 		} else if agolaUserRole == agola.Owner {
 			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "member")
@@ -71,7 +71,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 
 	//Verifico i membri eliminati su git
 
-	for _, agolaMember := range agolaMembers.Members {
+	for _, agolaMember := range agolaOrganizationMembers.Members {
 		if findGiteaMemberByAgolaUserRef(gitTeamOwners, agolaUsersMap, agolaMember.Username) == nil && findGiteaMemberByAgolaUserRef(gitTeamMembers, agolaUsersMap, agolaMember.Username) == nil {
 			agolaApi.RemoveOrganizationMember(organization, agolaMember.Username)
 		}

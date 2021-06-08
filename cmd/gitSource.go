@@ -4,14 +4,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
-	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
@@ -39,9 +37,14 @@ var cfgGitSource configGitSourceCmd
 type configGitSourceCmd struct {
 	CommonConfig
 
-	name      string
-	gitType   string
-	gitAPIURL string
+	name                  string
+	gitType               string
+	gitAPIURL             string
+	gitClientID           string
+	gitClientSecret       string
+	agolaRemoteSourceName string
+	agolaClientID         string
+	agolaClientSecret     string
 }
 
 func init() {
@@ -55,6 +58,11 @@ func init() {
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.name, "name", "", "gitSource name")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitType, "type", "", "git type(gitea, github)")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitAPIURL, "git-api-url", "", "api url")
+	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitClientID, "git-client-id", "", "git oauth2 client id")
+	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitClientSecret, "git-client-secret", "", "git oauth2 client secret")
+	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.agolaRemoteSourceName, "agola-remotesource", "", "agola remotesource name")
+	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.agolaClientID, "agola-client-id", "", "agola oauth2 client id")
+	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.agolaClientSecret, "agola-client-secret", "", "agola oauth2 client secret")
 }
 
 func addGitSource(cmd *cobra.Command, args []string) {
@@ -63,35 +71,24 @@ func addGitSource(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if len(cfgGitSource.name) == 0 {
-		cmd.PrintErrln("name is empty or not valid")
+	gitSourceRequest := dto.CreateGitSourceRequestDto{
+		Name:                  cfgGitSource.name,
+		GitType:               types.GitType(cfgGitSource.gitType),
+		GitAPIURL:             cfgGitSource.gitAPIURL,
+		GitClientID:           cfgGitSource.gitClientID,
+		GitClientSecret:       cfgGitSource.agolaClientSecret,
+		AgolaRemoteSourceName: &cfgGitSource.agolaRemoteSourceName,
+		AgolaClientID:         &cfgGitSource.agolaClientID,
+		AgolaClientSecret:     &cfgGitSource.agolaClientSecret,
+	}
+
+	err := gitSourceRequest.IsValid()
+	if err != nil {
+		cmd.PrintErrln(err)
 		os.Exit(1)
 	}
 
-	if strings.Compare(cfgGitSource.gitType, "gitea") != 0 && strings.Compare(cfgGitSource.gitType, "github") != 0 {
-		cmd.PrintErrln("type must be gitea or github")
-		os.Exit(1)
-	}
-
-	if len(cfgGitSource.gitAPIURL) > 0 {
-		_, err := url.ParseRequestURI(cfgGitSource.gitAPIURL)
-		if err != nil {
-			cmd.PrintErrln("git-api-url is not valid")
-			os.Exit(1)
-		}
-	} else {
-		if strings.Compare(cfgGitSource.gitType, "gitea") == 0 {
-			cmd.PrintErrln("gitea type need git-api-url")
-			os.Exit(1)
-		}
-	}
-
-	gitSource := model.GitSource{
-		Name:      cfgGitSource.name,
-		GitType:   types.GitType(cfgGitSource.gitType),
-		GitAPIURL: cfgGitSource.gitAPIURL,
-	}
-	data, _ := json.Marshal(gitSource)
+	data, _ := json.Marshal(gitSourceRequest)
 
 	client := &http.Client{}
 	URLApi := cfgGitSource.gatewayURL + "/api/gitsource"
@@ -143,7 +140,6 @@ func removeGitSource(cmd *cobra.Command, args []string) {
 	cmd.Println("gitsource removed")
 }
 
-//TODO
 func updateGitSource(cmd *cobra.Command, args []string) {
 	if err := cfgGitSource.IsAdminUser(); err != nil {
 		cmd.PrintErrln(err.Error())

@@ -1,7 +1,7 @@
 #!groovy
 
 def appName = "papagaio-api"
-def targetMap = [ master: 'dev', stable: 'uat', va: 'va']
+def targetMap = [ master: 'dev', stable: 'stable', release: 'release']
 def branch = env.BRANCH_NAME
 def target = targetMap[branch]
 def label = appName + "-${UUID.randomUUID().toString()}"
@@ -71,19 +71,19 @@ podTemplate(
                     }
 
                     stage('Go Dependencies') {
-                        if (branch == 'master' || branch == 'stable' || branch == 'va') {
+                        if (branch == 'master' || branch == 'stable' || branch == 'release') {
                             // sh "go get -v" Aggiungi quando hai moduli
                         }
                     }
 
                     stage('Go Build')  {
-                        if (branch == 'master' || branch == 'stable' || branch == 'va') {
+                        if (branch == 'master' || branch == 'stable' || branch == 'release') {
                             sh "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o papagaio-api"
                         }
                     }
 
                     stage('Creazione tar.gz') {
-                        if (branch == 'master' || branch == 'stable' || branch == 'va') {
+                        if (branch == 'master' || branch == 'stable' || branch == 'release') {
                             sh "mkdir dist && cp papagaio-api dist/"
                             tarball = "papagaio-api-${version}.tar.gz"
                             sh "tar -zcvf ${tarball} dist"
@@ -91,7 +91,7 @@ podTemplate(
                     }
 
                     stage('Deploy su Nexus') {
-                        if (branch == 'master' || branch == 'stable' || branch == 'va') {
+                        if (branch == 'master' || branch == 'stable' || branch == 'release') {
                             withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                                 sh "curl -v -k -u ${USERNAME}:${PASSWORD} --upload-file ${tarball} https://nexus.sorintdev.it/repository/binaries/it.sorintdev.papagaio/papagaio-api-${version}.tar.gz"
                             }
@@ -101,7 +101,7 @@ podTemplate(
             }
 
             container('docker') {
-                stage('Docker') {
+                stage('Docker Image and Push') {
                     docker.withRegistry('', 'hub') {
                         def img = docker.build(appName, '.')
                         docker.withRegistry('https://registry.sorintdev.it', 'nexus') {
@@ -116,7 +116,7 @@ podTemplate(
             }
 
             container("go") {
-                if (branch == 'master' || branch == 'stable' || branch == 'va') {
+                if (branch == 'master' || branch == 'stable' || branch == 'release') {
                     stage ('Kubernetes') {
                         // sh "sed -i s/VERSION/${version}/g k8s/uat/deployment.yml"
                         // sh "sed -i s/VERSION/${version}/g k8s/va/deployment.yml"

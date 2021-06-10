@@ -118,8 +118,8 @@ podTemplate(
             container("go") {
                 if (branch == 'master' || branch == 'stable' || branch == 'release') {
                     stage ('Kubernetes') {
-                        // sh "sed -i s/VERSION/${version}/g k8s/uat/deployment.yml"
-                        // sh "sed -i s/VERSION/${version}/g k8s/va/deployment.yml"
+                        sh "sed -i s/VERSION/${version}/g k8s/stable/deployment.yml"
+                        sh "sed -i s/VERSION/${version}/g k8s/release/deployment.yml"
                         sh "kubectl replace --force --kubeconfig=/etc/kubernetes/kubernetes.conf -f k8s/${target}"
                     }
                 }

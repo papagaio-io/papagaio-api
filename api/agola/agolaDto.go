@@ -169,3 +169,25 @@ type OrganizationDto struct {
 	Name       string `json:"name"`
 	Visibility string `json:"visibility"`
 }
+
+type TokenRequestDto struct {
+	TokenName string `json:"token_name"`
+}
+
+type TokenResponseDto struct {
+	Token string `json:"token"`
+}
+
+type CreateRemoteSourceRequestDto struct {
+	Name                string `json:"name"`
+	APIURL              string `json:"apiurl"`
+	Type                string `json:"type"`
+	AuthType            string `json:"auth_type"`
+	SkipVerify          bool   `json:"skip_verify"`
+	Oauth2ClientID      string `json:"oauth_2_client_id"`
+	Oauth2ClientSecret  string `json:"oauth_2_client_secret"`
+	SSHHostKey          string `json:"ssh_host_key"`
+	SkipSSHHostKeyCheck bool   `json:"skip_ssh_host_key_check"`
+	RegistrationEnabled *bool  `json:"registration_enabled"`
+	LoginEnabled        *bool  `json:"login_enabled"`
+}

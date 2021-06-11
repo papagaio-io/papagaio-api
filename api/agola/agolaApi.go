@@ -11,6 +11,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
+	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
@@ -18,9 +19,9 @@ type AgolaApiInterface interface {
 	CheckOrganizationExists(organization *model.Organization) (bool, string)
 	CheckProjectExists(organization *model.Organization, projectName string) (bool, string)
 	CreateOrganization(organization *model.Organization, visibility types.VisibilityType) (string, error)
-	DeleteOrganization(organization *model.Organization, agolaUserToken string) error
-	CreateProject(projectName string, agolaProjectRef string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error)
-	DeleteProject(organization *model.Organization, agolaProjectRef string, agolaUserToken string) error
+	DeleteOrganization(organization *model.Organization, user *model.User) error
+	CreateProject(projectName string, agolaProjectRef string, organization *model.Organization, remoteSourceName string, user *model.User) (string, error)
+	DeleteProject(organization *model.Organization, agolaProjectRef string, user *model.User) error
 	AddOrUpdateOrganizationMember(organization *model.Organization, agolaUserRef string, role string) error
 	RemoveOrganizationMember(organization *model.Organization, agolaUserRef string) error
 	GetOrganizationMembers(organization *model.Organization) (*OrganizationMembersResponseDto, error)
@@ -33,9 +34,17 @@ type AgolaApiInterface interface {
 	GetRemoteSource(agolaRemoteSource string) (*RemoteSourceDto, error)
 	GetUsers() (*[]UserDto, error)
 	GetOrganizations() (*[]OrganizationDto, error)
+
+	CreateUserToken(user *model.User) error
+	GetRemoteSources() (*[]RemoteSourceDto, error)
+	CreateRemoteSource(remoteSourceName string, gitType string, apiUrl string, oauth2ClientId string, oauth2ClientSecret string) error
 }
 
-type AgolaApi struct{}
+type AgolaApi struct {
+	Db repository.Database
+}
+
+const baseTokenName string = "papagaioToken"
 
 func (agolaApi *AgolaApi) GetOrganizations() (*[]OrganizationDto, error) {
 	client := &http.Client{}
@@ -140,11 +149,11 @@ func (agolaApi *AgolaApi) CreateOrganization(organization *model.Organization, v
 	return jsonResponse.ID, err
 }
 
-func (agolaApi *AgolaApi) DeleteOrganization(organization *model.Organization, agolaUserToken string) error {
+func (agolaApi *AgolaApi) DeleteOrganization(organization *model.Organization, user *model.User) error {
 	client := &http.Client{}
 	URLApi := getOrganizationUrl(organization.AgolaOrganizationRef)
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
-	req.Header.Add("Authorization", "token "+agolaUserToken)
+	req.Header.Add("Authorization", "token "+*user.AgolaToken)
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -164,7 +173,7 @@ func (agolaApi *AgolaApi) DeleteOrganization(organization *model.Organization, a
 	return nil
 }
 
-func (agolaApi *AgolaApi) CreateProject(projectName string, agolaProjectRef string, organization *model.Organization, remoteSourceName string, agolaUserToken string) (string, error) {
+func (agolaApi *AgolaApi) CreateProject(projectName string, agolaProjectRef string, organization *model.Organization, remoteSourceName string, user *model.User) (string, error) {
 	log.Println("CreateProject start")
 
 	if exists, projectID := agolaApi.CheckProjectExists(organization, agolaProjectRef); exists {
@@ -186,7 +195,7 @@ func (agolaApi *AgolaApi) CreateProject(projectName string, agolaProjectRef stri
 	reqBody := strings.NewReader(string(data))
 
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Add("Authorization", "token "+agolaUserToken)
+	req.Header.Add("Authorization", "token "+*user.AgolaToken)
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -207,13 +216,13 @@ func (agolaApi *AgolaApi) CreateProject(projectName string, agolaProjectRef stri
 	return jsonResponse.ID, err
 }
 
-func (agolaApi *AgolaApi) DeleteProject(organization *model.Organization, agolaProjectRef string, agolaUserToken string) error {
+func (agolaApi *AgolaApi) DeleteProject(organization *model.Organization, agolaProjectRef string, user *model.User) error {
 	log.Println("DeleteProject start")
 
 	client := &http.Client{}
 	URLApi := getProjectUrl(organization.AgolaOrganizationRef, agolaProjectRef)
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
-	req.Header.Add("Authorization", "token "+agolaUserToken)
+	req.Header.Add("Authorization", "token "+*user.AgolaToken)
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -486,4 +495,117 @@ func (agolaApi *AgolaApi) GetUsers() (*[]UserDto, error) {
 	json.Unmarshal(body, &jsonResponse)
 
 	return &jsonResponse, nil
+}
+
+func (agolaApi *AgolaApi) CreateUserToken(user *model.User) error {
+	log.Println("RefreshUserToken user", user.AgolaUserRef)
+
+	if user.UserID == nil {
+		log.Println("UserID is nil")
+		return errors.New("UsersID is nil")
+	}
+	if user.AgolaUserRef == nil {
+		log.Println("AgolaUserRef is nil")
+		return errors.New("AgolaUserRef is nil")
+	}
+
+	if user.AgolaTokenName == nil {
+		tokenName := baseTokenName
+		user.AgolaTokenName = &tokenName
+	}
+
+	client := &http.Client{}
+	URLApi := getCreateTokenUrl(*user.AgolaUserRef)
+
+	tokenRequest := &TokenRequestDto{
+		TokenName: *user.AgolaTokenName,
+	}
+	data, _ := json.Marshal(tokenRequest)
+	reqBody := strings.NewReader(string(data))
+
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var jsonResponse TokenResponseDto
+	json.Unmarshal(body, &jsonResponse)
+
+	user.AgolaToken = &jsonResponse.Token
+	agolaApi.Db.SaveUser(user)
+
+	return nil
+}
+
+func (agolaApi *AgolaApi) GetRemoteSources() (*[]RemoteSourceDto, error) {
+	log.Println("GetRemoteSources start")
+
+	client := &http.Client{}
+	URLApi := getRemoteSourcesUrl()
+
+	req, _ := http.NewRequest("GET", URLApi, nil)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var jsonResponse []RemoteSourceDto
+	json.Unmarshal(body, &jsonResponse)
+
+	return &jsonResponse, nil
+}
+
+func (agolaApi *AgolaApi) CreateRemoteSource(remoteSourceName string, gitType string, apiUrl string, oauth2ClientId string, oauth2ClientSecret string) error {
+	log.Println("CreateRemoteSource start")
+
+	client := &http.Client{}
+	URLApi := getRemoteSourcesUrl()
+
+	projectRequest := &CreateRemoteSourceRequestDto{
+		Name:                remoteSourceName,
+		APIURL:              apiUrl,
+		Type:                gitType,
+		AuthType:            "oauth2",
+		SkipSSHHostKeyCheck: true,
+		SkipVerify:          false,
+		Oauth2ClientID:      oauth2ClientId,
+		Oauth2ClientSecret:  oauth2ClientSecret,
+	}
+	data, _ := json.Marshal(projectRequest)
+	reqBody := strings.NewReader(string(data))
+
+	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
+	}
+
+	return nil
 }

@@ -6,8 +6,10 @@ package mock_gitea
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	oauth2 "golang.org/x/oauth2"
 	reflect "reflect"
 	dto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
+	gitea "wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
 	model "wecode.sorint.it/opensource/papagaio-api/model"
 )
 
@@ -35,177 +37,252 @@ func (m *MockGiteaInterface) EXPECT() *MockGiteaInterfaceMockRecorder {
 }
 
 // CreateWebHook mocks base method
-func (m *MockGiteaInterface) CreateWebHook(gitSource *model.GitSource, gitOrgRef, organizationRef string) (int, error) {
+func (m *MockGiteaInterface) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef, organizationRef string) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateWebHook", gitSource, gitOrgRef, organizationRef)
+	ret := m.ctrl.Call(m, "CreateWebHook", gitSource, user, gitOrgRef, organizationRef)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateWebHook indicates an expected call of CreateWebHook
-func (mr *MockGiteaInterfaceMockRecorder) CreateWebHook(gitSource, gitOrgRef, organizationRef interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) CreateWebHook(gitSource, user, gitOrgRef, organizationRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWebHook", reflect.TypeOf((*MockGiteaInterface)(nil).CreateWebHook), gitSource, gitOrgRef, organizationRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWebHook", reflect.TypeOf((*MockGiteaInterface)(nil).CreateWebHook), gitSource, user, gitOrgRef, organizationRef)
 }
 
 // DeleteWebHook mocks base method
-func (m *MockGiteaInterface) DeleteWebHook(gitSource *model.GitSource, gitOrgRef string, webHookID int) error {
+func (m *MockGiteaInterface) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteWebHook", gitSource, gitOrgRef, webHookID)
+	ret := m.ctrl.Call(m, "DeleteWebHook", gitSource, user, gitOrgRef, webHookID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteWebHook indicates an expected call of DeleteWebHook
-func (mr *MockGiteaInterfaceMockRecorder) DeleteWebHook(gitSource, gitOrgRef, webHookID interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) DeleteWebHook(gitSource, user, gitOrgRef, webHookID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteWebHook", reflect.TypeOf((*MockGiteaInterface)(nil).DeleteWebHook), gitSource, gitOrgRef, webHookID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteWebHook", reflect.TypeOf((*MockGiteaInterface)(nil).DeleteWebHook), gitSource, user, gitOrgRef, webHookID)
 }
 
 // GetRepositories mocks base method
-func (m *MockGiteaInterface) GetRepositories(gitSource *model.GitSource, gitOrgRef string) (*[]string, error) {
+func (m *MockGiteaInterface) GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRepositories", gitSource, gitOrgRef)
+	ret := m.ctrl.Call(m, "GetRepositories", gitSource, user, gitOrgRef)
 	ret0, _ := ret[0].(*[]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRepositories indicates an expected call of GetRepositories
-func (mr *MockGiteaInterfaceMockRecorder) GetRepositories(gitSource, gitOrgRef interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) GetRepositories(gitSource, user, gitOrgRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepositories", reflect.TypeOf((*MockGiteaInterface)(nil).GetRepositories), gitSource, gitOrgRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepositories", reflect.TypeOf((*MockGiteaInterface)(nil).GetRepositories), gitSource, user, gitOrgRef)
 }
 
 // GetOrganization mocks base method
-func (m *MockGiteaInterface) GetOrganization(gitSource *model.GitSource, gitOrgRef string) *dto.OrganizationDto {
+func (m *MockGiteaInterface) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrganization", gitSource, gitOrgRef)
+	ret := m.ctrl.Call(m, "GetOrganization", gitSource, user, gitOrgRef)
 	ret0, _ := ret[0].(*dto.OrganizationDto)
 	return ret0
 }
 
 // GetOrganization indicates an expected call of GetOrganization
-func (mr *MockGiteaInterfaceMockRecorder) GetOrganization(gitSource, gitOrgRef interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) GetOrganization(gitSource, user, gitOrgRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganization", reflect.TypeOf((*MockGiteaInterface)(nil).GetOrganization), gitSource, gitOrgRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganization", reflect.TypeOf((*MockGiteaInterface)(nil).GetOrganization), gitSource, user, gitOrgRef)
 }
 
 // CheckOrganizationExists mocks base method
-func (m *MockGiteaInterface) CheckOrganizationExists(gitSource *model.GitSource, gitOrgRef string) bool {
+func (m *MockGiteaInterface) CheckOrganizationExists(gitSource *model.GitSource, user *model.User, gitOrgRef string) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckOrganizationExists", gitSource, gitOrgRef)
+	ret := m.ctrl.Call(m, "CheckOrganizationExists", gitSource, user, gitOrgRef)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // CheckOrganizationExists indicates an expected call of CheckOrganizationExists
-func (mr *MockGiteaInterfaceMockRecorder) CheckOrganizationExists(gitSource, gitOrgRef interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) CheckOrganizationExists(gitSource, user, gitOrgRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckOrganizationExists", reflect.TypeOf((*MockGiteaInterface)(nil).CheckOrganizationExists), gitSource, gitOrgRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckOrganizationExists", reflect.TypeOf((*MockGiteaInterface)(nil).CheckOrganizationExists), gitSource, user, gitOrgRef)
 }
 
 // GetRepositoryTeams mocks base method
-func (m *MockGiteaInterface) GetRepositoryTeams(gitSource *model.GitSource, gitOrgRef, repositoryRef string) (*[]dto.TeamResponseDto, error) {
+func (m *MockGiteaInterface) GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef, repositoryRef string) (*[]dto.TeamResponseDto, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRepositoryTeams", gitSource, gitOrgRef, repositoryRef)
+	ret := m.ctrl.Call(m, "GetRepositoryTeams", gitSource, user, gitOrgRef, repositoryRef)
 	ret0, _ := ret[0].(*[]dto.TeamResponseDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRepositoryTeams indicates an expected call of GetRepositoryTeams
-func (mr *MockGiteaInterfaceMockRecorder) GetRepositoryTeams(gitSource, gitOrgRef, repositoryRef interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) GetRepositoryTeams(gitSource, user, gitOrgRef, repositoryRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepositoryTeams", reflect.TypeOf((*MockGiteaInterface)(nil).GetRepositoryTeams), gitSource, gitOrgRef, repositoryRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepositoryTeams", reflect.TypeOf((*MockGiteaInterface)(nil).GetRepositoryTeams), gitSource, user, gitOrgRef, repositoryRef)
 }
 
 // GetOrganizationTeams mocks base method
-func (m *MockGiteaInterface) GetOrganizationTeams(gitSource *model.GitSource, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
+func (m *MockGiteaInterface) GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrganizationTeams", gitSource, gitOrgRef)
+	ret := m.ctrl.Call(m, "GetOrganizationTeams", gitSource, user, gitOrgRef)
 	ret0, _ := ret[0].(*[]dto.TeamResponseDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrganizationTeams indicates an expected call of GetOrganizationTeams
-func (mr *MockGiteaInterfaceMockRecorder) GetOrganizationTeams(gitSource, gitOrgRef interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) GetOrganizationTeams(gitSource, user, gitOrgRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationTeams", reflect.TypeOf((*MockGiteaInterface)(nil).GetOrganizationTeams), gitSource, gitOrgRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationTeams", reflect.TypeOf((*MockGiteaInterface)(nil).GetOrganizationTeams), gitSource, user, gitOrgRef)
 }
 
 // GetTeamMembers mocks base method
-func (m *MockGiteaInterface) GetTeamMembers(gitSource *model.GitSource, teamId int) (*[]dto.UserTeamResponseDto, error) {
+func (m *MockGiteaInterface) GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int) (*[]dto.UserTeamResponseDto, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTeamMembers", gitSource, teamId)
+	ret := m.ctrl.Call(m, "GetTeamMembers", gitSource, user, teamId)
 	ret0, _ := ret[0].(*[]dto.UserTeamResponseDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTeamMembers indicates an expected call of GetTeamMembers
-func (mr *MockGiteaInterfaceMockRecorder) GetTeamMembers(gitSource, teamId interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) GetTeamMembers(gitSource, user, teamId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamMembers", reflect.TypeOf((*MockGiteaInterface)(nil).GetTeamMembers), gitSource, teamId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamMembers", reflect.TypeOf((*MockGiteaInterface)(nil).GetTeamMembers), gitSource, user, teamId)
 }
 
 // GetBranches mocks base method
-func (m *MockGiteaInterface) GetBranches(gitSource *model.GitSource, gitOrgRef, repositoryRef string) map[string]bool {
+func (m *MockGiteaInterface) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef, repositoryRef string) map[string]bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBranches", gitSource, gitOrgRef, repositoryRef)
+	ret := m.ctrl.Call(m, "GetBranches", gitSource, user, gitOrgRef, repositoryRef)
 	ret0, _ := ret[0].(map[string]bool)
 	return ret0
 }
 
 // GetBranches indicates an expected call of GetBranches
-func (mr *MockGiteaInterfaceMockRecorder) GetBranches(gitSource, gitOrgRef, repositoryRef interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) GetBranches(gitSource, user, gitOrgRef, repositoryRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBranches", reflect.TypeOf((*MockGiteaInterface)(nil).GetBranches), gitSource, gitOrgRef, repositoryRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBranches", reflect.TypeOf((*MockGiteaInterface)(nil).GetBranches), gitSource, user, gitOrgRef, repositoryRef)
 }
 
 // CheckRepositoryAgolaConfExists mocks base method
-func (m *MockGiteaInterface) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, gitOrgRef, repositoryRef string) (bool, error) {
+func (m *MockGiteaInterface) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef, repositoryRef string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckRepositoryAgolaConfExists", gitSource, gitOrgRef, repositoryRef)
+	ret := m.ctrl.Call(m, "CheckRepositoryAgolaConfExists", gitSource, user, gitOrgRef, repositoryRef)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CheckRepositoryAgolaConfExists indicates an expected call of CheckRepositoryAgolaConfExists
-func (mr *MockGiteaInterfaceMockRecorder) CheckRepositoryAgolaConfExists(gitSource, gitOrgRef, repositoryRef interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) CheckRepositoryAgolaConfExists(gitSource, user, gitOrgRef, repositoryRef interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckRepositoryAgolaConfExists", reflect.TypeOf((*MockGiteaInterface)(nil).CheckRepositoryAgolaConfExists), gitSource, gitOrgRef, repositoryRef)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckRepositoryAgolaConfExists", reflect.TypeOf((*MockGiteaInterface)(nil).CheckRepositoryAgolaConfExists), gitSource, user, gitOrgRef, repositoryRef)
 }
 
 // GetCommitMetadata mocks base method
-func (m *MockGiteaInterface) GetCommitMetadata(gitSource *model.GitSource, gitOrgRef, repositoryRef, commitSha string) (*dto.CommitMetadataDto, error) {
+func (m *MockGiteaInterface) GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef, repositoryRef, commitSha string) (*dto.CommitMetadataDto, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCommitMetadata", gitSource, gitOrgRef, repositoryRef, commitSha)
+	ret := m.ctrl.Call(m, "GetCommitMetadata", gitSource, user, gitOrgRef, repositoryRef, commitSha)
 	ret0, _ := ret[0].(*dto.CommitMetadataDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetCommitMetadata indicates an expected call of GetCommitMetadata
-func (mr *MockGiteaInterfaceMockRecorder) GetCommitMetadata(gitSource, gitOrgRef, repositoryRef, commitSha interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) GetCommitMetadata(gitSource, user, gitOrgRef, repositoryRef, commitSha interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommitMetadata", reflect.TypeOf((*MockGiteaInterface)(nil).GetCommitMetadata), gitSource, gitOrgRef, repositoryRef, commitSha)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommitMetadata", reflect.TypeOf((*MockGiteaInterface)(nil).GetCommitMetadata), gitSource, user, gitOrgRef, repositoryRef, commitSha)
 }
 
 // GetOrganizations mocks base method
-func (m *MockGiteaInterface) GetOrganizations(gitSource *model.GitSource) (*[]string, error) {
+func (m *MockGiteaInterface) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrganizations", gitSource)
+	ret := m.ctrl.Call(m, "GetOrganizations", gitSource, user)
 	ret0, _ := ret[0].(*[]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrganizations indicates an expected call of GetOrganizations
-func (mr *MockGiteaInterfaceMockRecorder) GetOrganizations(gitSource interface{}) *gomock.Call {
+func (mr *MockGiteaInterfaceMockRecorder) GetOrganizations(gitSource, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizations", reflect.TypeOf((*MockGiteaInterface)(nil).GetOrganizations), gitSource)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizations", reflect.TypeOf((*MockGiteaInterface)(nil).GetOrganizations), gitSource, user)
+}
+
+// IsUserOwner mocks base method
+func (m *MockGiteaInterface) IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsUserOwner", gitSource, user, gitOrgRef)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsUserOwner indicates an expected call of IsUserOwner
+func (mr *MockGiteaInterfaceMockRecorder) IsUserOwner(gitSource, user, gitOrgRef interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUserOwner", reflect.TypeOf((*MockGiteaInterface)(nil).IsUserOwner), gitSource, user, gitOrgRef)
+}
+
+// GetUserInfo mocks base method
+func (m *MockGiteaInterface) GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserInfo", gitSource, user)
+	ret0, _ := ret[0].(*dto.UserInfoDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserInfo indicates an expected call of GetUserInfo
+func (mr *MockGiteaInterfaceMockRecorder) GetUserInfo(gitSource, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserInfo", reflect.TypeOf((*MockGiteaInterface)(nil).GetUserInfo), gitSource, user)
+}
+
+// CreateAgolaApp mocks base method
+func (m *MockGiteaInterface) CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*gitea.CreateOauth2AppResponseDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAgolaApp", gitSource, user)
+	ret0, _ := ret[0].(*gitea.CreateOauth2AppResponseDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateAgolaApp indicates an expected call of CreateAgolaApp
+func (mr *MockGiteaInterfaceMockRecorder) CreateAgolaApp(gitSource, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAgolaApp", reflect.TypeOf((*MockGiteaInterface)(nil).CreateAgolaApp), gitSource, user)
+}
+
+// GetOauth2AccessToken mocks base method
+func (m *MockGiteaInterface) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*oauth2.Token, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOauth2AccessToken", gitSource, code)
+	ret0, _ := ret[0].(*oauth2.Token)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOauth2AccessToken indicates an expected call of GetOauth2AccessToken
+func (mr *MockGiteaInterfaceMockRecorder) GetOauth2AccessToken(gitSource, code interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOauth2AccessToken", reflect.TypeOf((*MockGiteaInterface)(nil).GetOauth2AccessToken), gitSource, code)
+}
+
+// RefreshToken mocks base method
+func (m *MockGiteaInterface) RefreshToken(gitSource *model.GitSource, refreshToken string) (*oauth2.Token, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshToken", gitSource, refreshToken)
+	ret0, _ := ret[0].(*oauth2.Token)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RefreshToken indicates an expected call of RefreshToken
+func (mr *MockGiteaInterfaceMockRecorder) RefreshToken(gitSource, refreshToken interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshToken", reflect.TypeOf((*MockGiteaInterface)(nil).RefreshToken), gitSource, refreshToken)
 }

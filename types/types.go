@@ -9,6 +9,14 @@ const (
 	Github GitType = "github"
 )
 
+func (gt GitType) IsValid() error {
+	switch gt {
+	case Gitea, Github:
+		return nil
+	}
+	return errors.New("invalid git type")
+}
+
 type VisibilityType string
 
 const (

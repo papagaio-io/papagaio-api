@@ -28,13 +28,12 @@ type GitSourceController interface {
 	GetGitOrganizations(w http.ResponseWriter, r *http.Request)
 }
 
-type UserController interface {
-	AddUser(w http.ResponseWriter, r *http.Request)
-	RemoveUser(w http.ResponseWriter, r *http.Request)
-	GetUserInfo(w http.ResponseWriter, r *http.Request)
-}
-
 type TriggersController interface {
 	GetTriggersConfig(w http.ResponseWriter, r *http.Request)
 	SaveTriggersConfig(w http.ResponseWriter, r *http.Request)
+}
+
+type Oauth2Controller interface {
+	Login(w http.ResponseWriter, r *http.Request)
+	Callback(w http.ResponseWriter, r *http.Request)
 }

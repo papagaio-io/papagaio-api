@@ -1,11 +1,14 @@
 package config
 
 import (
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"io/ioutil"
 	"log"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
+	"wecode.sorint.it/opensource/papagaio-api/common"
 )
 
 // Configuration contains all informations required to run papagaio
@@ -31,6 +34,8 @@ type Configuration struct {
 	TriggersConfig TriggersConfig
 	// Email configuration
 	Email *EmailConfig
+
+	TokenSigning TokenSigning
 }
 
 type TriggersConfig struct {
@@ -83,6 +88,19 @@ type EmailConfig struct {
 	Encryption *string
 }
 
+type TokenSigning struct {
+	// token duration (defaults to 12 hours)
+	Duration time.Duration `yaml:"duration"`
+	// signing method: "hmac" or "rsa"
+	Method string `yaml:"method"`
+	// signing key. Used only with HMAC signing method
+	Key string `yaml:"key"`
+	// path to a file containing a pem encoded private key. Used only with RSA signing method
+	PrivateKeyPath string `yaml:"privateKeyPath"`
+	// path to a file containing a pem encoded public key. Used only with RSA signing method
+	PublicKeyPath string `yaml:"publicKeyPath"`
+}
+
 // Config contains global configuration read with config.ReadConfig()
 var Config Configuration
 
@@ -106,43 +124,47 @@ func readConfig() {
 // SetupConfig load the configuration from config.json and set config.Config to it
 func SetupConfig() {
 	readConfig()
-	readKeycloakConfig()
 }
 
-// parsePubKey parsing the public key generated from keycloak
-func parsePubKey(raw []byte) interface{} {
-	block, _ := pem.Decode(raw)
-	if block == nil {
-		log.Fatal("Unable to parse the public key")
-	}
-
-	pubkey, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		log.Fatal("Unable to parse the public key: ", err)
-	}
-
-	return pubkey
-}
-
-// readKeycloakConfig read the keycloak configuration file from "keycloak.json"
-func readKeycloakConfig() {
-	var err error
-	var raw []byte
-
-	if raw, err = ioutil.ReadFile("/app/keycloak.json"); err != nil {
-		if raw, err = ioutil.ReadFile("keycloak.json"); err != nil {
-			log.Fatal("Unable to read keycloak.json: ", err)
+func InitTokenSigninData(tokenSigning *TokenSigning) (*common.TokenSigningData, error) {
+	sd := &common.TokenSigningData{Duration: tokenSigning.Duration}
+	switch tokenSigning.Method {
+	case "hmac":
+		sd.Method = jwt.SigningMethodHS256
+		if tokenSigning.Key == "" {
+			return nil, errors.Errorf("empty token signing key for hmac method")
 		}
-	}
-	if err = json.Unmarshal(raw, &Config.Keycloak); err != nil {
-		log.Fatal("Unable to parse keycloak.json", err)
-	}
-	if raw, err = ioutil.ReadFile("/app/pubkey.pub"); err != nil {
-		if raw, err = ioutil.ReadFile("keys/pubkey.pub"); err != nil {
-			log.Fatal("Public key (pubkey.pub) was not found: ", err)
+		sd.Key = []byte(tokenSigning.Key)
+	case "rsa":
+		if tokenSigning.PrivateKeyPath == "" {
+			return nil, errors.Errorf("token signing private key file for rsa method not defined")
 		}
+		if tokenSigning.PublicKeyPath == "" {
+			return nil, errors.Errorf("token signing public key file for rsa method not defined")
+		}
+
+		sd.Method = jwt.SigningMethodRS256
+		privateKeyData, err := ioutil.ReadFile(tokenSigning.PrivateKeyPath)
+		if err != nil {
+			return nil, errors.Errorf("error reading token signing private key: %w", err)
+		}
+		sd.PrivateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKeyData)
+		if err != nil {
+			return nil, errors.Errorf("error parsing token signing private key: %w", err)
+		}
+		publicKeyData, err := ioutil.ReadFile(tokenSigning.PublicKeyPath)
+		if err != nil {
+			return nil, errors.Errorf("error reading token signing public key: %w", err)
+		}
+		sd.PublicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKeyData)
+		if err != nil {
+			return nil, errors.Errorf("error parsing token signing public key: %w", err)
+		}
+	case "":
+		return nil, errors.Errorf("missing token signing method")
+	default:
+		return nil, errors.Errorf("unknown token signing method: %q", tokenSigning.Method)
 	}
 
-	KeycloakPubKey = parsePubKey(raw)
-	Config.Keycloak.PubKey = string(raw)
+	return sd, nil
 }

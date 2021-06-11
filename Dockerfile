@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM registry.sorintdev.it/alpine:latest
 COPY papagaio-api /app/
 
 RUN apk update && apk add bash

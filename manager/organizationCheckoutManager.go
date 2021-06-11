@@ -11,14 +11,14 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 )
 
-func StartOrganizationCheckout(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
-	organizationCheckout(db, organization, gitSource, agolaApi, gitGateway)
+func StartOrganizationCheckout(db repository.Database, user *model.User, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
+	organizationCheckout(db, user, organization, gitSource, agolaApi, gitGateway)
 }
 
-func organizationCheckout(db repository.Database, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
+func organizationCheckout(db repository.Database, user *model.User, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	log.Println("Start organization synk")
 
-	membersManager.SynkMembers(organization, gitSource, agolaApi, gitGateway)
+	membersManager.SynkMembers(organization, gitSource, agolaApi, gitGateway, user)
 
-	repositoryManager.CheckoutAllGitRepository(db, organization, gitSource, agolaApi, gitGateway)
+	repositoryManager.CheckoutAllGitRepository(db, user, organization, gitSource, agolaApi, gitGateway)
 }

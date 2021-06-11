@@ -35,7 +35,7 @@ func TestGetReportOK(t *testing.T) {
 
 	db.EXPECT().GetOrganizations().Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
 
 	serviceOrganization := OrganizationService{
 		Db:         db,
@@ -137,7 +137,7 @@ func TestGetOrganizationReportOk(t *testing.T) {
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
 
 	serviceOrganization := OrganizationService{
 		Db:         db,

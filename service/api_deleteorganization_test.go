@@ -32,7 +32,7 @@ func TestDeleteOrganizationOK(t *testing.T) {
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
 	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(nil)
-	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
+	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(nil)
 
 	serviceOrganization := OrganizationService{
@@ -68,7 +68,7 @@ func TestDeleteOrganizationInternalOnly(t *testing.T) {
 
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
+	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(nil)
 
 	serviceOrganization := OrganizationService{
@@ -261,7 +261,7 @@ func TestDeleteOrganizationWhenInternalOnlyDeletingOrganizationError(t *testing.
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
 	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(nil)
-	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
+	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(errors.New(string("someError")))
 
 	serviceOrganization := OrganizationService{

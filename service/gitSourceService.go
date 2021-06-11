@@ -2,12 +2,17 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
+	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
@@ -16,6 +21,7 @@ import (
 type GitSourceService struct {
 	Db         repository.Database
 	GitGateway *git.GitGateway
+	AgolaApi   agolaApi.AgolaApiInterface
 }
 
 // @Summary Return a list of gitsources
@@ -57,18 +63,72 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var gitGitSource model.GitSource
+	var gitGitSourceDto dto.CreateGitSourceRequestDto
 	data, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(data, &gitGitSource)
+	json.Unmarshal(data, &gitGitSourceDto)
 
-	oldGitSource, _ := service.Db.GetGitSourceByName(gitGitSource.Name)
+	oldGitSource, _ := service.Db.GetGitSourceByName(gitGitSourceDto.Name)
 	if oldGitSource != nil {
-		UnprocessableEntityResponse(w, "Gitsource "+gitGitSource.Name+" already exists")
+		UnprocessableEntityResponse(w, "Gitsource "+gitGitSourceDto.Name+" already exists")
 		return
 	}
 
-	service.Db.SaveGitSource(&gitGitSource)
-	JSONokResponse(w, gitGitSource.ID)
+	err := gitGitSourceDto.IsValid()
+	if err != nil {
+		log.Println("request is not valid:", err)
+		UnprocessableEntityResponse(w, err.Error())
+		return
+	}
+
+	gitSource := model.GitSource{
+		Name:        gitGitSourceDto.Name,
+		GitType:     gitGitSourceDto.GitType,
+		GitAPIURL:   gitGitSourceDto.GitAPIURL,
+		GitClientID: gitGitSourceDto.GitClientID,
+		GitSecret:   gitGitSourceDto.GitClientSecret,
+	}
+
+	if gitGitSourceDto.AgolaRemoteSourceName == nil {
+		gsList, err := service.AgolaApi.GetRemoteSources()
+		if err != nil {
+			log.Println("Error in GetRemoteSources:", err)
+			InternalServerError(w)
+			return
+		}
+
+		findRemoteSourceName := gitGitSourceDto.Name
+		search := true
+		i := 0
+		for search {
+			found := false
+			for _, gs := range *gsList {
+				if strings.Compare(gs.Name, findRemoteSourceName) == 0 {
+					found = true
+					break
+				}
+			}
+			if !found {
+				search = false
+			} else {
+				findRemoteSourceName = gitGitSourceDto.Name + fmt.Sprint(i)
+				i++
+			}
+		}
+
+		gitGitSourceDto.AgolaRemoteSourceName = &findRemoteSourceName
+
+		err = service.AgolaApi.CreateRemoteSource(*gitGitSourceDto.AgolaRemoteSourceName, string(gitGitSourceDto.GitType), gitGitSourceDto.GitAPIURL, gitGitSourceDto.GitClientID, gitGitSourceDto.GitClientSecret)
+		if err != nil {
+			log.Println("Error in CreateRemoteSource:", err)
+			InternalServerError(w)
+			return
+		}
+	}
+
+	gitSource.AgolaRemoteSource = *gitGitSourceDto.AgolaRemoteSourceName
+
+	service.Db.SaveGitSource(&gitSource)
+	JSONokResponse(w, gitSource.ID)
 }
 
 // @Summary Remove a GitSource
@@ -117,7 +177,7 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 	vars := mux.Vars(r)
 	gitSourceName := vars["gitSourceName"]
 
-	var req dto.UpdateRemoteSourceRequestDto
+	var req dto.UpdateGitSourceRequestDto
 	data, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(data, &req)
 
@@ -130,14 +190,8 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 	if req.AgolaRemoteSource != nil {
 		oldGitSource.AgolaRemoteSource = *req.AgolaRemoteSource
 	}
-	if req.AgolaToken != nil {
-		oldGitSource.AgolaToken = *req.AgolaToken
-	}
 	if req.GitAPIURL != nil {
 		oldGitSource.GitAPIURL = *req.GitAPIURL
-	}
-	if req.GitToken != nil {
-		oldGitSource.GitToken = *req.GitToken
 	}
 	if req.GitType != nil {
 		oldGitSource.GitType = *req.GitType
@@ -171,7 +225,15 @@ func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *h
 		return
 	}
 
-	organizations, err := service.GitGateway.GetOrganizations(gitSource)
+	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
+	organizations, err := service.GitGateway.GetOrganizations(gitSource, user)
 	if err != nil {
 		log.Println("GitGateway GetOrganizations error:", err.Error())
 		InternalServerError(w)

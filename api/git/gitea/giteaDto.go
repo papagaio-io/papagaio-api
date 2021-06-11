@@ -50,3 +50,17 @@ type OrganizationResponseDto struct {
 	ID         int    `json:"id"`
 	Visibility string `json:"visibility"`
 }
+
+type CreateOauth2AppRequestDto struct {
+	Name         string   `json:"name"`
+	RedirectUris []string `json:"redirect_uris"`
+}
+
+type CreateOauth2AppResponseDto struct {
+	ClientID     string   `json:"client_id"`
+	ClientSecret string   `json:"client_secret"`
+	Created      string   `json:"created"`
+	ID           int64    `json:"id"`
+	Name         string   `json:"name"`
+	RedirectURIs []string `json:"redirect_uris"`
+}

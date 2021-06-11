@@ -25,14 +25,15 @@ type Database interface {
 	GetGitSourceByName(name string) (*model.GitSource, error)
 	DeleteGitSource(id string) error
 
-	SaveUser(user *model.User) error
-	GetUserByEmail(email string) (*model.User, error)
-	DeleteUser(email string) error
-
 	GetOrganizationsTriggerTime() int
 	SaveOrganizationsTriggerTime(val int)
 	GetRunFailedTriggerTime() int
 	SaveRunFailedTriggerTime(val int)
+
+	GetUserByUserId(userId uint64) (*model.User, error)
+	GetUserByGitSourceNameAndID(gitSourceName string, id uint64) (*model.User, error)
+	SaveUser(user *model.User) (*model.User, error)
+	DeleteUser(userId uint) error
 }
 
 type AppDb struct {

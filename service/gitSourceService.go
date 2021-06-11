@@ -93,7 +93,7 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 		return
 	}
 
-	error := service.Db.DeleteGitSource(gitSource.ID)
+	error := service.Db.DeleteGitSource(gitSourceName)
 
 	if error != nil {
 		UnprocessableEntityResponse(w, error.Error())

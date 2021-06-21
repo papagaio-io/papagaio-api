@@ -328,6 +328,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	if !internalonly {
 		err = service.AgolaApi.DeleteOrganization(organization, userCreator)
 		if err != nil {
+			log.Println("error in agola DeleteOrganization:", err)
 			InternalServerError(w)
 			return
 		}

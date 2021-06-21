@@ -618,8 +618,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		return c.c.Do(req)
 	}
 
-	fmt.Println("user before:", *c.user.AgolaTokenName, ",", *c.user.AgolaToken)
-
 	req.Header.Set("Authorization", "token "+*c.user.AgolaToken)
 	response, err := c.c.Do(req)
 	if err != nil {
@@ -638,8 +636,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		req.Header.Set("Authorization", "token "+*c.user.AgolaToken)
 		response, err = c.c.Do(req)
 	}
-
-	fmt.Println("user after:", *c.user.AgolaTokenName, ",", *c.user.AgolaToken)
 
 	return response, err
 }

@@ -14,9 +14,12 @@ type GitSourcesDto struct {
 }
 
 type UpdateGitSourceRequestDto struct {
-	GitType           *types.GitType `json:"gitType"`
-	GitAPIURL         *string        `json:"gitApiUrl"`
-	AgolaRemoteSource *string        `json:"agolaRemoteSource"`
+	GitType         *types.GitType `json:"gitType"`
+	GitAPIURL       *string        `json:"gitApiUrl"`
+	GitClientID     *string        `json:"gitClientId"`
+	GitClientSecret *string        `json:"gitClientSecret"`
+
+	AgolaRemoteSource *string `json:"agolaRemoteSource"`
 }
 
 type CreateGitSourceRequestDto struct {

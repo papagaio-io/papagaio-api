@@ -155,11 +155,14 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 
 		user.AgolaUserRef = agolaUserRef
-		err = service.AgolaApi.CreateUserToken(user)
-		if err != nil {
-			log.Println("Error in CreateUserToken:", err)
-			InternalServerError(w)
-			return
+
+		if user.AgolaToken == nil {
+			err = service.AgolaApi.CreateUserToken(user)
+			if err != nil {
+				log.Println("Error in CreateUserToken:", err)
+				InternalServerError(w)
+				return
+			}
 		}
 
 		service.Db.SaveUser(user)

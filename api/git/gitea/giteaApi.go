@@ -61,7 +61,7 @@ func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, user *model.
 
 	reqBody := strings.NewReader(string(data))
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Add("content-type", "application/json")
+	req.Header.Set("content-type", "application/json")
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -482,7 +482,7 @@ func (giteaApi *GiteaApi) RefreshToken(gitSource *model.GitSource, refreshToken 
 	data, _ := json.Marshal(accessTokenRequest)
 	reqBody := strings.NewReader(string(data))
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -520,7 +520,7 @@ func (giteaApi *GiteaApi) CreateAgolaApp(gitSource *model.GitSource, user *model
 
 	reqBody := strings.NewReader(string(data))
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Add("content-type", "application/json")
+	req.Header.Set("content-type", "application/json")
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -576,7 +576,7 @@ type httpClient struct {
 }
 
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
-	req.Header.Add("Authorization", "bearer "+c.accessToken)
+	req.Header.Set("Authorization", "bearer "+c.accessToken)
 	return c.c.Do(req)
 
 }

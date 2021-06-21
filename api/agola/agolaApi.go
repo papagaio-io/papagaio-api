@@ -513,7 +513,7 @@ func (agolaApi *AgolaApi) CreateUserToken(user *model.User) error {
 	reqBody := strings.NewReader(string(data))
 
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+	req.Header.Set("Authorization", config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -614,15 +614,19 @@ type httpClient struct {
 
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	if c.isAdminUser {
-		req.Header.Add("Authorization", config.Config.Agola.AdminToken)
+		req.Header.Set("Authorization", config.Config.Agola.AdminToken)
 		return c.c.Do(req)
 	}
 
-	req.Header.Add("Authorization", "token "+*c.user.AgolaToken)
+	fmt.Println("user before:", *c.user.AgolaTokenName, ",", *c.user.AgolaToken)
+
+	req.Header.Set("Authorization", "token "+*c.user.AgolaToken)
 	response, err := c.c.Do(req)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("statucCode:", response.StatusCode)
 
 	if response.StatusCode == 401 {
 		err = c.agolaApi.CreateUserToken(c.user)
@@ -631,9 +635,11 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
-		req.Header.Add("Authorization", "token "+*c.user.AgolaToken)
+		req.Header.Set("Authorization", "token "+*c.user.AgolaToken)
 		response, err = c.c.Do(req)
 	}
+
+	fmt.Println("user after:", *c.user.AgolaTokenName, ",", *c.user.AgolaToken)
 
 	return response, err
 }

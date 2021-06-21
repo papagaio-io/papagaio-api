@@ -163,6 +163,13 @@ func updateGitSource(cmd *cobra.Command, args []string) {
 		}
 		requestDto.GitType = (*types.GitType)(&cfgGitSource.gitType)
 	}
+	if len(cfgGitSource.gitClientID) != 0 {
+		requestDto.GitClientID = &cfgGitSource.gitClientID
+	}
+	if len(cfgGitSource.gitClientSecret) != 0 {
+		requestDto.GitClientSecret = &cfgGitSource.gitClientSecret
+	}
+
 	data, _ := json.Marshal(requestDto)
 
 	client := &http.Client{}

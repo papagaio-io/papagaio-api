@@ -44,6 +44,8 @@ func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
 
+	db.DB.DropAll()
+
 	return db
 }
 

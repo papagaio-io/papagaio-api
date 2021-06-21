@@ -3,10 +3,12 @@ package agola
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/config"
@@ -510,7 +512,7 @@ func (agolaApi *AgolaApi) CreateUserToken(user *model.User) error {
 	}
 
 	if user.AgolaTokenName == nil {
-		tokenName := baseTokenName
+		tokenName := baseTokenName + "-" + fmt.Sprint(time.Now().Unix())
 		user.AgolaTokenName = &tokenName
 	}
 

@@ -77,14 +77,14 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 	setupOauth2Callback(apirouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)
 
 	//TODO SOLO PER I TEST. DA RIMUOVERE
-	ferouter := mux.NewRouter().PathPrefix("").Subrouter().UseEncodedPath()
+	/*ferouter := mux.NewRouter().PathPrefix("").Subrouter().UseEncodedPath()
 	router.PathPrefix("").Handler(ferouter)
-	setupTestOauth2Callback(ferouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)
+	setupTestOauth2Callback(ferouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)*/
 }
 
-func setupTestOauth2Callback(router *mux.Router, ctrl Oauth2Controller) {
+/*func setupTestOauth2Callback(router *mux.Router, ctrl Oauth2Controller) {
 	router.HandleFunc("", ctrl.Callback).Methods("GET")
-}
+}*/
 
 func setupPingRouter(router *mux.Router) {
 	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {

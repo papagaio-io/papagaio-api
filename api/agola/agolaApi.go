@@ -484,7 +484,12 @@ func (agolaApi *AgolaApi) GetUsers() (*[]UserDto, error) {
 }
 
 func (agolaApi *AgolaApi) CreateUserToken(user *model.User) error {
-	log.Println("RefreshUserToken user", user.AgolaUserRef)
+	if user == nil || user.AgolaUserRef == nil {
+		log.Println("CreateUserToken error user nil")
+		return errors.New("user nil error")
+	}
+
+	log.Println("RefreshAgolaUserToken user", *user.AgolaUserRef)
 
 	if user.UserID == nil {
 		log.Println("UserID is nil")

@@ -198,6 +198,12 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 	if req.GitType != nil {
 		oldGitSource.GitType = *req.GitType
 	}
+	if req.GitClientID != nil {
+		oldGitSource.GitClientID = *req.GitClientID
+	}
+	if req.GitClientSecret != nil {
+		oldGitSource.GitSecret = *req.GitClientSecret
+	}
 
 	service.Db.SaveGitSource(oldGitSource)
 }

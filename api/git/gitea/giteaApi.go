@@ -191,6 +191,7 @@ func (giteaApi *GiteaApi) GetOrganizationTeams(gitSource *model.GitSource, gitOr
 	client := &http.Client{}
 
 	URLApi := getOrganizationTeamsListUrl(gitSource.GitAPIURL, gitOrgRef, gitSource.GitToken)
+	fmt.Println("GetOrganizationTeams url:", URLApi)
 
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)

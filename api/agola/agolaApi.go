@@ -624,8 +624,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	fmt.Println("statucCode:", response.StatusCode)
-
 	if response.StatusCode == 401 {
 		err = c.agolaApi.CreateUserToken(c.user)
 		if err != nil {

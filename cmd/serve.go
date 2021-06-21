@@ -77,8 +77,9 @@ func serve(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 	ctrlOauth2 := service.Oauth2Service{
-		Db: &db,
-		Sd: sd,
+		Db:         &db,
+		Sd:         sd,
+		GitGateway: &gitGateway,
 	}
 
 	router := mux.NewRouter()

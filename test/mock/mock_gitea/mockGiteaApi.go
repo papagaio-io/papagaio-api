@@ -6,10 +6,10 @@ package mock_gitea
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	oauth2 "golang.org/x/oauth2"
 	reflect "reflect"
 	dto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	gitea "wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
+	common "wecode.sorint.it/opensource/papagaio-api/common"
 	model "wecode.sorint.it/opensource/papagaio-api/model"
 )
 
@@ -258,10 +258,10 @@ func (mr *MockGiteaInterfaceMockRecorder) CreateAgolaApp(gitSource, user interfa
 }
 
 // GetOauth2AccessToken mocks base method
-func (m *MockGiteaInterface) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*oauth2.Token, error) {
+func (m *MockGiteaInterface) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOauth2AccessToken", gitSource, code)
-	ret0, _ := ret[0].(*oauth2.Token)
+	ret0, _ := ret[0].(*common.Token)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -273,10 +273,10 @@ func (mr *MockGiteaInterfaceMockRecorder) GetOauth2AccessToken(gitSource, code i
 }
 
 // RefreshToken mocks base method
-func (m *MockGiteaInterface) RefreshToken(gitSource *model.GitSource, refreshToken string) (*oauth2.Token, error) {
+func (m *MockGiteaInterface) RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RefreshToken", gitSource, refreshToken)
-	ret0, _ := ret[0].(*oauth2.Token)
+	ret0, _ := ret[0].(*common.Token)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

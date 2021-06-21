@@ -11,7 +11,7 @@ import (
 )
 
 func SynkMembers(org *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway, user *model.User) error {
-	log.Println("SynkMembers", org.AgolaOrganizationRef, "start")
+	log.Println("SynkMembers", org.AgolaOrganizationRef, org.Name, "start")
 
 	if gitSource != nil {
 		if gitSource.GitType == types.Gitea {

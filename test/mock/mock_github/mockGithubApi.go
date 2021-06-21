@@ -6,10 +6,10 @@ package mock_github
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	oauth2 "golang.org/x/oauth2"
 	reflect "reflect"
 	dto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	github "wecode.sorint.it/opensource/papagaio-api/api/git/github"
+	common "wecode.sorint.it/opensource/papagaio-api/common"
 	model "wecode.sorint.it/opensource/papagaio-api/model"
 )
 
@@ -273,10 +273,10 @@ func (mr *MockGithubInterfaceMockRecorder) GetUserInfo(gitSource, user interface
 }
 
 // GetOauth2AccessToken mocks base method
-func (m *MockGithubInterface) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*oauth2.Token, error) {
+func (m *MockGithubInterface) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOauth2AccessToken", gitSource, code)
-	ret0, _ := ret[0].(*oauth2.Token)
+	ret0, _ := ret[0].(*common.Token)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -288,10 +288,10 @@ func (mr *MockGithubInterfaceMockRecorder) GetOauth2AccessToken(gitSource, code 
 }
 
 // RefreshToken mocks base method
-func (m *MockGithubInterface) RefreshToken(gitSource *model.GitSource, refreshToken string) (*oauth2.Token, error) {
+func (m *MockGithubInterface) RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RefreshToken", gitSource, refreshToken)
-	ret0, _ := ret[0].(*oauth2.Token)
+	ret0, _ := ret[0].(*common.Token)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

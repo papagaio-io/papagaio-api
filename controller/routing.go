@@ -52,7 +52,7 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 
 	setupPingRouter(router)
 
-	setupGetOrganizationsRouter(apirouter.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
+	setupGetOrganizationsRouter(apirouter.PathPrefix("/organizations").Subrouter(), ctrlOrganization) //USED FOR DEBUGGING
 	setupCreateOrganizationEndpoint(apirouter.PathPrefix("/createorganization").Subrouter(), ctrlOrganization)
 	setupDeleteOrganizationEndpoint(apirouter.PathPrefix("/deleteorganization").Subrouter(), ctrlOrganization)
 	setupAddOrganizationExternalUserEndpoint(apirouter.PathPrefix("/addexternaluser").Subrouter(), ctrlOrganization)
@@ -74,7 +74,16 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 	setupSaveTriggersConfigEndpoint(apirouter.PathPrefix("/savetriggersconfig").Subrouter(), ctrlTrigger)
 
 	setupOauth2Login(apirouter.PathPrefix("/auth/login").Subrouter(), ctrlOauth2)
-	setupOauth2Callback(apirouter.PathPrefix("/auth/authorize").Subrouter(), ctrlOauth2)
+	setupOauth2Callback(apirouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)
+
+	//TODO SOLO PER I TEST. DA RIMUOVERE
+	ferouter := mux.NewRouter().PathPrefix("").Subrouter().UseEncodedPath()
+	router.PathPrefix("").Handler(ferouter)
+	setupTestOauth2Callback(ferouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)
+}
+
+func setupTestOauth2Callback(router *mux.Router, ctrl Oauth2Controller) {
+	router.HandleFunc("", ctrl.Callback).Methods("GET")
 }
 
 func setupPingRouter(router *mux.Router) {
@@ -84,7 +93,7 @@ func setupPingRouter(router *mux.Router) {
 }
 
 func setupGetOrganizationsRouter(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedAllRoutes)
+	router.Use(handleRestrictedAdminRoutes)
 	router.HandleFunc("", ctrl.GetOrganizations).Methods("GET")
 }
 
@@ -109,22 +118,21 @@ func setupDeleteOrganizationExternalUserEndpoint(router *mux.Router, ctrl Organi
 }
 
 func setupReportEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedAllRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("", ctrl.GetReport).Methods("GET")
 }
 
 func setupOrganizationReportEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedAllRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("/{organizationRef}", ctrl.GetOrganizationReport).Methods("GET")
 }
 
 func setupProjectReportEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedAllRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("/{organizationRef}/{projectName}", ctrl.GetProjectReport).Methods("GET")
 }
 
 func setupGetGitSourcesEndpoint(router *mux.Router, ctrl GitSourceController) {
-	router.Use(handleRestrictedAllRoutes)
 	router.HandleFunc("", ctrl.GetGitSources).Methods("GET")
 }
 
@@ -145,7 +153,7 @@ func setupDeleteGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) 
 
 func setupGetGitOrganizations(router *mux.Router, ctrl GitSourceController) {
 	router.Use(handleLoggedUserRoutes)
-	router.HandleFunc("/{gitSourceName}", ctrl.GetGitOrganizations).Methods("GET")
+	router.HandleFunc("", ctrl.GetGitOrganizations).Methods("GET")
 }
 
 func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
@@ -197,9 +205,11 @@ func handleLoggedUserRoutes(h http.Handler) http.Handler {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		userId := claims["sub"].(uint64)
+		//userId := claims["sub"].(uint64)
+		userId := uint64(claims["sub"].(float64))
 
-		exp := claims["sub"].(int64)
+		//exp := claims["exp"].(int64)
+		exp := int64(claims["exp"].(float64))
 		expTime := time.Unix(exp, 0)
 		if common.IsAccessTokenExpired(expTime) {
 			log.Println("Your token was expired at: ", expTime)
@@ -215,7 +225,9 @@ func handleLoggedUserRoutes(h http.Handler) http.Handler {
 			return
 		}
 
+		fmt.Println("http request user", userId)
 		r.Header.Set(XAuthUserId, fmt.Sprint(userId))
+		h.ServeHTTP(w, r)
 	})
 }
 
@@ -255,9 +267,11 @@ func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 			}
 
 			claims := token.Claims.(jwt.MapClaims)
-			userId := claims["sub"].(uint64)
+			//userId := claims["sub"].(uint64)
+			userId := uint64(claims["sub"].(float64))
 
-			exp := claims["sub"].(int64)
+			//exp := claims["exp"].(int64)
+			exp := int64(claims["exp"].(float64))
 			expTime := time.Unix(exp, 0)
 			if common.IsAccessTokenExpired(expTime) {
 				log.Println("Your token was expired at: ", expTime)
@@ -273,7 +287,9 @@ func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 				return
 			}
 
+			fmt.Println("http request user", userId)
 			r.Header.Set(XAuthUserId, fmt.Sprint(userId))
+			h.ServeHTTP(w, r)
 		}
 	})
 }
@@ -283,7 +299,7 @@ func checkIsAdminUser(authorization string) bool {
 	return strings.Compare(token, config.Config.AdminToken) == 0
 }
 
-const redirectPath string = "%s/api/auth/authorize"
+const redirectPath string = "%s/auth/callback"
 
 func GetRedirectUrl() string {
 	return fmt.Sprintf(redirectPath, config.Config.Server.LocalHostAddress)

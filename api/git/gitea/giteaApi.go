@@ -8,8 +8,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
-	"golang.org/x/oauth2"
 	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/common"
@@ -37,8 +37,8 @@ type GiteaInterface interface {
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
 	CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*CreateOauth2AppResponseDto, error)
 
-	GetOauth2AccessToken(gitSource *model.GitSource, code string) (*oauth2.Token, error)
-	RefreshToken(gitSource *model.GitSource, refreshToken string) (*oauth2.Token, error)
+	GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error)
+	RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error)
 }
 
 type GiteaApi struct {
@@ -413,6 +413,8 @@ func (giteaApi *GiteaApi) IsUserOwner(gitSource *model.GitSource, user *model.Us
 }
 
 func (giteaApi *GiteaApi) GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error) {
+	log.Println("GetUserInfo start")
+
 	client, _ := giteaApi.getClient(gitSource, user)
 
 	URLApi := getUserInfoUrl(gitSource.GitAPIURL)
@@ -429,13 +431,17 @@ func (giteaApi *GiteaApi) GetUserInfo(gitSource *model.GitSource, user *model.Us
 		var response dto.UserInfoDto
 		json.Unmarshal(body, &response)
 
+		log.Println("GetUserInfo end")
+
 		return &response, nil
 	}
 
 	return nil, err
 }
 
-func (giteaApi *GiteaApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*oauth2.Token, error) {
+func (giteaApi *GiteaApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
+	log.Println("GetOauth2AccessToken start")
+
 	client := &http.Client{}
 
 	URLApi := getOauth2AccessTokenUrl(gitSource.GitAPIURL)
@@ -443,6 +449,8 @@ func (giteaApi *GiteaApi) GetOauth2AccessToken(gitSource *model.GitSource, code 
 	data, _ := json.Marshal(accessTokenRequest)
 	reqBody := strings.NewReader(string(data))
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
+
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -452,23 +460,29 @@ func (giteaApi *GiteaApi) GetOauth2AccessToken(gitSource *model.GitSource, code 
 
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
-		var response oauth2.Token
+		var response common.Token
 		json.Unmarshal(body, &response)
 
-		return &response, nil
-	}
+		response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
 
-	return nil, err
+		log.Println("GetOauth2AccessToken end")
+
+		return &response, nil
+	} else {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
 }
 
-func (giteaApi *GiteaApi) RefreshToken(gitSource *model.GitSource, refreshToken string) (*oauth2.Token, error) {
+func (giteaApi *GiteaApi) RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error) {
 	client := &http.Client{}
 
 	URLApi := getOauth2AccessTokenUrl(gitSource.GitAPIURL)
-	accessTokenRequest := dto.AccessTokenRequestDto{ClientID: gitSource.GitClientID, ClientSecret: gitSource.GitSecret, GrantType: "refresh_token", RedirectURL: controller.GetRedirectUrl()}
+	accessTokenRequest := dto.AccessTokenRequestDto{ClientID: gitSource.GitClientID, ClientSecret: gitSource.GitSecret, GrantType: "refresh_token", RedirectURL: controller.GetRedirectUrl(), RefreshToken: refreshToken}
 	data, _ := json.Marshal(accessTokenRequest)
 	reqBody := strings.NewReader(string(data))
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -478,13 +492,20 @@ func (giteaApi *GiteaApi) RefreshToken(gitSource *model.GitSource, refreshToken 
 
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
-		var response oauth2.Token
+		var response common.Token
 		json.Unmarshal(body, &response)
 
-		return &response, nil
-	}
+		response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
 
-	return nil, err
+		return &response, nil
+	} else {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return nil, errors.New(string(respMessage))
+	}
+}
+
+type Extra struct {
+	Expiry int `json:"expires_in,omitempty"`
 }
 
 func (giteaApi *GiteaApi) CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*CreateOauth2AppResponseDto, error) {
@@ -526,9 +547,10 @@ func (giteaApi *GiteaApi) getClient(gitSource *model.GitSource, user *model.User
 	if common.IsAccessTokenExpired(user.Oauth2AccessTokenExpiresAt) {
 		if user.UserID == nil {
 			log.Println("Can not refresh token for user nil")
-			return nil, errors.New("Can not refresh token for user nil")
+			return nil, errors.New("can not refresh token for user nil")
 		}
 
+		log.Println("token is to refresh")
 		token, err := giteaApi.RefreshToken(gitSource, user.Oauth2RefreshToken)
 
 		if err != nil {
@@ -538,7 +560,7 @@ func (giteaApi *GiteaApi) getClient(gitSource *model.GitSource, user *model.User
 
 		user.Oauth2AccessToken = token.AccessToken
 		user.Oauth2RefreshToken = token.RefreshToken
-		user.Oauth2AccessTokenExpiresAt = token.Expiry
+		user.Oauth2AccessTokenExpiresAt = time.Now().Add(time.Second * time.Duration(token.Expiry))
 
 		giteaApi.Db.SaveUser(user)
 	}

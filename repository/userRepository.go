@@ -26,7 +26,7 @@ func (db *AppDb) GetUserByUserId(userId uint64) (*model.User, error) {
 			var localUser model.User
 			dst, _ = item.ValueCopy(dst)
 			json.Unmarshal(dst, &localUser)
-			if localUser.UserID != &userId {
+			if *localUser.UserID != userId {
 				continue
 			}
 
@@ -79,8 +79,11 @@ func (db *AppDb) SaveUser(user *model.User) (*model.User, error) {
 			return nil, err
 		}
 
-		id, err := seq.Next()
-		seq.Release()
+		id, _ := seq.Next()
+		if id == 0 {
+			id, _ = seq.Next()
+		}
+		err = seq.Release()
 		if err != nil {
 			return nil, err
 		}
@@ -105,5 +108,5 @@ func (db *AppDb) SaveUser(user *model.User) (*model.User, error) {
 }
 
 func (db *AppDb) DeleteUser(userId uint) error {
-	return db.DB.DropPrefix([]byte("user/" + string(userId)))
+	return db.DB.DropPrefix([]byte("user/" + fmt.Sprint(userId)))
 }

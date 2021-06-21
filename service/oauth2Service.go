@@ -77,7 +77,8 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 	claims := token.Claims.(jwt.MapClaims)
 	gitSourceName := claims["git_source_name"].(string)
 
-	exp := claims["sub"].(int64)
+	exp := int64(claims["exp"].(float64))
+	//exp := claims["exp"].(int64)
 	expTime := time.Unix(exp, 0)
 	if common.IsAccessTokenExpired(expTime) {
 		log.Println("Your token was expired at: ", expTime)
@@ -96,16 +97,17 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("error during access token request:", err)
 		InternalServerError(w)
+		return
 	}
 
 	tempUser := &model.User{
 		Oauth2AccessToken:          accessToken.AccessToken,
-		Oauth2AccessTokenExpiresAt: accessToken.Expiry,
+		Oauth2AccessTokenExpiresAt: accessToken.ExpiryAt,
 		Oauth2RefreshToken:         accessToken.RefreshToken,
 	}
 
 	userInfo, err := service.GitGateway.GetUserInfo(gitSource, tempUser)
-	if err != nil {
+	if err != nil || userInfo == nil {
 		log.Println("Failed to get userinfo")
 		InternalServerError(w)
 		return
@@ -122,7 +124,7 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	user.Oauth2AccessToken = accessToken.AccessToken
-	user.Oauth2AccessTokenExpiresAt = accessToken.Expiry
+	user.Oauth2AccessTokenExpiresAt = accessToken.ExpiryAt
 	user.Oauth2RefreshToken = accessToken.RefreshToken
 	user, err = service.Db.SaveUser(user)
 
@@ -141,5 +143,5 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 	response := dto.OauthCallbackResponseDto{Token: userToken, UserID: *user.UserID, UserInfo: *userInfo}
 	JSONokResponse(w, response)
 
-	log.Println("Callback end for user", user.UserID)
+	log.Println("Callback end for user:", *user.UserID)
 }

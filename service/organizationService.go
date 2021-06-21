@@ -75,7 +75,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 32)
+	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")
@@ -442,13 +442,28 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
+	gitsource, _ := service.Db.GetGitSourceByName(user.GitSourceName)
+	if gitsource == nil {
+		log.Println("gitSource", user.GitSourceName, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	organizations, _ := service.Db.GetOrganizations()
 
 	retVal := make([]dto.OrganizationDto, 0)
 	for _, organization := range *organizations {
-		gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
-		user, _ := service.Db.GetUserByUserId(organization.UserIDCreator)
-		retVal = append(retVal, manager.GetOrganizationDto(user, &organization, gitsource, service.GitGateway))
+		if strings.Compare(organization.GitSourceName, user.GitSourceName) == 0 {
+			retVal = append(retVal, manager.GetOrganizationDto(user, &organization, gitsource, service.GitGateway))
+		}
 	}
 
 	JSONokResponse(w, retVal)
@@ -469,14 +484,32 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
+	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
+	gitsource, _ := service.Db.GetGitSourceByName(user.GitSourceName)
+	if gitsource == nil {
+		log.Println("gitSource", user.GitSourceName, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if organization == nil {
 		NotFoundResponse(w)
 		return
 	}
 
-	gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
-	user, _ := service.Db.GetUserByUserId(organization.UserIDCreator)
+	if strings.Compare(organization.GitSourceName, user.GitSourceName) != 0 {
+		log.Println("user not authorized to get report of organizarion", organizationRef)
+		InternalServerError(w) //TODO change to not authorized
+		return
+	}
 
 	JSONokResponse(w, manager.GetOrganizationDto(user, organization, gitsource, service.GitGateway))
 }
@@ -497,9 +530,30 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	organizationRef := vars["organizationRef"]
 	projectName := vars["projectName"]
 
+	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
+	gitsource, _ := service.Db.GetGitSourceByName(user.GitSourceName)
+	if gitsource == nil {
+		log.Println("gitSource", user.GitSourceName, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if organization == nil {
 		NotFoundResponse(w)
+		return
+	}
+
+	if strings.Compare(organization.GitSourceName, user.GitSourceName) != 0 {
+		log.Println("user not authorized to get report of organizarion", organizationRef)
+		InternalServerError(w) //TODO change to not authorized
 		return
 	}
 

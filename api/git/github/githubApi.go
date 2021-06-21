@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -39,8 +40,8 @@ type GithubInterface interface {
 
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
 
-	GetOauth2AccessToken(gitSource *model.GitSource, code string) (*oauth2.Token, error)
-	RefreshToken(gitSource *model.GitSource, refreshToken string) (*oauth2.Token, error)
+	GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error)
+	RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error)
 }
 
 type GithubApi struct {
@@ -311,7 +312,7 @@ func (githubApi *GithubApi) getClient(gitSource *model.GitSource, user *model.Us
 
 		user.Oauth2AccessToken = token.AccessToken
 		user.Oauth2RefreshToken = token.RefreshToken
-		user.Oauth2AccessTokenExpiresAt = token.Expiry
+		user.Oauth2AccessTokenExpiresAt = token.ExpiryAt
 
 		githubApi.Db.SaveUser(user)
 	}
@@ -335,7 +336,7 @@ func GetOauth2AuthorizeUrl(gitClientId string, redirectUrl string, state string)
 	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, redirectUrl, state)
 }
 
-func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*oauth2.Token, error) {
+func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
 	client := &http.Client{}
 
 	URLApi := oauth2AccessTokenPath
@@ -352,8 +353,10 @@ func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, cod
 
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
-		var response oauth2.Token
+		var response common.Token
 		json.Unmarshal(body, &response)
+
+		response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
 
 		return &response, nil
 	}
@@ -361,7 +364,7 @@ func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, cod
 	return nil, err
 }
 
-func (githubApi *GithubApi) RefreshToken(gitSource *model.GitSource, refreshToken string) (*oauth2.Token, error) {
+func (githubApi *GithubApi) RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error) {
 	client := &http.Client{}
 
 	URLApi := oauth2AccessTokenPath
@@ -378,8 +381,10 @@ func (githubApi *GithubApi) RefreshToken(gitSource *model.GitSource, refreshToke
 
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
-		var response oauth2.Token
+		var response common.Token
 		json.Unmarshal(body, &response)
+
+		response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
 
 		return &response, nil
 	}

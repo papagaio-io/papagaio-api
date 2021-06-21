@@ -1,10 +1,10 @@
 package git
 
 import (
-	"golang.org/x/oauth2"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
+	"wecode.sorint.it/opensource/papagaio-api/common"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/types"
 )
@@ -134,7 +134,7 @@ func (gitGateway *GitGateway) GetOauth2AuthorizePathUrl(gitSource *model.GitSour
 	}
 }
 
-func (gitGateway *GitGateway) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*oauth2.Token, error) {
+func (gitGateway *GitGateway) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
 	if gitSource.GitType == types.Gitea {
 		return gitGateway.GiteaApi.GetOauth2AccessToken(gitSource, code)
 	} else {
@@ -142,7 +142,7 @@ func (gitGateway *GitGateway) GetOauth2AccessToken(gitSource *model.GitSource, c
 	}
 }
 
-func (gitGateway *GitGateway) RefreshToken(gitSource *model.GitSource, refreshToken string) (*oauth2.Token, error) {
+func (gitGateway *GitGateway) RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error) {
 	if gitSource.GitType == types.Gitea {
 		return gitGateway.GiteaApi.RefreshToken(gitSource, refreshToken)
 	} else {

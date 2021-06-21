@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -44,7 +45,8 @@ func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Re
 	gs := make([]dto.GitSourcesDto, 0)
 
 	for _, v := range *gitSources {
-		gs = append(gs, dto.GitSourcesDto{Name: v.Name, GitAPIURL: v.GitAPIURL})
+		login := config.Config.Server.LocalHostAddress + "/api/auth/login/" + v.Name
+		gs = append(gs, dto.GitSourcesDto{Name: v.Name, GitAPIURL: v.GitAPIURL, LoginURL: login})
 	}
 
 	JSONokResponse(w, &gs)
@@ -213,23 +215,21 @@ func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *h
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	vars := mux.Vars(r)
-	gitSourceName := vars["gitSourceName"]
-	gitSource, _ := service.Db.GetGitSourceByName(gitSourceName)
-
-	log.Println("gitSourceName:", gitSourceName)
-
-	if gitSource == nil {
-		log.Println("gitSource", gitSourceName, "non trovato")
-		NotFoundResponse(w)
-		return
-	}
-
 	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")
 		InternalServerError(w)
+		return
+	}
+
+	gitSource, _ := service.Db.GetGitSourceByName(user.GitSourceName)
+
+	log.Println("gitSourceName:", user.GitSourceName)
+
+	if gitSource == nil {
+		log.Println("gitSource", user.GitSourceName, "non trovato")
+		NotFoundResponse(w)
 		return
 	}
 

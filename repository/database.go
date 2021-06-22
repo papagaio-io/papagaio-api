@@ -26,9 +26,11 @@ type Database interface {
 	DeleteGitSource(id string) error
 
 	GetOrganizationsTriggerTime() int
-	SaveOrganizationsTriggerTime(val int)
+	SaveOrganizationsTriggerTime(value int)
 	GetRunFailedTriggerTime() int
 	SaveRunFailedTriggerTime(val int)
+	GetUsersTriggerTime() int
+	SaveUsersTriggerTime(value int)
 
 	GetUsersIDByGitSourceName(gitSourceName string) ([]uint64, error)
 	GetUserByUserId(userId uint64) (*model.User, error)

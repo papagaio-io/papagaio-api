@@ -25,8 +25,9 @@ func (service *TriggersService) GetTriggersConfig(w http.ResponseWriter, r *http
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	dto := dto.ConfigTriggersDto{}
-	dto.OrganizationsDefaultTriggerTime = service.Tr.GetOrganizationsTriggerTime()
-	dto.RunFailedDefaultTriggerTime = service.Tr.GetRunFailedTriggerTime()
+	dto.OrganizationsTriggerTime = service.Tr.GetOrganizationsTriggerTime()
+	dto.RunFailedTriggerTime = service.Tr.GetRunFailedTriggerTime()
+	dto.UsersTriggerTime = service.Tr.GetUsersTriggerTime()
 	JSONokResponse(w, dto)
 }
 
@@ -42,6 +43,13 @@ func (service *TriggersService) SaveTriggersConfig(w http.ResponseWriter, r *htt
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req *dto.ConfigTriggersDto
 	json.NewDecoder(r.Body).Decode(&req)
-	service.Db.SaveOrganizationsTriggerTime(int(req.OrganizationsDefaultTriggerTime))
-	service.Db.SaveRunFailedTriggerTime(int(req.RunFailedDefaultTriggerTime))
+	if req.OrganizationsTriggerTime != 0 {
+		service.Db.SaveOrganizationsTriggerTime(int(req.OrganizationsTriggerTime))
+	}
+	if req.RunFailedTriggerTime != 0 {
+		service.Db.SaveRunFailedTriggerTime(int(req.RunFailedTriggerTime))
+	}
+	if req.UsersTriggerTime != 0 {
+		service.Db.SaveUsersTriggerTime(int(req.UsersTriggerTime))
+	}
 }

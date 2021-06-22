@@ -23,6 +23,7 @@
     "LogHttpRequest": true,
     "TriggersConfig": {
       "OrganizationsDefaultTriggerTime": 5,
-      "RunFailedDefaultTriggerTime": 5
+      "RunFailedDefaultTriggerTime": 5,
+      "UsersDefaultTriggerTime": 1440
     }
 }

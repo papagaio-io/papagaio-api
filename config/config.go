@@ -41,6 +41,7 @@ type Configuration struct {
 type TriggersConfig struct {
 	OrganizationsDefaultTriggerTime uint
 	RunFailedDefaultTriggerTime     uint
+	UsersDefaultTriggerTime         uint
 }
 
 type AgolaConfig struct {

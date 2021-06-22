@@ -37,8 +37,6 @@ definitions:
         type: string
       behaviourType:
         type: string
-      gitSourceName:
-        type: string
       name:
         type: string
       visibility:
@@ -54,6 +52,8 @@ definitions:
   dto.GitSourcesDto:
     properties:
       gitApiUrl:
+        type: string
+      loginUrl:
         type: string
       name:
         type: string
@@ -134,11 +134,11 @@ definitions:
     properties:
       agolaRemoteSource:
         type: string
-      agolaToken:
-        type: string
       gitApiUrl:
         type: string
-      gitToken:
+      gitClientId:
+        type: string
+      gitSecret:
         type: string
       gitType:
         type: string
@@ -175,9 +175,9 @@ definitions:
         additionalProperties:
           $ref: '#/definitions/model.Project'
         type: object
-      userEmailCreator:
-        example: nome.cognome@sorint.it
-        type: string
+      userIdCreator:
+        example: 1
+        type: integer
       visibility:
         example: public
         type: string
@@ -482,25 +482,6 @@ paths:
       summary: Return a list of gitsources
       tags:
       - GitSources
-  /organizations:
-    get:
-      description: Return the list of organizations
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ok
-          schema:
-            items:
-              $ref: '#/definitions/model.Organization'
-            type: array
-        "400":
-          description: bad request
-      security:
-      - OAuth2Password: []
-      summary: Return the list of organizations
-      tags:
-      - Organization
   /report:
     get:
       description: Obtain a full report of all organizations

@@ -197,10 +197,8 @@ func handleLoggedUserRoutes(h http.Handler) http.Handler {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		//userId := claims["sub"].(uint64)
 		userId := uint64(claims["sub"].(float64))
 
-		//exp := claims["exp"].(int64)
 		exp := int64(claims["exp"].(float64))
 		expTime := time.Unix(exp, 0)
 		if common.IsAccessTokenExpired(expTime) {
@@ -269,10 +267,8 @@ func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 			}
 
 			claims := token.Claims.(jwt.MapClaims)
-			//userId := claims["sub"].(uint64)
 			userId := uint64(claims["sub"].(float64))
 
-			//exp := claims["exp"].(int64)
 			exp := int64(claims["exp"].(float64))
 			expTime := time.Unix(exp, 0)
 			if common.IsAccessTokenExpired(expTime) {

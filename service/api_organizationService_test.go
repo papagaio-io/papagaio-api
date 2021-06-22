@@ -9,11 +9,13 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/gorilla/mux"
 	"gotest.tools/assert"
+	"wecode.sorint.it/opensource/papagaio-api/api/git"
+	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/test"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_agola"
+	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_gitea"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
@@ -50,19 +52,26 @@ func TestAddExternalUser(t *testing.T) {
 	commonMutex := utils.NewEventMutex()
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
 
 	serviceOrganization := OrganizationService{
 		Db:          db,
 		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		CommonMutex: &commonMutex,
 	}
-	user := model.User{Email: "user@email.com"}
+	user := test.MakeUser()
 
 	org := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
 
+	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.Name).Return(true, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
-	router := mux.NewRouter()
+
+	router := test.SetupBaseRouter(user)
 
 	router.HandleFunc("/{organizationName}", serviceOrganization.AddExternalUser)
 	ts := httptest.NewServer(router)
@@ -89,13 +98,13 @@ func TestAddExternalUserWhenOrganizationNotFound(t *testing.T) {
 		AgolaApi:    agolaApi,
 		CommonMutex: &commonMutex,
 	}
-	user := model.User{Email: "user@email.com"}
+	user := test.MakeUser()
 
 	organizationRefTest := "testnotfound"
+	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(nil, nil)
 
-	router := mux.NewRouter()
-
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationName}", serviceOrganization.AddExternalUser)
 	ts := httptest.NewServer(router)
 
@@ -115,29 +124,36 @@ func TestRemoveExternalUserOk(t *testing.T) {
 	commonMutex := utils.NewEventMutex()
 	db := mock_repository.NewMockDatabase(ctl)
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
 
 	serviceOrganization := OrganizationService{
 		Db:          db,
 		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
 		CommonMutex: &commonMutex,
 	}
 	mail := "user@email.com"
-	user := model.User{Email: mail}
+	user := test.MakeUser()
 
 	org := (*test.MakeOrganizationList())[0]
 	org.ExternalUsers = make(map[string]bool)
 	org.ExternalUsers[mail] = true
 
-	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
-	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
-	router := mux.NewRouter()
+	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
 
+	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.Name).Return(true, nil)
+	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
+
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationName}", serviceOrganization.RemoveExternalUser)
 	ts := httptest.NewServer(router)
 
 	client := ts.Client()
 
-	data, _ := json.Marshal(user)
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mail})
 	requestBody := strings.NewReader(string(data))
 	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
 	assert.Equal(t, err, nil)
@@ -160,22 +176,23 @@ func TestRemoveExternalUserWhenAgolaRefNotFound(t *testing.T) {
 		CommonMutex: &commonMutex,
 	}
 	mail := "user@email.com"
-	user := model.User{Email: mail}
+	user := test.MakeUser()
 
 	org := (*test.MakeOrganizationList())[0]
 	org.ExternalUsers = make(map[string]bool)
 	org.ExternalUsers[mail] = true
 
+	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, errors.New(string("someError")))
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 
 	router.HandleFunc("/{organizationName}", serviceOrganization.RemoveExternalUser)
 	ts := httptest.NewServer(router)
 
 	client := ts.Client()
 
-	data, _ := json.Marshal(user)
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mail})
 	requestBody := strings.NewReader(string(data))
 	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
 	assert.Equal(t, err, nil)

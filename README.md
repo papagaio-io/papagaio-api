@@ -36,5 +36,5 @@ example: papagaio user add --email {userEmail} --token {papagaioAdminToken}
 
 # Swagger
 
-* Use command line "swag init" to update swaw autogenerate files
+* Use command line "swag init" to update swag autogenerate files
 * URL: /swagger/index.html or /swagger/

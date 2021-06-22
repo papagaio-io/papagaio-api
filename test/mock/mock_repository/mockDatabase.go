@@ -224,15 +224,15 @@ func (mr *MockDatabaseMockRecorder) GetOrganizationsTriggerTime() *gomock.Call {
 }
 
 // SaveOrganizationsTriggerTime mocks base method
-func (m *MockDatabase) SaveOrganizationsTriggerTime(val int) {
+func (m *MockDatabase) SaveOrganizationsTriggerTime(value int) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SaveOrganizationsTriggerTime", val)
+	m.ctrl.Call(m, "SaveOrganizationsTriggerTime", value)
 }
 
 // SaveOrganizationsTriggerTime indicates an expected call of SaveOrganizationsTriggerTime
-func (mr *MockDatabaseMockRecorder) SaveOrganizationsTriggerTime(val interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveOrganizationsTriggerTime(value interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveOrganizationsTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveOrganizationsTriggerTime), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveOrganizationsTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveOrganizationsTriggerTime), value)
 }
 
 // GetRunFailedTriggerTime mocks base method
@@ -259,6 +259,32 @@ func (m *MockDatabase) SaveRunFailedTriggerTime(val int) {
 func (mr *MockDatabaseMockRecorder) SaveRunFailedTriggerTime(val interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveRunFailedTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveRunFailedTriggerTime), val)
+}
+
+// GetUsersTriggerTime mocks base method
+func (m *MockDatabase) GetUsersTriggerTime() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersTriggerTime")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetUsersTriggerTime indicates an expected call of GetUsersTriggerTime
+func (mr *MockDatabaseMockRecorder) GetUsersTriggerTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersTriggerTime", reflect.TypeOf((*MockDatabase)(nil).GetUsersTriggerTime))
+}
+
+// SaveUsersTriggerTime mocks base method
+func (m *MockDatabase) SaveUsersTriggerTime(value int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SaveUsersTriggerTime", value)
+}
+
+// SaveUsersTriggerTime indicates an expected call of SaveUsersTriggerTime
+func (mr *MockDatabaseMockRecorder) SaveUsersTriggerTime(value interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveUsersTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveUsersTriggerTime), value)
 }
 
 // GetUsersIDByGitSourceName mocks base method

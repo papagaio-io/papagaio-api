@@ -77,9 +77,7 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 			locked = false
 		}
 
-		//TODO trigger time value
-		//time.Sleep(time.Duration(tr.GetOrganizationsTriggerTime()) * time.Minute)
-		time.Sleep(24 * time.Hour)
+		time.Sleep(time.Duration(tr.GetUsersTriggerTime()) * time.Minute)
 	}
 }
 

@@ -17,10 +17,18 @@ func (tg *ConfigUtils) GetOrganizationsTriggerTime() uint {
 	return uint(val)
 }
 
-func (fg *ConfigUtils) GetRunFailedTriggerTime() uint {
-	val := fg.Db.GetRunFailedTriggerTime()
+func (tg *ConfigUtils) GetRunFailedTriggerTime() uint {
+	val := tg.Db.GetRunFailedTriggerTime()
 	if val == -1 {
 		return config.Config.TriggersConfig.RunFailedDefaultTriggerTime
+	}
+	return uint(val)
+}
+
+func (tg *ConfigUtils) GetUsersTriggerTime() uint {
+	val := tg.Db.GetUsersTriggerTime()
+	if val == -1 {
+		return config.Config.TriggersConfig.UsersDefaultTriggerTime
 	}
 	return uint(val)
 }

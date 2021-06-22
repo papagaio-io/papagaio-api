@@ -11,10 +11,6 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/common"
 )
 
-func init() {
-	SetupConfig()
-}
-
 // Configuration contains all informations required to run papagaio
 type Configuration struct {
 	// Server configuration

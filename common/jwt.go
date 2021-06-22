@@ -26,7 +26,6 @@ type TokenSigningData struct {
 //Token utilizzato come campo "state" nella request al authorization server
 func GenerateOauth2JWTToken(sd *TokenSigningData, remoteSourceName string) (string, error) {
 	return GenerateGenericJWTToken(sd, jwt.MapClaims{
-		//"exp":             time.Now().Add(sd.Duration).Unix(),
 		"exp":             time.Now().Add(time.Duration(sd.Duration) * time.Second).Unix(),
 		"git_source_name": remoteSourceName,
 	})
@@ -36,7 +35,6 @@ func GenerateOauth2JWTToken(sd *TokenSigningData, remoteSourceName string) (stri
 func GenerateLoginJWTToken(sd *TokenSigningData, userID uint64) (string, error) {
 	return GenerateGenericJWTToken(sd, jwt.MapClaims{
 		"sub": userID,
-		//"exp": time.Now().Add(sd.Duration).Unix(),
 		"exp": time.Now().Add(time.Duration(sd.Duration) * time.Second).Unix(),
 	})
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"log"
@@ -75,16 +76,7 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 
 	setupOauth2Login(apirouter.PathPrefix("/auth/login").Subrouter(), ctrlOauth2)
 	setupOauth2Callback(apirouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)
-
-	//TODO SOLO PER I TEST. DA RIMUOVERE
-	/*ferouter := mux.NewRouter().PathPrefix("").Subrouter().UseEncodedPath()
-	router.PathPrefix("").Handler(ferouter)
-	setupTestOauth2Callback(ferouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)*/
 }
-
-/*func setupTestOauth2Callback(router *mux.Router, ctrl Oauth2Controller) {
-	router.HandleFunc("", ctrl.Callback).Methods("GET")
-}*/
 
 func setupPingRouter(router *mux.Router) {
 	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
@@ -226,8 +218,12 @@ func handleLoggedUserRoutes(h http.Handler) http.Handler {
 		}
 
 		fmt.Println("http request user", userId)
-		r.Header.Set(XAuthUserId, fmt.Sprint(userId))
-		h.ServeHTTP(w, r)
+
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, "admin", false)
+		ctx = context.WithValue(ctx, XAuthUserId, userId)
+
+		h.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -238,14 +234,20 @@ func handleRestrictedAdminRoutes(h http.Handler) http.Handler {
 			return
 		}
 
-		h.ServeHTTP(w, r)
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, "admin", true)
+
+		h.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if checkIsAdminUser(r.Header.Get("Authorization")) {
-			h.ServeHTTP(w, r)
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, "admin", true)
+
+			h.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 			if tokenString == "" {
@@ -288,8 +290,12 @@ func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 			}
 
 			fmt.Println("http request user", userId)
-			r.Header.Set(XAuthUserId, fmt.Sprint(userId))
-			h.ServeHTTP(w, r)
+
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, "admin", false)
+			ctx = context.WithValue(ctx, XAuthUserId, userId)
+
+			h.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
 }

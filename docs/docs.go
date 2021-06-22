@@ -827,6 +827,10 @@ var doc = `{
                         "$ref": "#/definitions/model.Project"
                     }
                 },
+                "userIdConnected": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "userIdCreator": {
                     "type": "integer",
                     "example": 1

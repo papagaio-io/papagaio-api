@@ -175,6 +175,9 @@ definitions:
         additionalProperties:
           $ref: '#/definitions/model.Project'
         type: object
+      userIdConnected:
+        example: 1
+        type: integer
       userIdCreator:
         example: 1
         type: integer

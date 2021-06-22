@@ -8,6 +8,7 @@ type User struct {
 
 	ID      uint64 `json:"id"`
 	Email   string `json:"email"`
+	Login   string `json:"login"`
 	IsAdmin bool   `json:"isAdmin"`
 
 	Oauth2AccessToken          string    `json:"oauth2_access_token"`

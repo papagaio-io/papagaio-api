@@ -65,7 +65,7 @@ func TestAddExternalUser(t *testing.T) {
 	org := (*test.MakeOrganizationList())[0]
 	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.Name).Return(true, nil)
@@ -101,7 +101,7 @@ func TestAddExternalUserWhenOrganizationNotFound(t *testing.T) {
 	user := test.MakeUser()
 
 	organizationRefTest := "testnotfound"
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(nil, nil)
 
 	router := test.SetupBaseRouter(user)
@@ -141,7 +141,7 @@ func TestRemoveExternalUserOk(t *testing.T) {
 
 	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.Name).Return(true, nil)
@@ -182,7 +182,7 @@ func TestRemoveExternalUserWhenAgolaRefNotFound(t *testing.T) {
 	org.ExternalUsers = make(map[string]bool)
 	org.ExternalUsers[mail] = true
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, errors.New(string("someError")))
 
 	router := test.SetupBaseRouter(user)

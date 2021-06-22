@@ -58,7 +58,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		organization.Projects = make(map[string]model.Project)
 	}
 
-	user, _ := service.Db.GetUserByUserId(organization.UserIDCreator)
+	user, _ := service.Db.GetUserByUserId(organization.UserIDConnected)
 
 	if webHookMessage.IsRepositoryCreated() {
 		log.Println("repository created: ", webHookMessage.Repository.Name)

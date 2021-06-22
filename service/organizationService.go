@@ -186,6 +186,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	org.UserIDCreator = *user.UserID
+	org.UserIDConnected = *user.UserID
 
 	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, user, org.Name, org.AgolaOrganizationRef)
 	if err != nil {
@@ -310,9 +311,9 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	userCreator, _ := service.Db.GetUserByUserId(organization.UserIDCreator)
+	userCreator, _ := service.Db.GetUserByUserId(organization.UserIDConnected)
 	if userCreator == nil {
-		log.Println("User creator", organization.UserIDCreator, "not found")
+		log.Println("User ", organization.UserIDConnected, "not found")
 		InternalServerError(w)
 		return
 	}

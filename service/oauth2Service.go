@@ -121,11 +121,17 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 			ID:            uint64(userInfo.ID),
 			Email:         userInfo.Email,
 			IsAdmin:       userInfo.IsAdmin,
+			Login:         userInfo.Login,
 		}
 	}
 	user.Oauth2AccessToken = accessToken.AccessToken
 	user.Oauth2AccessTokenExpiresAt = accessToken.ExpiryAt
 	user.Oauth2RefreshToken = accessToken.RefreshToken
+
+	user.IsAdmin = userInfo.IsAdmin
+	user.Login = userInfo.Login
+	user.Email = userInfo.Email
+
 	user, err = service.Db.SaveUser(user)
 
 	if err != nil || user == nil {

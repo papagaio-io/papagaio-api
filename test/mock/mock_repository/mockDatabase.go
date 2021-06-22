@@ -261,6 +261,21 @@ func (mr *MockDatabaseMockRecorder) SaveRunFailedTriggerTime(val interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveRunFailedTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveRunFailedTriggerTime), val)
 }
 
+// GetUsersIDByGitSourceName mocks base method
+func (m *MockDatabase) GetUsersIDByGitSourceName(gitSourceName string) ([]uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersIDByGitSourceName", gitSourceName)
+	ret0, _ := ret[0].([]uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersIDByGitSourceName indicates an expected call of GetUsersIDByGitSourceName
+func (mr *MockDatabaseMockRecorder) GetUsersIDByGitSourceName(gitSourceName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersIDByGitSourceName", reflect.TypeOf((*MockDatabase)(nil).GetUsersIDByGitSourceName), gitSourceName)
+}
+
 // GetUserByUserId mocks base method
 func (m *MockDatabase) GetUserByUserId(userId uint64) (*model.User, error) {
 	m.ctrl.T.Helper()

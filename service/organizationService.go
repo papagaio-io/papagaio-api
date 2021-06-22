@@ -388,7 +388,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 		return
 	}
 
-	gitSource, err := service.Db.GetGitSourceByName(organization.Name)
+	gitSource, err := service.Db.GetGitSourceByName(organization.GitSourceName)
 	if err != nil || gitSource == nil {
 		log.Println("gitSource not found err:", err)
 	}
@@ -459,7 +459,7 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 		return
 	}
 
-	gitSource, err := service.Db.GetGitSourceByName(organization.Name)
+	gitSource, err := service.Db.GetGitSourceByName(organization.GitSourceName)
 	if err != nil || gitSource == nil {
 		log.Println("gitSource not found err:", err)
 	}

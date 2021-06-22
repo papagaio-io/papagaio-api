@@ -29,11 +29,11 @@ func TestDeleteOrganizationOK(t *testing.T) {
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 	user := test.MakeUser()
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organization.Name).Return(true, nil)
-	db.EXPECT().GetUserByUserId(organization.UserIDCreator).Return(user, nil)
+	db.EXPECT().GetUserByUserId(organization.UserIDConnected).Return(user, nil)
 	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(nil)
 	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(nil)
@@ -70,11 +70,11 @@ func TestDeleteOrganizationInternalOnly(t *testing.T) {
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 	user := test.MakeUser()
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organization.Name).Return(true, nil)
-	db.EXPECT().GetUserByUserId(organization.UserIDCreator).Return(user, nil)
+	db.EXPECT().GetUserByUserId(organization.UserIDConnected).Return(user, nil)
 	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(nil)
 
@@ -107,7 +107,7 @@ func TestDeleteOrganizationNotFound(t *testing.T) {
 	organizationRefTest := "testnotfound"
 	user := test.MakeUser()
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organizationRefTest)).Return(nil, nil)
 
 	serviceOrganization := OrganizationService{
@@ -169,7 +169,7 @@ func TestDeleteOrganizationWhenAgolaRefNotFoundOnDB(t *testing.T) {
 	organization := (*test.MakeOrganizationList())[0]
 	user := test.MakeUser()
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, errors.New(string("someError")))
 
 	serviceOrganization := OrganizationService{
@@ -204,7 +204,7 @@ func TestDeleteOrganizationWhenGitSourceNotFoundOnDB(t *testing.T) {
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 	user := test.MakeUser()
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Any()).Return(&gitSource, errors.New(string("someError")))
 
@@ -240,11 +240,11 @@ func TestDeleteOrganizationWhenDeletingOrganizationInAgola(t *testing.T) {
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 	user := test.MakeUser()
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Any()).Return(&gitSource, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organization.Name).Return(true, nil)
-	db.EXPECT().GetUserByUserId(organization.UserIDCreator).Return(user, nil)
+	db.EXPECT().GetUserByUserId(organization.UserIDConnected).Return(user, nil)
 	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(errors.New(string("someError")))
 
 	serviceOrganization := OrganizationService{
@@ -279,11 +279,11 @@ func TestDeleteOrganizationWhenInternalOnlyDeletingOrganizationError(t *testing.
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 	user := test.MakeUser()
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organization.Name).Return(true, nil)
-	db.EXPECT().GetUserByUserId(organization.UserIDCreator).Return(user, nil)
+	db.EXPECT().GetUserByUserId(organization.UserIDConnected).Return(user, nil)
 	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(nil)
 	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(errors.New(string("someError")))

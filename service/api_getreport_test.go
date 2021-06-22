@@ -33,7 +33,7 @@ func TestGetReportOK(t *testing.T) {
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
 	user := test.MakeUser()
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizations().Return(&organizationList, nil)
 	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
@@ -74,7 +74,7 @@ func TestGetProjectReportOK(t *testing.T) {
 	user := test.MakeUser()
 	insertRunsData(&organization)
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 
@@ -112,7 +112,7 @@ func TestGetProjectReportNotFound(t *testing.T) {
 	user := test.MakeUser()
 	insertRunsData(&organization)
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 
@@ -144,7 +144,7 @@ func TestGetOrganizationReportOk(t *testing.T) {
 	user := test.MakeUser()
 	insertRunsData(&organization)
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&organization, nil)
 	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
@@ -184,7 +184,7 @@ func TestGetOrganizationReportOrganizationNotFound(t *testing.T) {
 		Db: db,
 	}
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(nil, nil)
 

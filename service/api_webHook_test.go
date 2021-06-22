@@ -41,7 +41,7 @@ func TestRepositoryCreatedWithAgolaConfigOK(t *testing.T) {
 
 	user := test.MakeUser()
 
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.Name, webHookMessage.Repository.Name).Return(true, nil)
@@ -97,7 +97,7 @@ func TestRepositoryCreatedWithoutAgolaConfigOK(t *testing.T) {
 
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.Name, webHookMessage.Repository.Name).Return(false, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
@@ -151,7 +151,7 @@ func TestRepositoryDeletedOK(t *testing.T) {
 
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	agolaApi.EXPECT().DeleteProject(gomock.Any(), utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), gomock.Any()).Return(nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
@@ -200,7 +200,7 @@ func TestRepositoryPushWithAgolaConfAndProjectNotExists(t *testing.T) {
 
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.Name, webHookMessage.Repository.Name).Return(true, nil)
 	agolaApi.EXPECT().CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), gomock.Any(), gitSource.AgolaRemoteSource, gomock.Any()).Return("projectTestID", nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
@@ -259,7 +259,7 @@ func TestRepositoryPushWithAgolaConfAndProjectArchivied(t *testing.T) {
 
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.Name, webHookMessage.Repository.Name).Return(true, nil)
 	agolaApi.EXPECT().UnarchiveProject(gomock.Any(), utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)).Return(nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
@@ -318,7 +318,7 @@ func TestRepositoryPushWithAgolaConfAndProjectNotArchivied(t *testing.T) {
 
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.Name, webHookMessage.Repository.Name).Return(true, nil)
 
 	setupBranchSynckMock(db, giteaApi, organization.Name, repositoryRef)
@@ -375,7 +375,7 @@ func TestRepositoryPushWithoutAgolaConfAndProjectArchivied(t *testing.T) {
 
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.Name, webHookMessage.Repository.Name).Return(false, nil)
 
 	setupBranchSynckMock(db, giteaApi, organization.Name, repositoryRef)
@@ -432,7 +432,7 @@ func TestRepositoryPushWithoutAgolaConfAndProjectNotExists(t *testing.T) {
 
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	db.EXPECT().GetUserByUserId(user.ID).Return(user, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.Name, webHookMessage.Repository.Name).Return(false, nil)
 	agolaApi.EXPECT().ArchiveProject(gomock.Any(), utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)).Return(nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)

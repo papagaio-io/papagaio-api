@@ -48,7 +48,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 				continue
 			}
 
-			user, _ := db.GetUserByUserId(org.UserIDCreator)
+			user, _ := db.GetUserByUserId(org.UserIDConnected)
 
 			for projectName, project := range org.Projects {
 				if project.Archivied {

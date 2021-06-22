@@ -4,11 +4,42 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/dgraph-io/badger"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
+
+func (db *AppDb) GetUsersIDByGitSourceName(gitSourceName string) ([]uint64, error) {
+	var retVal []uint64 = make([]uint64, 0)
+
+	dst := make([]byte, 0)
+	err := db.DB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = []byte("user/")
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+
+			var localUser model.User
+			dst, _ = item.ValueCopy(dst)
+			json.Unmarshal(dst, &localUser)
+			if strings.Compare(localUser.GitSourceName, gitSourceName) != 0 {
+				continue
+			}
+
+			key := string(item.Key())
+			userID, _ := strconv.ParseUint(strings.Split(key, "/")[1], 10, 64)
+			retVal = append(retVal, userID)
+		}
+		return nil
+	})
+
+	return retVal, err
+}
 
 func (db *AppDb) GetUserByUserId(userId uint64) (*model.User, error) {
 	var user *model.User

@@ -82,3 +82,7 @@ const (
 type DeleteOrganizationResponseDto struct {
 	ErrorCode OrganizationResponseStatusCode `json:"errorCode"`
 }
+
+type OrganizationResponseDto struct {
+	ErrorCode OrganizationResponseStatusCode `json:"errorCode"`
+}

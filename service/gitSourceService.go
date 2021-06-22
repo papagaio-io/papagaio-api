@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -221,7 +220,7 @@ func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *h
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	userId, _ := strconv.ParseUint(r.Header.Get(controller.XAuthUserId), 10, 64)
+	userId, _ := r.Context().Value(controller.XAuthUserId).(uint64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")

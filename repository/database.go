@@ -48,8 +48,6 @@ func NewAppDb(config config.Configuration) AppDb {
 	db := AppDb{}
 	db.Init(config)
 
-	db.DB.DropPrefix([]byte("user/")) //clear db users
-
 	return db
 }
 

@@ -117,12 +117,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, org.Name)
-	if err != nil {
-		log.Println("Error from IsUserOwner:", err)
-		InternalServerError(w)
-		return
-	}
+	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, user, org.Name)
 	if !isOwner {
 		log.Println("User", user.UserID, "is not owner")
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
@@ -298,12 +293,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	isOwner, err := service.GitGateway.IsUserOwner(gitSource, userRequest, organization.Name)
-	if err != nil {
-		log.Println("Error from IsUserOwner:", err)
-		InternalServerError(w)
-		return
-	}
+	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, userRequest, organization.Name)
 	if !isOwner {
 		log.Println("User", userRequest.UserID, "is not owner")
 		response := dto.DeleteOrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}

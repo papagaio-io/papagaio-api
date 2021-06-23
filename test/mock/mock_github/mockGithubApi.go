@@ -272,6 +272,21 @@ func (mr *MockGithubInterfaceMockRecorder) GetUserInfo(gitSource, user interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserInfo", reflect.TypeOf((*MockGithubInterface)(nil).GetUserInfo), gitSource, user)
 }
 
+// GetUserByLogin mocks base method
+func (m *MockGithubInterface) GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByLogin", gitSource, login)
+	ret0, _ := ret[0].(*dto.UserInfoDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByLogin indicates an expected call of GetUserByLogin
+func (mr *MockGithubInterfaceMockRecorder) GetUserByLogin(gitSource, login interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByLogin", reflect.TypeOf((*MockGithubInterface)(nil).GetUserByLogin), gitSource, login)
+}
+
 // GetOauth2AccessToken mocks base method
 func (m *MockGithubInterface) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
 	m.ctrl.T.Helper()

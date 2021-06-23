@@ -99,6 +99,7 @@ func serve(cmd *cobra.Command, args []string) {
 
 	trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway)
 	trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway)
+	trigger.StartSynkUsers(&db, tr, &commonMutex, &agolaApi, &gitGateway)
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

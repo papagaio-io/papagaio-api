@@ -11,6 +11,28 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 
+func (db *AppDb) GetUsersID() ([]uint64, error) {
+	var retVal []uint64 = make([]uint64, 0)
+
+	err := db.DB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.Prefix = []byte("user/")
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+
+			key := string(item.Key())
+			userID, _ := strconv.ParseUint(strings.Split(key, "/")[1], 10, 64)
+			retVal = append(retVal, userID)
+		}
+		return nil
+	})
+
+	return retVal, err
+}
+
 func (db *AppDb) GetUsersIDByGitSourceName(gitSourceName string) ([]uint64, error) {
 	var retVal []uint64 = make([]uint64, 0)
 
@@ -138,6 +160,6 @@ func (db *AppDb) SaveUser(user *model.User) (*model.User, error) {
 	return user, err
 }
 
-func (db *AppDb) DeleteUser(userId uint) error {
+func (db *AppDb) DeleteUser(userId uint64) error {
 	return db.DB.DropPrefix([]byte("user/" + fmt.Sprint(userId)))
 }

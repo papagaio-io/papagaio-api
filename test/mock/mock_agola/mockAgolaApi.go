@@ -81,46 +81,46 @@ func (mr *MockAgolaApiInterfaceMockRecorder) CreateOrganization(organization, vi
 }
 
 // DeleteOrganization mocks base method
-func (m *MockAgolaApiInterface) DeleteOrganization(organization *model.Organization, agolaUserToken string) error {
+func (m *MockAgolaApiInterface) DeleteOrganization(organization *model.Organization, user *model.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOrganization", organization, agolaUserToken)
+	ret := m.ctrl.Call(m, "DeleteOrganization", organization, user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteOrganization indicates an expected call of DeleteOrganization
-func (mr *MockAgolaApiInterfaceMockRecorder) DeleteOrganization(organization, agolaUserToken interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) DeleteOrganization(organization, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrganization", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteOrganization), organization, agolaUserToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrganization", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteOrganization), organization, user)
 }
 
 // CreateProject mocks base method
-func (m *MockAgolaApiInterface) CreateProject(projectName, agolaProjectRef string, organization *model.Organization, remoteSourceName, agolaUserToken string) (string, error) {
+func (m *MockAgolaApiInterface) CreateProject(projectName, agolaProjectRef string, organization *model.Organization, remoteSourceName string, user *model.User) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateProject", projectName, agolaProjectRef, organization, remoteSourceName, agolaUserToken)
+	ret := m.ctrl.Call(m, "CreateProject", projectName, agolaProjectRef, organization, remoteSourceName, user)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateProject indicates an expected call of CreateProject
-func (mr *MockAgolaApiInterfaceMockRecorder) CreateProject(projectName, agolaProjectRef, organization, remoteSourceName, agolaUserToken interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) CreateProject(projectName, agolaProjectRef, organization, remoteSourceName, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateProject), projectName, agolaProjectRef, organization, remoteSourceName, agolaUserToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateProject), projectName, agolaProjectRef, organization, remoteSourceName, user)
 }
 
 // DeleteProject mocks base method
-func (m *MockAgolaApiInterface) DeleteProject(organization *model.Organization, agolaProjectRef, agolaUserToken string) error {
+func (m *MockAgolaApiInterface) DeleteProject(organization *model.Organization, agolaProjectRef string, user *model.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteProject", organization, agolaProjectRef, agolaUserToken)
+	ret := m.ctrl.Call(m, "DeleteProject", organization, agolaProjectRef, user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteProject indicates an expected call of DeleteProject
-func (mr *MockAgolaApiInterfaceMockRecorder) DeleteProject(organization, agolaProjectRef, agolaUserToken interface{}) *gomock.Call {
+func (mr *MockAgolaApiInterfaceMockRecorder) DeleteProject(organization, agolaProjectRef, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteProject), organization, agolaProjectRef, agolaUserToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProject", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteProject), organization, agolaProjectRef, user)
 }
 
 // AddOrUpdateOrganizationMember mocks base method
@@ -297,4 +297,47 @@ func (m *MockAgolaApiInterface) GetOrganizations() (*[]agola.OrganizationDto, er
 func (mr *MockAgolaApiInterfaceMockRecorder) GetOrganizations() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizations", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetOrganizations))
+}
+
+// CreateUserToken mocks base method
+func (m *MockAgolaApiInterface) CreateUserToken(user *model.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUserToken", user)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateUserToken indicates an expected call of CreateUserToken
+func (mr *MockAgolaApiInterfaceMockRecorder) CreateUserToken(user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserToken", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateUserToken), user)
+}
+
+// GetRemoteSources mocks base method
+func (m *MockAgolaApiInterface) GetRemoteSources() (*[]agola.RemoteSourceDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRemoteSources")
+	ret0, _ := ret[0].(*[]agola.RemoteSourceDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRemoteSources indicates an expected call of GetRemoteSources
+func (mr *MockAgolaApiInterfaceMockRecorder) GetRemoteSources() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteSources", reflect.TypeOf((*MockAgolaApiInterface)(nil).GetRemoteSources))
+}
+
+// CreateRemoteSource mocks base method
+func (m *MockAgolaApiInterface) CreateRemoteSource(remoteSourceName, gitType, apiUrl, oauth2ClientId, oauth2ClientSecret string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateRemoteSource", remoteSourceName, gitType, apiUrl, oauth2ClientId, oauth2ClientSecret)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateRemoteSource indicates an expected call of CreateRemoteSource
+func (mr *MockAgolaApiInterfaceMockRecorder) CreateRemoteSource(remoteSourceName, gitType, apiUrl, oauth2ClientId, oauth2ClientSecret interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRemoteSource", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateRemoteSource), remoteSourceName, gitType, apiUrl, oauth2ClientId, oauth2ClientSecret)
 }

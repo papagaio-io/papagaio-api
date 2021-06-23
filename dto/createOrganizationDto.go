@@ -14,8 +14,6 @@ type CreateOrganizationRequestDto struct {
 	AgolaRef   string               `json:"agolaRef"`
 	Visibility types.VisibilityType `json:"visibility"`
 
-	GitSourceName string `json:"gitSourceName"`
-
 	BehaviourInclude string              `json:"behaviourInclude"`
 	BehaviourExclude string              `json:"behaviourExclude"`
 	BehaviourType    types.BehaviourType `json:"behaviourType"`
@@ -28,7 +26,7 @@ func (org *CreateOrganizationRequestDto) IsAgolaRefValid() bool {
 }
 
 func (org *CreateOrganizationRequestDto) IsValid() error {
-	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.GitSourceName) > 0 && len(org.AgolaRef) > 0 && !strings.Contains(org.AgolaRef, ".") {
+	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.Name) > 0 && len(org.AgolaRef) > 0 && !strings.Contains(org.AgolaRef, ".") {
 		return nil
 	}
 	return errors.New("fields not valid")
@@ -65,16 +63,26 @@ func (org CreateOrganizationRequestDto) IsBehaviourValid() bool {
 }
 
 type CreateOrganizationResponseDto struct {
-	OrganizationURL string                               `json:"organizationURL"`
-	ErrorCode       CreateOrganizationResponseStatusCode `json:"errorCode"`
+	OrganizationURL string                         `json:"organizationURL"`
+	ErrorCode       OrganizationResponseStatusCode `json:"errorCode"`
 }
 
-type CreateOrganizationResponseStatusCode string
+type OrganizationResponseStatusCode string
 
 const (
-	NoError                         CreateOrganizationResponseStatusCode = "NO_ERROR"
-	AgolaOrganizationExistsError    CreateOrganizationResponseStatusCode = "ORG_AGOLA_EXISTS"
-	PapagaioOrganizationExistsError CreateOrganizationResponseStatusCode = "ORG_PAPAGAIO_EXISTS"
-	GitOrganizationNotFoundError    CreateOrganizationResponseStatusCode = "ORG_GIT_NOT_FOUND"
-	AgolaRefNotValid                CreateOrganizationResponseStatusCode = "AGOLA_REF_NOT_VALID"
+	NoError                         OrganizationResponseStatusCode = "NO_ERROR"
+	AgolaOrganizationExistsError    OrganizationResponseStatusCode = "ORG_AGOLA_EXISTS"
+	PapagaioOrganizationExistsError OrganizationResponseStatusCode = "ORG_PAPAGAIO_EXISTS"
+	GitOrganizationNotFoundError    OrganizationResponseStatusCode = "ORG_GIT_NOT_FOUND"
+	AgolaRefNotValid                OrganizationResponseStatusCode = "AGOLA_REF_NOT_VALID"
+	UserNotOwnerError               OrganizationResponseStatusCode = "USER_NOT_OWNER"
+	UserAgolaRefNotFoundError       OrganizationResponseStatusCode = "USER_AGOLAREF_NOT_FOUND"
 )
+
+type DeleteOrganizationResponseDto struct {
+	ErrorCode OrganizationResponseStatusCode `json:"errorCode"`
+}
+
+type OrganizationResponseDto struct {
+	ErrorCode OrganizationResponseStatusCode `json:"errorCode"`
+}

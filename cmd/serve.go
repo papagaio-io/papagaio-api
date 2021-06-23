@@ -42,8 +42,8 @@ func serve(cmd *cobra.Command, args []string) {
 
 	db := repository.NewAppDb(config.Config)
 	tr := utils.ConfigUtils{Db: &db}
-	agolaApi := agola.AgolaApi{}
-	gitGateway := git.GitGateway{GiteaApi: &gitea.GiteaApi{}, GithubApi: &github.GithubApi{}}
+	agolaApi := agola.AgolaApi{Db: &db}
+	gitGateway := git.GitGateway{GiteaApi: &gitea.GiteaApi{Db: &db}, GithubApi: &github.GithubApi{Db: &db}}
 
 	commonMutex := utils.NewEventMutex()
 
@@ -57,6 +57,7 @@ func serve(cmd *cobra.Command, args []string) {
 	ctrlGitSource := service.GitSourceService{
 		Db:         &db,
 		GitGateway: &gitGateway,
+		AgolaApi:   &agolaApi,
 	}
 
 	ctrlWebHook := service.WebHookService{
@@ -66,18 +67,25 @@ func serve(cmd *cobra.Command, args []string) {
 		GitGateway:  &gitGateway,
 	}
 
-	ctrlUser := service.UserService{
-		Db: &db,
-	}
-
 	ctrlTrigger := service.TriggersService{
 		Db: &db,
 		Tr: tr,
 	}
+
+	sd, err := config.InitTokenSigninData(&config.Config.TokenSigning)
+	if err != nil {
+		panic(err)
+	}
+	ctrlOauth2 := service.Oauth2Service{
+		Db:         &db,
+		Sd:         sd,
+		GitGateway: &gitGateway,
+	}
+
 	router := mux.NewRouter()
 
 	controller.SetupHTTPClient()
-	controller.SetupRouter(&db, router, &ctrlOrganization, &ctrlGitSource, &ctrlWebHook, &ctrlUser, &ctrlTrigger)
+	controller.SetupRouter(sd, &db, router, &ctrlOrganization, &ctrlGitSource, &ctrlWebHook, &ctrlTrigger, &ctrlOauth2)
 
 	log.Println("Papagaio Server Starting on port ", config.Config.Server.Port)
 

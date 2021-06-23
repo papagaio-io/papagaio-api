@@ -442,37 +442,6 @@ var doc = `{
                 }
             }
         },
-        "/organizations": {
-            "get": {
-                "security": [
-                    {
-                        "OAuth2Password": []
-                    }
-                ],
-                "description": "Return the list of organizations",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Organization"
-                ],
-                "summary": "Return the list of organizations",
-                "responses": {
-                    "200": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.Organization"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "bad request"
-                    }
-                }
-            }
-        },
         "/report": {
             "get": {
                 "security": [
@@ -649,9 +618,6 @@ var doc = `{
                 "behaviourType": {
                     "type": "string"
                 },
-                "gitSourceName": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
                 },
@@ -675,6 +641,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "gitApiUrl": {
+                    "type": "string"
+                },
+                "loginUrl": {
                     "type": "string"
                 },
                 "name": {
@@ -798,13 +767,13 @@ var doc = `{
                 "agolaRemoteSource": {
                     "type": "string"
                 },
-                "agolaToken": {
-                    "type": "string"
-                },
                 "gitApiUrl": {
                     "type": "string"
                 },
-                "gitToken": {
+                "gitClientId": {
+                    "type": "string"
+                },
+                "gitSecret": {
                     "type": "string"
                 },
                 "gitType": {
@@ -858,9 +827,13 @@ var doc = `{
                         "$ref": "#/definitions/model.Project"
                     }
                 },
-                "userEmailCreator": {
-                    "type": "string",
-                    "example": "nome.cognome@sorint.it"
+                "userIdConnected": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "userIdCreator": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "visibility": {
                     "type": "string",

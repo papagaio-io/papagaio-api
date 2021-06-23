@@ -10,14 +10,14 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/types"
 )
 
-func SynkMembers(org *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway) error {
+func SynkMembers(org *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway, user *model.User) error {
 	log.Println("SynkMembers", org.AgolaOrganizationRef, org.Name, "start")
 
 	if gitSource != nil {
 		if gitSource.GitType == types.Gitea {
-			SyncMembersForGitea(org, gitSource, agolaApi, gitGateway)
+			SyncMembersForGitea(org, gitSource, agolaApi, gitGateway, user)
 		} else {
-			SyncMembersForGithub(org, gitSource, agolaApi, gitGateway)
+			SyncMembersForGithub(org, gitSource, agolaApi, gitGateway, user)
 		}
 	} else {
 		log.Println("Warning!!! Found gitSource null: ", org.AgolaOrganizationRef)

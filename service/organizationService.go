@@ -25,14 +25,6 @@ type OrganizationService struct {
 	GitGateway  *git.GitGateway
 }
 
-// @Summary Return the list of organizations
-// @Description Return the list of organizations
-// @Tags Organization
-// @Produce  json
-// @Success 200 {array} model.Organization "ok"
-// @Failure 400 "bad request"-
-// @Router /organizations [get]
-// @Security OAuth2Password
 func (service *OrganizationService) GetOrganizations(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -75,6 +67,14 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 	}
 
+	userId := r.Context().Value(controller.XAuthUserId).(uint64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	var req *dto.CreateOrganizationRequestDto
 	json.NewDecoder(r.Body).Decode(&req)
 
@@ -94,7 +94,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	org := &model.Organization{}
 	org.Name = req.Name
 	org.AgolaOrganizationRef = req.AgolaRef
-	org.GitSourceName = req.GitSourceName
+	org.GitSourceName = user.GitSourceName
 	org.Visibility = req.Visibility
 	org.BehaviourType = req.BehaviourType
 	org.BehaviourInclude = req.BehaviourInclude
@@ -108,13 +108,56 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	gitOrgExists := service.GitGateway.CheckOrganizationExists(gitSource, org.Name)
+	gitOrgExists := service.GitGateway.CheckOrganizationExists(gitSource, user, org.Name)
 	log.Println("gitOrgExists:", gitOrgExists)
 	if !gitOrgExists {
 		log.Println("failed to find organization", org.Name, "from git")
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.GitOrganizationNotFoundError}
 		JSONokResponse(w, response)
 		return
+	}
+
+	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, org.Name)
+	if err != nil {
+		log.Println("Error from IsUserOwner:", err)
+		InternalServerError(w)
+		return
+	}
+	if !isOwner {
+		log.Println("User", user.UserID, "is not owner")
+		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		JSONokResponse(w, response)
+		return
+	}
+
+	if user.AgolaUserRef == nil { //Se diverso da nil l'utente è registrato su Agola
+		userInfo, err := service.GitGateway.GetUserInfo(gitSource, user)
+		if err != nil || userInfo == nil {
+			log.Println("Error on getting user info from git:", err)
+			InternalServerError(w)
+			return
+		}
+
+		agolaUserRef := utils.GetAgolaUserRefByGitUsername(service.AgolaApi, gitSource.AgolaRemoteSource, userInfo.Login)
+		if agolaUserRef == nil {
+			log.Println("User not found in Agola")
+			response := dto.CreateOrganizationResponseDto{ErrorCode: dto.UserAgolaRefNotFoundError}
+			JSONokResponse(w, response)
+			return
+		}
+
+		user.AgolaUserRef = agolaUserRef
+
+		if user.AgolaToken == nil {
+			err = service.AgolaApi.CreateUserToken(user)
+			if err != nil {
+				log.Println("Error in CreateUserToken:", err)
+				InternalServerError(w)
+				return
+			}
+		}
+
+		service.Db.SaveUser(user)
 	}
 
 	mutex := utils.ReserveOrganizationMutex(org.AgolaOrganizationRef, service.CommonMutex)
@@ -142,9 +185,10 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	org.UserEmailCreator = r.Header.Get(controller.XAuthEmail)
+	org.UserIDCreator = *user.UserID
+	org.UserIDConnected = *user.UserID
 
-	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, org.Name, org.AgolaOrganizationRef)
+	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, user, org.Name, org.AgolaOrganizationRef)
 	if err != nil {
 		log.Println("failed to creare webhook")
 		InternalServerError(w)
@@ -156,7 +200,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	if agolaOrganizationExists {
 		log.Println("organization", org.AgolaOrganizationRef, "just exists in Agola")
 		if !forceCreate {
-			service.GitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
+			service.GitGateway.DeleteWebHook(gitSource, user, org.Name, org.WebHookID)
 			response := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaOrganizationExistsError}
 			JSONokResponse(w, response)
 			return
@@ -166,13 +210,13 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		org.ID, err = service.AgolaApi.CreateOrganization(org, org.Visibility)
 		if err != nil {
 			log.Println("failed to create organization", org.AgolaOrganizationRef, "in agola:", err)
-			service.GitGateway.DeleteWebHook(gitSource, org.Name, org.WebHookID)
+			service.GitGateway.DeleteWebHook(gitSource, user, org.Name, org.WebHookID)
 			InternalServerError(w)
 			return
 		}
 	}
 
-	log.Println("Organization created: ", org.AgolaOrganizationRef, " by:", org.UserEmailCreator)
+	log.Println("Organization created: ", org.AgolaOrganizationRef, " by:", org.UserIDCreator)
 	log.Println("WebHook created: ", org.WebHookID)
 
 	err = service.Db.SaveOrganization(org)
@@ -182,7 +226,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	manager.StartOrganizationCheckout(service.Db, org, gitSource, service.AgolaApi, service.GitGateway)
+	manager.StartOrganizationCheckout(service.Db, user, org, gitSource, service.AgolaApi, service.GitGateway)
 
 	mutex.Unlock()
 	utils.ReleaseOrganizationMutex(org.AgolaOrganizationRef, service.CommonMutex)
@@ -226,6 +270,14 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		}
 	}
 
+	userIdRequest, _ := r.Context().Value(controller.XAuthUserId).(uint64)
+	userRequest, _ := service.Db.GetUserByUserId(userIdRequest)
+	if userRequest == nil {
+		log.Println("User", userRequest, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
@@ -246,15 +298,36 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
+	isOwner, err := service.GitGateway.IsUserOwner(gitSource, userRequest, organization.Name)
+	if err != nil {
+		log.Println("Error from IsUserOwner:", err)
+		InternalServerError(w)
+		return
+	}
+	if !isOwner {
+		log.Println("User", userRequest.UserID, "is not owner")
+		response := dto.DeleteOrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		JSONokResponse(w, response)
+		return
+	}
+
+	userCreator, _ := service.Db.GetUserByUserId(organization.UserIDConnected)
+	if userCreator == nil {
+		log.Println("User ", organization.UserIDConnected, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	if !internalonly {
-		err = service.AgolaApi.DeleteOrganization(organization, gitSource.AgolaToken)
+		err = service.AgolaApi.DeleteOrganization(organization, userCreator)
 		if err != nil {
+			log.Println("error in agola DeleteOrganization:", err)
 			InternalServerError(w)
 			return
 		}
 	}
 
-	service.GitGateway.DeleteWebHook(gitSource, organization.Name, organization.WebHookID)
+	service.GitGateway.DeleteWebHook(gitSource, userCreator, organization.Name, organization.WebHookID)
 	err = service.Db.DeleteOrganization(organization.AgolaOrganizationRef)
 
 	mutex.Unlock()
@@ -263,8 +336,12 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 
 	if err != nil {
 		InternalServerError(w)
+		return
 	}
-	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", organization.UserEmailCreator)
+	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", userIdRequest)
+
+	response := dto.DeleteOrganizationResponseDto{ErrorCode: dto.NoError}
+	JSONokResponse(w, response)
 }
 
 // @Summary Add External User
@@ -284,6 +361,14 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
+	userId := r.Context().Value(controller.XAuthUserId).(uint64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
@@ -293,6 +378,25 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	organization, err := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
+		return
+	}
+
+	gitSource, err := service.Db.GetGitSourceByName(organization.GitSourceName)
+	if err != nil || gitSource == nil {
+		log.Println("gitSource not found err:", err)
+	}
+
+	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.Name)
+	if err != nil {
+		log.Println("Error from IsUserOwner:", err)
+		InternalServerError(w)
+		return
+	}
+	if !isOwner {
+		log.Println("User", user.UserID, "is not owner")
+
+		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		JSONokResponse(w, response)
 		return
 	}
 
@@ -328,6 +432,14 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
+	userId := r.Context().Value(controller.XAuthUserId).(uint64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	mutex := utils.ReserveOrganizationMutex(organizationRef, service.CommonMutex)
 	mutex.Lock()
 
@@ -337,6 +449,25 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	organization, err := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if err != nil || organization == nil {
 		NotFoundResponse(w)
+		return
+	}
+
+	gitSource, err := service.Db.GetGitSourceByName(organization.GitSourceName)
+	if err != nil || gitSource == nil {
+		log.Println("gitSource not found err:", err)
+	}
+
+	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.Name)
+	if err != nil {
+		log.Println("Error from IsUserOwner:", err)
+		InternalServerError(w)
+		return
+	}
+	if !isOwner {
+		log.Println("User", user.UserID, "is not owner")
+
+		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		JSONokResponse(w, response)
 		return
 	}
 
@@ -362,12 +493,28 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	userId, _ := r.Context().Value(controller.XAuthUserId).(uint64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
+	gitsource, _ := service.Db.GetGitSourceByName(user.GitSourceName)
+	if gitsource == nil {
+		log.Println("gitSource", user.GitSourceName, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	organizations, _ := service.Db.GetOrganizations()
 
 	retVal := make([]dto.OrganizationDto, 0)
 	for _, organization := range *organizations {
-		gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
-		retVal = append(retVal, manager.GetOrganizationDto(&organization, gitsource, service.GitGateway))
+		if strings.Compare(organization.GitSourceName, user.GitSourceName) == 0 {
+			retVal = append(retVal, manager.GetOrganizationDto(user, &organization, gitsource, service.GitGateway))
+		}
 	}
 
 	JSONokResponse(w, retVal)
@@ -388,15 +535,36 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
+	userId, _ := r.Context().Value(controller.XAuthUserId).(uint64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
+	gitsource, _ := service.Db.GetGitSourceByName(user.GitSourceName)
+	if gitsource == nil {
+		log.Println("gitSource", user.GitSourceName, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if organization == nil {
 		NotFoundResponse(w)
 		return
 	}
 
-	gitsource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
+	if strings.Compare(organization.GitSourceName, user.GitSourceName) != 0 {
+		log.Println("user not authorized to get report of organizarion", organizationRef)
 
-	JSONokResponse(w, manager.GetOrganizationDto(organization, gitsource, service.GitGateway))
+		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		JSONokResponse(w, response)
+		return
+	}
+
+	JSONokResponse(w, manager.GetOrganizationDto(user, organization, gitsource, service.GitGateway))
 }
 
 // @Summary Get Report from a specific organization/project
@@ -415,9 +583,32 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	organizationRef := vars["organizationRef"]
 	projectName := vars["projectName"]
 
+	userId, _ := r.Context().Value(controller.XAuthUserId).(uint64)
+	user, _ := service.Db.GetUserByUserId(userId)
+	if user == nil {
+		log.Println("User", userId, "not found")
+		InternalServerError(w)
+		return
+	}
+
+	gitsource, _ := service.Db.GetGitSourceByName(user.GitSourceName)
+	if gitsource == nil {
+		log.Println("gitSource", user.GitSourceName, "not found")
+		InternalServerError(w)
+		return
+	}
+
 	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if organization == nil {
 		NotFoundResponse(w)
+		return
+	}
+
+	if strings.Compare(organization.GitSourceName, user.GitSourceName) != 0 {
+		log.Println("user not authorized to get report of organizarion", organizationRef)
+
+		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		JSONokResponse(w, response)
 		return
 	}
 

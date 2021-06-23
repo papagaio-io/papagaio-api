@@ -11,8 +11,8 @@ import (
 )
 
 //Sincronizzo i membri della organization tra github e agola
-func SyncMembersForGithub(organization *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway) {
-	githubUsers, _ := gitGateway.GithubApi.GetOrganizationMembers(gitSource, organization.Name)
+func SyncMembersForGithub(organization *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway, user *model.User) {
+	githubUsers, _ := gitGateway.GithubApi.GetOrganizationMembers(gitSource, user, organization.Name)
 	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization)
 
 	agolaUsersMap := utils.GetUsersMapByRemotesource(agolaApi, gitSource.AgolaRemoteSource)

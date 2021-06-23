@@ -39,3 +39,14 @@ func GetUsersMapByRemotesource(agolaApi agola.AgolaApiInterface, agolaRemoteSour
 
 	return &usersMap
 }
+
+func GetAgolaUserRefByGitUsername(agolaApi agola.AgolaApiInterface, agolaRemoteSource string, gitUsername string) *string {
+	users := GetUsersMapByRemotesource(agolaApi, agolaRemoteSource)
+
+	userRef, exists := (*users)[gitUsername]
+	if !exists {
+		return nil
+	}
+
+	return &userRef
+}

@@ -7,7 +7,7 @@ type GitSource struct {
 	Name              string        `json:"name"`
 	GitType           types.GitType `json:"gitType"`
 	GitAPIURL         string        `json:"gitApiUrl"`
-	GitToken          string        `json:"gitToken"`
+	GitClientID       string        `json:"gitClientId"`
+	GitSecret         string        `json:"gitSecret"`
 	AgolaRemoteSource string        `json:"agolaRemoteSource"`
-	AgolaToken        string        `json:"agolaToken"`
 }

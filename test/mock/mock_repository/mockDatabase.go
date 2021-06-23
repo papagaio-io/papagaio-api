@@ -209,49 +209,6 @@ func (mr *MockDatabaseMockRecorder) DeleteGitSource(id interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGitSource", reflect.TypeOf((*MockDatabase)(nil).DeleteGitSource), id)
 }
 
-// SaveUser mocks base method
-func (m *MockDatabase) SaveUser(user *model.User) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveUser", user)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SaveUser indicates an expected call of SaveUser
-func (mr *MockDatabaseMockRecorder) SaveUser(user interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveUser", reflect.TypeOf((*MockDatabase)(nil).SaveUser), user)
-}
-
-// GetUserByEmail mocks base method
-func (m *MockDatabase) GetUserByEmail(email string) (*model.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByEmail", email)
-	ret0, _ := ret[0].(*model.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserByEmail indicates an expected call of GetUserByEmail
-func (mr *MockDatabaseMockRecorder) GetUserByEmail(email interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockDatabase)(nil).GetUserByEmail), email)
-}
-
-// DeleteUser mocks base method
-func (m *MockDatabase) DeleteUser(email string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUser", email)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteUser indicates an expected call of DeleteUser
-func (mr *MockDatabaseMockRecorder) DeleteUser(email interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockDatabase)(nil).DeleteUser), email)
-}
-
 // GetOrganizationsTriggerTime mocks base method
 func (m *MockDatabase) GetOrganizationsTriggerTime() int {
 	m.ctrl.T.Helper()
@@ -267,15 +224,15 @@ func (mr *MockDatabaseMockRecorder) GetOrganizationsTriggerTime() *gomock.Call {
 }
 
 // SaveOrganizationsTriggerTime mocks base method
-func (m *MockDatabase) SaveOrganizationsTriggerTime(val int) {
+func (m *MockDatabase) SaveOrganizationsTriggerTime(value int) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SaveOrganizationsTriggerTime", val)
+	m.ctrl.Call(m, "SaveOrganizationsTriggerTime", value)
 }
 
 // SaveOrganizationsTriggerTime indicates an expected call of SaveOrganizationsTriggerTime
-func (mr *MockDatabaseMockRecorder) SaveOrganizationsTriggerTime(val interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveOrganizationsTriggerTime(value interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveOrganizationsTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveOrganizationsTriggerTime), val)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveOrganizationsTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveOrganizationsTriggerTime), value)
 }
 
 // GetRunFailedTriggerTime mocks base method
@@ -302,4 +259,104 @@ func (m *MockDatabase) SaveRunFailedTriggerTime(val int) {
 func (mr *MockDatabaseMockRecorder) SaveRunFailedTriggerTime(val interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveRunFailedTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveRunFailedTriggerTime), val)
+}
+
+// GetUsersTriggerTime mocks base method
+func (m *MockDatabase) GetUsersTriggerTime() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersTriggerTime")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetUsersTriggerTime indicates an expected call of GetUsersTriggerTime
+func (mr *MockDatabaseMockRecorder) GetUsersTriggerTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersTriggerTime", reflect.TypeOf((*MockDatabase)(nil).GetUsersTriggerTime))
+}
+
+// SaveUsersTriggerTime mocks base method
+func (m *MockDatabase) SaveUsersTriggerTime(value int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SaveUsersTriggerTime", value)
+}
+
+// SaveUsersTriggerTime indicates an expected call of SaveUsersTriggerTime
+func (mr *MockDatabaseMockRecorder) SaveUsersTriggerTime(value interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveUsersTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveUsersTriggerTime), value)
+}
+
+// GetUsersIDByGitSourceName mocks base method
+func (m *MockDatabase) GetUsersIDByGitSourceName(gitSourceName string) ([]uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersIDByGitSourceName", gitSourceName)
+	ret0, _ := ret[0].([]uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersIDByGitSourceName indicates an expected call of GetUsersIDByGitSourceName
+func (mr *MockDatabaseMockRecorder) GetUsersIDByGitSourceName(gitSourceName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersIDByGitSourceName", reflect.TypeOf((*MockDatabase)(nil).GetUsersIDByGitSourceName), gitSourceName)
+}
+
+// GetUserByUserId mocks base method
+func (m *MockDatabase) GetUserByUserId(userId uint64) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByUserId", userId)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByUserId indicates an expected call of GetUserByUserId
+func (mr *MockDatabaseMockRecorder) GetUserByUserId(userId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByUserId", reflect.TypeOf((*MockDatabase)(nil).GetUserByUserId), userId)
+}
+
+// GetUserByGitSourceNameAndID mocks base method
+func (m *MockDatabase) GetUserByGitSourceNameAndID(gitSourceName string, id uint64) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByGitSourceNameAndID", gitSourceName, id)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByGitSourceNameAndID indicates an expected call of GetUserByGitSourceNameAndID
+func (mr *MockDatabaseMockRecorder) GetUserByGitSourceNameAndID(gitSourceName, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByGitSourceNameAndID", reflect.TypeOf((*MockDatabase)(nil).GetUserByGitSourceNameAndID), gitSourceName, id)
+}
+
+// SaveUser mocks base method
+func (m *MockDatabase) SaveUser(user *model.User) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveUser", user)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveUser indicates an expected call of SaveUser
+func (mr *MockDatabaseMockRecorder) SaveUser(user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveUser", reflect.TypeOf((*MockDatabase)(nil).SaveUser), user)
+}
+
+// DeleteUser mocks base method
+func (m *MockDatabase) DeleteUser(userId uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUser", userId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteUser indicates an expected call of DeleteUser
+func (mr *MockDatabaseMockRecorder) DeleteUser(userId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockDatabase)(nil).DeleteUser), userId)
 }

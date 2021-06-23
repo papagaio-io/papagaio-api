@@ -287,6 +287,21 @@ func (mr *MockDatabaseMockRecorder) SaveUsersTriggerTime(value interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveUsersTriggerTime", reflect.TypeOf((*MockDatabase)(nil).SaveUsersTriggerTime), value)
 }
 
+// GetUsersID mocks base method
+func (m *MockDatabase) GetUsersID() ([]uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersID")
+	ret0, _ := ret[0].([]uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersID indicates an expected call of GetUsersID
+func (mr *MockDatabaseMockRecorder) GetUsersID() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersID", reflect.TypeOf((*MockDatabase)(nil).GetUsersID))
+}
+
 // GetUsersIDByGitSourceName mocks base method
 func (m *MockDatabase) GetUsersIDByGitSourceName(gitSourceName string) ([]uint64, error) {
 	m.ctrl.T.Helper()
@@ -348,7 +363,7 @@ func (mr *MockDatabaseMockRecorder) SaveUser(user interface{}) *gomock.Call {
 }
 
 // DeleteUser mocks base method
-func (m *MockDatabase) DeleteUser(userId uint) error {
+func (m *MockDatabase) DeleteUser(userId uint64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUser", userId)
 	ret0, _ := ret[0].(error)

@@ -14,15 +14,48 @@ import (
 )
 
 func StartSynkUsers(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
-	synkUsersRun(db, tr, commonMutex, agolaApi, gitGateway)
+	go synkUsersRun(db, tr, commonMutex, agolaApi, gitGateway)
 }
 
 func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	for {
 		log.Println("start users synk")
 
-		usersVerifiedOK := make(map[uint64]bool)
-		usersVerifiedError := make(map[uint64]bool)
+		usersVerifiedOK := make(map[uint64]*model.User)
+
+		usersId, err := db.GetUsersID()
+		if err != nil {
+			log.Println("error in GetUsersID:", err)
+			continue
+		}
+
+		for _, userId := range usersId {
+			user, err := db.GetUserByUserId(userId)
+			if err != nil || user == nil {
+				log.Println("user not found in db")
+				continue
+			}
+
+			log.Println("synk user:", userId, user.Login, user.ID)
+
+			gitSource, err := db.GetGitSourceByName(user.GitSourceName)
+			if err != nil || gitSource == nil {
+				log.Println("gitSource", user.GitSourceName, "not found in db:", err)
+				continue
+			}
+			userGitNotFound, err := verifyUserAccount(user, db, gitGateway, agolaApi, gitSource)
+
+			if userGitNotFound {
+				log.Println("delete user:", user.UserID)
+				db.DeleteUser(*user.UserID)
+			} else if user != nil {
+				db.SaveUser(user)
+			}
+
+			if err == nil {
+				usersVerifiedOK[userId] = user
+			}
+		}
 
 		organizationsRef, _ := db.GetOrganizationsRef()
 		for _, organizationRef := range organizationsRef {
@@ -38,38 +71,27 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 				continue
 			}
 
-			userError := false
-			if usersVerifiedOK[org.UserIDConnected] {
-				continue
-			}
+			user := usersVerifiedOK[org.UserIDConnected]
 
-			gitSource, err := db.GetGitSourceByName(org.GitSourceName)
+			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
 			if err != nil || gitSource == nil {
 				log.Println("gitSource", org.GitSourceName, "not found:", err)
 				continue
 			}
 
-			if usersVerifiedError[org.UserIDConnected] {
-				userError = true
-			} else {
-				user, err := verifyUserAccount(org.UserIDConnected, db, gitGateway, agolaApi, gitSource, org.Name)
-				if user != nil {
-					db.SaveUser(user)
-				}
-
-				if err != nil {
-					userError = true
-					usersVerifiedError[org.UserIDConnected] = true
-					log.Println("userError:", err)
+			if user != nil {
+				isOwner, _ := gitGateway.IsUserOwner(gitSource, user, org.Name)
+				if isOwner {
+					continue
 				}
 			}
 
-			if userError {
-				user := findUserToConnect(db, gitGateway, agolaApi, gitSource, org.Name)
-				if user != nil {
-					org.UserIDConnected = *user.UserID
-					db.SaveOrganization(org)
-				}
+			log.Println("findUserToConnect for organization ", org.Name)
+			user = findUserToConnect(db, gitGateway, agolaApi, gitSource, org.Name, usersVerifiedOK)
+			if user != nil {
+				log.Println("findUserToConnect result UserID", user.UserID)
+				org.UserIDConnected = *user.UserID
+				db.SaveOrganization(org)
 			}
 
 			mutex.Unlock()
@@ -81,15 +103,10 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 	}
 }
 
-func findUserToConnect(db repository.Database, gitGateway *git.GitGateway, agolaApi agola.AgolaApiInterface, gitSource *model.GitSource, gitOrgRef string) *model.User {
-	usersID, _ := db.GetUsersIDByGitSourceName(gitSource.Name)
-	for _, id := range usersID {
-		user, err := verifyUserAccount(id, db, gitGateway, agolaApi, gitSource, gitOrgRef)
-		if user != nil {
-			db.SaveUser(user)
-		}
-
-		if err == nil {
+func findUserToConnect(db repository.Database, gitGateway *git.GitGateway, agolaApi agola.AgolaApiInterface, gitSource *model.GitSource, gitOrgRef string, usersVerifiedOK map[uint64]*model.User) *model.User {
+	for _, user := range usersVerifiedOK {
+		isOwner, _ := gitGateway.IsUserOwner(gitSource, user, gitOrgRef)
+		if isOwner {
 			return user
 		}
 	}
@@ -97,32 +114,38 @@ func findUserToConnect(db repository.Database, gitGateway *git.GitGateway, agola
 	return nil
 }
 
-func verifyUserAccount(userID uint64, db repository.Database, gitGateway *git.GitGateway, agolaApi agola.AgolaApiInterface, gitSource *model.GitSource, gitOrgRef string) (*model.User, error) {
-	user, err := db.GetUserByUserId(userID)
-	if err != nil || user == nil {
-		log.Println("user not found")
-		return nil, errors.New("user not found in db")
-	}
+func verifyUserAccount(user *model.User, db repository.Database, gitGateway *git.GitGateway, agolaApi agola.AgolaApiInterface, gitSource *model.GitSource) (bool, error) {
+	userGitNotFound, err := verifyUserGiteaAccount(user, gitGateway, gitSource)
 
-	err = verifyUserGiteaAccount(user, gitGateway, gitSource, gitOrgRef)
-	if err != nil {
-		return user, err
+	if userGitNotFound || err != nil {
+		return userGitNotFound, err
 	}
 
 	err = verifyUserAgolaAccount(user, agolaApi, gitSource)
-	return user, err
+	return false, err
 }
 
-func verifyUserGiteaAccount(user *model.User, gitGateway *git.GitGateway, gitSource *model.GitSource, gitOrgRef string) error {
-	//TODO gestire utente cancellato da git
+func verifyUserGiteaAccount(user *model.User, gitGateway *git.GitGateway, gitSource *model.GitSource) (bool, error) {
+	userInfo, err := gitGateway.GetUserByLogin(gitSource, user.Login)
 
-	//TODO gestire la modifica dei campi info utente(es. isAdmin)
+	if userInfo == nil && err == nil {
+		return true, errors.New("user not found in git")
+	}
+
+	if err != nil {
+		return false, errors.New("error in GetUserByLogin or user not found")
+	}
+
+	user.Email = userInfo.Email
+	user.IsAdmin = userInfo.IsAdmin
+	user.Login = userInfo.Login
+	user.ID = uint64(userInfo.ID)
 
 	if common.IsAccessTokenExpired(user.Oauth2AccessTokenExpiresAt) {
 		token, err := gitGateway.RefreshToken(gitSource, user.Oauth2RefreshToken)
 		if err != nil {
 			log.Println("error in RefreshToken:", err)
-			return err
+			return false, err
 		}
 
 		user.Oauth2AccessToken = token.AccessToken
@@ -130,16 +153,7 @@ func verifyUserGiteaAccount(user *model.User, gitGateway *git.GitGateway, gitSou
 		user.Oauth2AccessTokenExpiresAt = time.Now().Add(time.Second * time.Duration(token.Expiry))
 	}
 
-	isOwner, err := gitGateway.IsUserOwner(gitSource, user, gitOrgRef)
-	if err != nil {
-		return err
-	}
-
-	if !isOwner {
-		return errors.New("user is not owner")
-	}
-
-	return nil
+	return false, nil
 }
 
 func verifyUserAgolaAccount(user *model.User, agolaApi agola.AgolaApiInterface, gitSource *model.GitSource) error {

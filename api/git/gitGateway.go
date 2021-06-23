@@ -126,6 +126,14 @@ func (gitGateway *GitGateway) GetUserInfo(gitSource *model.GitSource, user *mode
 	}
 }
 
+func (gitGateway *GitGateway) GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error) {
+	if gitSource.GitType == types.Gitea {
+		return gitGateway.GiteaApi.GetUserByLogin(gitSource, login)
+	} else {
+		return gitGateway.GithubApi.GetUserByLogin(gitSource, login)
+	}
+}
+
 func (gitGateway *GitGateway) GetOauth2AuthorizePathUrl(gitSource *model.GitSource, redirectUrl string, state string) string {
 	if gitSource.GitType == types.Gitea {
 		return gitea.GetOauth2AuthorizeUrl(gitSource.GitAPIURL, gitSource.GitClientID, redirectUrl, state)

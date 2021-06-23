@@ -57,8 +57,9 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 
 			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
 
-			membersManager.SynkMembers(org, gitSource, agolaApi, gitGateway)
-			repositoryManager.SynkGitRepositorys(db, org, gitSource, agolaApi, gitGateway)
+			user, _ := db.GetUserByUserId(org.UserIDConnected)
+			membersManager.SynkMembers(org, gitSource, agolaApi, gitGateway, user)
+			repositoryManager.SynkGitRepositorys(db, user, org, gitSource, agolaApi, gitGateway)
 
 			mutex.Unlock()
 			utils.ReleaseOrganizationMutex(organizationRef, commonMutex)

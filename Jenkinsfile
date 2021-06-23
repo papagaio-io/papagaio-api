@@ -91,7 +91,7 @@ podTemplate(
                     }
 
                     stage('Deploy su Nexus') {
-                        if (branch == 'master' || branch == 'stable' || branch == 'release') {
+                        if (branch == 'master' || branch == 'stable') {
                             withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                                 sh "curl -v -k -u ${USERNAME}:${PASSWORD} --upload-file ${tarball} https://nexus.sorintdev.it/repository/binaries/it.sorintdev.papagaio/papagaio-api-${version}.tar.gz"
                             }
@@ -107,7 +107,7 @@ podTemplate(
                         docker.withRegistry('https://registry.sorintdev.it', 'nexus') {
                             if (branch == 'stable') {
                                 img.push("${version}")
-                            } else {
+                            } else if (branch == 'master'){
                                 img.push("latest")
                             }
                         }

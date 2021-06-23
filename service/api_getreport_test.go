@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/gorilla/mux"
 	"gotest.tools/assert"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	gitDto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
@@ -32,21 +31,26 @@ func TestGetReportOK(t *testing.T) {
 	organizationList = append(organizationList, organization)
 
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizations().Return(&organizationList, nil)
-	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
 
 	serviceOrganization := OrganizationService{
 		Db:         db,
 		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
 	}
 
-	ts := httptest.NewServer(http.HandlerFunc(serviceOrganization.GetReport))
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/getReport", serviceOrganization.GetReport)
+	ts := httptest.NewServer(router)
+
 	defer ts.Close()
 
 	client := ts.Client()
-	resp, err := client.Get(ts.URL)
+	resp, err := client.Get(ts.URL + "/getReport")
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
@@ -66,8 +70,12 @@ func TestGetProjectReportOK(t *testing.T) {
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
 
 	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
 	insertRunsData(&organization)
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 
 	serviceOrganization := OrganizationService{
@@ -75,7 +83,7 @@ func TestGetProjectReportOK(t *testing.T) {
 		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}/{projectName}", serviceOrganization.GetProjectReport)
 	ts := httptest.NewServer(router)
 	defer ts.Close()
@@ -100,8 +108,12 @@ func TestGetProjectReportNotFound(t *testing.T) {
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
 
 	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
 	insertRunsData(&organization)
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
 
 	serviceOrganization := OrganizationService{
@@ -109,7 +121,7 @@ func TestGetProjectReportNotFound(t *testing.T) {
 		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}/{projectName}", serviceOrganization.GetProjectReport)
 	ts := httptest.NewServer(router)
 	defer ts.Close()
@@ -128,24 +140,23 @@ func TestGetOrganizationReportOk(t *testing.T) {
 	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
 
 	organization := (*test.MakeOrganizationList())[0]
-	insertRunsData(&organization)
-	organizationList := make([]model.Organization, 0)
-	organizationList = append(organizationList, organization)
-
-	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&organization, nil)
-
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
+	insertRunsData(&organization)
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&organization, nil)
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
 
 	serviceOrganization := OrganizationService{
 		Db:         db,
 		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
 	}
 
-	ts := httptest.NewServer(http.HandlerFunc(serviceOrganization.GetOrganizationReport))
-	defer ts.Close()
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/{organizationRef}", serviceOrganization.GetOrganizationReport)
+	ts := httptest.NewServer(router)
 
 	client := ts.Client()
 	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
@@ -164,14 +175,20 @@ func TestGetOrganizationReportOrganizationNotFound(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 	db := mock_repository.NewMockDatabase(ctl)
+
 	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
+
 	serviceOrganization := OrganizationService{
 		Db: db,
 	}
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(nil, nil)
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}", serviceOrganization.GetOrganizationReport)
 	ts := httptest.NewServer(router)
 

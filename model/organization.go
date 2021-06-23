@@ -8,7 +8,8 @@ type Organization struct {
 	ID                   string               `json:"id"`
 	Name                 string               `json:"name" example:"TestDemo"`
 	AgolaOrganizationRef string               `json:"agolaOrganizationRef" example:"TestDemo"`
-	UserEmailCreator     string               `json:"userEmailCreator" example:"nome.cognome@sorint.it"`
+	UserIDCreator        uint64               `json:"userIdCreator" example:"1"`
+	UserIDConnected      uint64               `json:"userIdConnected" example:"1"`
 	Visibility           types.VisibilityType `json:"visibility" example:"public"`
 
 	GitSourceName string `json:"gitSourceName" example:"wecodedev"`

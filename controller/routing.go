@@ -1,33 +1,35 @@
 package controller
 
 import (
+	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"gopkg.in/square/go-jose.v2/jwt"
+	"wecode.sorint.it/opensource/papagaio-api/common"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 
 	httpSwagger "github.com/swaggo/http-swagger" // http-swagger middleware
 )
 
-const XAuthEmail string = "X-Auth-Email"
+const XAuthUserId string = "X-Auth-User-Id"
 
 const apiPath string = "/api"
 const WebHookPath string = "/webhook"
 const WenHookPathParam string = "/{organizationRef}"
 
 var db repository.Database
+var sd *common.TokenSigningData
 
 type Claim struct {
-	Expiry  *jwt.NumericDate `json:"exp,omitempty"`
-	Email   string           `json:"email"`
-	Name    string           `json:"given_name"`
-	Surname string           `json:"family_name"`
+	Expiry int64  `json:"exp,omitempty"`
+	Sub    string `json:"sub"`
 }
 
 func GetWebHookPath() string {
@@ -40,8 +42,9 @@ func SetupHTTPClient() {
 	}
 }
 
-func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlWebHook WebHookController, ctrlUser UserController, ctrlTrigger TriggersController) {
+func SetupRouter(signingData *common.TokenSigningData, database repository.Database, router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlWebHook WebHookController, ctrlTrigger TriggersController, ctrlOauth2 Oauth2Controller) {
 	db = database
+	sd = signingData
 
 	apirouter := mux.NewRouter().PathPrefix("/api").Subrouter().UseEncodedPath()
 	router.PathPrefix("/api").Handler(apirouter)
@@ -50,7 +53,7 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 
 	setupPingRouter(router)
 
-	setupGetOrganizationsRouter(apirouter.PathPrefix("/organizations").Subrouter(), ctrlOrganization)
+	setupGetOrganizationsRouter(apirouter.PathPrefix("/organizations").Subrouter(), ctrlOrganization) //USED FOR DEBUGGING
 	setupCreateOrganizationEndpoint(apirouter.PathPrefix("/createorganization").Subrouter(), ctrlOrganization)
 	setupDeleteOrganizationEndpoint(apirouter.PathPrefix("/deleteorganization").Subrouter(), ctrlOrganization)
 	setupAddOrganizationExternalUserEndpoint(apirouter.PathPrefix("/addexternaluser").Subrouter(), ctrlOrganization)
@@ -68,12 +71,11 @@ func SetupRouter(database repository.Database, router *mux.Router, ctrlOrganizat
 
 	setupWebHookEndpoint(apirouter.PathPrefix(WebHookPath).Subrouter(), ctrlWebHook)
 
-	setupAddUserEndpoint(apirouter.PathPrefix("/adduser").Subrouter(), ctrlUser)
-	setupRemoveUserEndpoint(apirouter.PathPrefix("/removeuser").Subrouter(), ctrlUser)
-	setupIsUserAdministratorEndpoint(apirouter.PathPrefix("/userinfo").Subrouter(), ctrlUser)
-
 	setupGetTriggersConfigEndpoint(apirouter.PathPrefix("/gettriggersconfig").Subrouter(), ctrlTrigger)
 	setupSaveTriggersConfigEndpoint(apirouter.PathPrefix("/savetriggersconfig").Subrouter(), ctrlTrigger)
+
+	setupOauth2Login(apirouter.PathPrefix("/auth/login").Subrouter(), ctrlOauth2)
+	setupOauth2Callback(apirouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)
 }
 
 func setupPingRouter(router *mux.Router) {
@@ -83,47 +85,46 @@ func setupPingRouter(router *mux.Router) {
 }
 
 func setupGetOrganizationsRouter(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedAllRoutes)
+	router.Use(handleRestrictedAdminRoutes)
 	router.HandleFunc("", ctrl.GetOrganizations).Methods("GET")
 }
 
 func setupCreateOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedUserRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("", ctrl.CreateOrganization).Methods("POST")
 }
 
 func setupDeleteOrganizationEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedUserRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("/{organizationRef}", ctrl.DeleteOrganization).Methods("DELETE")
 }
 
 func setupAddOrganizationExternalUserEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedUserRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("/{organizationRef}", ctrl.AddExternalUser).Methods("POST")
 }
 
 func setupDeleteOrganizationExternalUserEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedUserRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("/{organizationRef}", ctrl.RemoveExternalUser).Methods("DELETE")
 }
 
 func setupReportEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedAllRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("", ctrl.GetReport).Methods("GET")
 }
 
 func setupOrganizationReportEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedAllRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("/{organizationRef}", ctrl.GetOrganizationReport).Methods("GET")
 }
 
 func setupProjectReportEndpoint(router *mux.Router, ctrl OrganizationController) {
-	router.Use(handleRestrictedAllRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("/{organizationRef}/{projectName}", ctrl.GetProjectReport).Methods("GET")
 }
 
 func setupGetGitSourcesEndpoint(router *mux.Router, ctrl GitSourceController) {
-	router.Use(handleRestrictedAllRoutes)
 	router.HandleFunc("", ctrl.GetGitSources).Methods("GET")
 }
 
@@ -143,36 +144,21 @@ func setupDeleteGitSourceEndpoint(router *mux.Router, ctrl GitSourceController) 
 }
 
 func setupGetGitOrganizations(router *mux.Router, ctrl GitSourceController) {
-	router.Use(handleRestrictedUserRoutes)
-	router.HandleFunc("/{gitSourceName}", ctrl.GetGitOrganizations).Methods("GET")
+	router.Use(handleLoggedUserRoutes)
+	router.HandleFunc("", ctrl.GetGitOrganizations).Methods("GET")
 }
 
 func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
 	router.HandleFunc("/{organizationRef}", ctrl.WebHookOrganization).Methods("POST")
 }
 
-func setupAddUserEndpoint(router *mux.Router, ctrl UserController) {
-	router.Use(handleRestrictedAdminRoutes)
-	router.HandleFunc("", ctrl.AddUser).Methods("POST")
-}
-
-func setupRemoveUserEndpoint(router *mux.Router, ctrl UserController) {
-	router.Use(handleRestrictedAdminRoutes)
-	router.HandleFunc("/{email}", ctrl.RemoveUser).Methods("DELETE")
-}
-
-func setupIsUserAdministratorEndpoint(router *mux.Router, ctrl UserController) {
-	router.Use(handleLoggedUserRoutes)
-	router.HandleFunc("", ctrl.GetUserInfo).Methods("GET")
-}
-
 func setupGetTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
-	router.Use(handleRestrictedUserRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("", ctrl.GetTriggersConfig).Methods("GET")
 }
 
 func setupSaveTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
-	router.Use(handleRestrictedUserRoutes)
+	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("", ctrl.SaveTriggersConfig).Methods("POST")
 }
 
@@ -181,86 +167,61 @@ func setupGetAgolaRefs(router *mux.Router, ctrl OrganizationController) {
 	router.HandleFunc("", ctrl.GetAgolaOrganizations).Methods("GET")
 }
 
+func setupOauth2Login(router *mux.Router, ctrl Oauth2Controller) {
+	router.HandleFunc("/{gitSourceName}", ctrl.Login).Methods("GET")
+}
+
+func setupOauth2Callback(router *mux.Router, ctrl Oauth2Controller) {
+	router.HandleFunc("", ctrl.Callback).Methods("GET")
+}
+
 func handleLoggedUserRoutes(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-
 		if tokenString == "" {
 			log.Println("Undefined Authorization")
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 
-		parsedToken, err := jwt.ParseSigned(tokenString)
+		token, err := common.ParseToken(sd, tokenString)
 		if err != nil {
-			log.Println("Failed to parse the token: ", err)
+			log.Println("failed to parse jwt:", err)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+		if !token.Valid {
+			log.Println("invalid token")
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 
-		claim := Claim{}
-		err = parsedToken.Claims(config.KeycloakPubKey, &claim)
-		if err != nil {
-			log.Println("Failed to claim JWT token: ", err)
+		claims := token.Claims.(jwt.MapClaims)
+		userId := uint64(claims["sub"].(float64))
+
+		exp := int64(claims["exp"].(float64))
+		expTime := time.Unix(exp, 0)
+		if common.IsAccessTokenExpired(expTime) {
+			log.Println("Your token was expired at: ", expTime)
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 
-		if claim.Expiry.Time().Before(time.Now().Add(time.Duration(-config.Config.Keycloak.TokenValidity) * time.Second)) {
-			log.Println("Your token was expired at: ", claim.Expiry.Time())
-			log.Println("The actual time is: ", time.Now())
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
+		user, _ := db.GetUserByUserId(userId)
 
-		r.Header.Set(XAuthEmail, claim.Email)
-
-		h.ServeHTTP(w, r)
-	})
-}
-
-func handleRestrictedUserRoutes(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-
-		if tokenString == "" {
-			log.Println("Undefined Authorization")
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
-
-		parsedToken, err := jwt.ParseSigned(tokenString)
-		if err != nil {
-			log.Println("Failed to parse the token: ", err)
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
-
-		claim := Claim{}
-		err = parsedToken.Claims(config.KeycloakPubKey, &claim)
-		if err != nil {
-			log.Println("Failed to claim JWT token: ", err)
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
-
-		if claim.Expiry.Time().Before(time.Now().Add(time.Duration(-config.Config.Keycloak.TokenValidity) * time.Second)) {
-			log.Println("Your token was expired at: ", claim.Expiry.Time())
-			log.Println("The actual time is: ", time.Now())
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
-
-		user, err := db.GetUserByEmail(claim.Email)
 		if user == nil {
-			log.Println("User", claim.Email, "not found")
+			log.Println("user", userId, "not found")
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 
-		r.Header.Set(XAuthEmail, claim.Email)
+		fmt.Println("http request user", userId)
 
-		h.ServeHTTP(w, r)
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, "admin", false)
+		ctx = context.WithValue(ctx, XAuthUserId, userId)
+
+		h.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -271,46 +232,66 @@ func handleRestrictedAdminRoutes(h http.Handler) http.Handler {
 			return
 		}
 
-		h.ServeHTTP(w, r)
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, "admin", true)
+
+		h.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if checkIsAdminUser(r.Header.Get("Authorization")) {
-			h.ServeHTTP(w, r)
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, "admin", true)
+
+			h.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-
 			if tokenString == "" {
 				log.Println("Undefined Authorization")
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
 
-			parsedToken, err := jwt.ParseSigned(tokenString)
+			token, err := common.ParseToken(sd, tokenString)
 			if err != nil {
-				log.Println("Failed to parse the token: ", err)
+				log.Println("failed to parse jwt:", err)
+				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				return
+			}
+			if !token.Valid {
+				log.Println("invalid token")
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
 
-			claim := Claim{}
-			err = parsedToken.Claims(config.KeycloakPubKey, &claim)
-			if err != nil {
-				log.Println("Failed to claim JWT token: ", err)
+			claims := token.Claims.(jwt.MapClaims)
+			userId := uint64(claims["sub"].(float64))
+
+			exp := int64(claims["exp"].(float64))
+			expTime := time.Unix(exp, 0)
+			if common.IsAccessTokenExpired(expTime) {
+				log.Println("Your token was expired at: ", expTime)
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
 
-			if claim.Expiry.Time().Before(time.Now().Add(time.Duration(-config.Config.Keycloak.TokenValidity) * time.Second)) {
-				log.Println("Your token was expired at: ", claim.Expiry.Time())
-				log.Println("The actual time is: ", time.Now())
+			user, _ := db.GetUserByUserId(userId)
+
+			if user == nil {
+				log.Println("user", userId, "not found")
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
 
-			h.ServeHTTP(w, r)
+			fmt.Println("http request user", userId)
+
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, "admin", false)
+			ctx = context.WithValue(ctx, XAuthUserId, userId)
+
+			h.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
 }
@@ -318,4 +299,10 @@ func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 func checkIsAdminUser(authorization string) bool {
 	token := strings.TrimPrefix(authorization, "token ")
 	return strings.Compare(token, config.Config.AdminToken) == 0
+}
+
+const redirectPath string = "%s/auth/callback"
+
+func GetRedirectUrl() string {
+	return fmt.Sprintf(redirectPath, config.Config.Server.LocalHostAddress)
 }

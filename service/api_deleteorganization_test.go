@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/gorilla/mux"
 	"gotest.tools/assert"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/test"
@@ -28,11 +27,15 @@ func TestDeleteOrganizationOK(t *testing.T) {
 
 	organization := (*test.MakeOrganizationList())[0]
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organization.Name).Return(true, nil)
+	db.EXPECT().GetUserByUserId(organization.UserIDConnected).Return(user, nil)
 	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(nil)
-	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
+	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(nil)
 
 	serviceOrganization := OrganizationService{
@@ -42,7 +45,7 @@ func TestDeleteOrganizationOK(t *testing.T) {
 		CommonMutex: &commonMutex,
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
 	ts := httptest.NewServer(router)
 
@@ -65,10 +68,14 @@ func TestDeleteOrganizationInternalOnly(t *testing.T) {
 
 	organization := (*test.MakeOrganizationList())[0]
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organization.Name).Return(true, nil)
+	db.EXPECT().GetUserByUserId(organization.UserIDConnected).Return(user, nil)
+	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(nil)
 
 	serviceOrganization := OrganizationService{
@@ -78,7 +85,7 @@ func TestDeleteOrganizationInternalOnly(t *testing.T) {
 		CommonMutex: &commonMutex,
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
 	ts := httptest.NewServer(router)
 
@@ -98,7 +105,9 @@ func TestDeleteOrganizationNotFound(t *testing.T) {
 	commonMutex := utils.NewEventMutex()
 
 	organizationRefTest := "testnotfound"
+	user := test.MakeUser()
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organizationRefTest)).Return(nil, nil)
 
 	serviceOrganization := OrganizationService{
@@ -106,7 +115,7 @@ func TestDeleteOrganizationNotFound(t *testing.T) {
 		CommonMutex: &commonMutex,
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
 	ts := httptest.NewServer(router)
 
@@ -127,6 +136,7 @@ func TestDeleteOrganizationInternalonlyInvalidParam(t *testing.T) {
 	commonMutex := utils.NewEventMutex()
 
 	organization := (*test.MakeOrganizationList())[0]
+	user := test.MakeUser()
 
 	serviceOrganization := OrganizationService{
 		Db:          db,
@@ -135,7 +145,7 @@ func TestDeleteOrganizationInternalonlyInvalidParam(t *testing.T) {
 		CommonMutex: &commonMutex,
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
 	ts := httptest.NewServer(router)
 
@@ -157,7 +167,9 @@ func TestDeleteOrganizationWhenAgolaRefNotFoundOnDB(t *testing.T) {
 	commonMutex := utils.NewEventMutex()
 
 	organization := (*test.MakeOrganizationList())[0]
+	user := test.MakeUser()
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, errors.New(string("someError")))
 
 	serviceOrganization := OrganizationService{
@@ -167,7 +179,7 @@ func TestDeleteOrganizationWhenAgolaRefNotFoundOnDB(t *testing.T) {
 		CommonMutex: &commonMutex,
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
 	ts := httptest.NewServer(router)
 
@@ -189,7 +201,10 @@ func TestDeleteOrganizationWhenGitSourceNotFoundOnDB(t *testing.T) {
 	commonMutex := utils.NewEventMutex()
 
 	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Any()).Return(&gitSource, errors.New(string("someError")))
 
@@ -200,7 +215,7 @@ func TestDeleteOrganizationWhenGitSourceNotFoundOnDB(t *testing.T) {
 		CommonMutex: &commonMutex,
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
 	ts := httptest.NewServer(router)
 
@@ -222,9 +237,14 @@ func TestDeleteOrganizationWhenDeletingOrganizationInAgola(t *testing.T) {
 	commonMutex := utils.NewEventMutex()
 
 	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Any()).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organization.Name).Return(true, nil)
+	db.EXPECT().GetUserByUserId(organization.UserIDConnected).Return(user, nil)
 	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(errors.New(string("someError")))
 
 	serviceOrganization := OrganizationService{
@@ -234,7 +254,7 @@ func TestDeleteOrganizationWhenDeletingOrganizationInAgola(t *testing.T) {
 		CommonMutex: &commonMutex,
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
 	ts := httptest.NewServer(router)
 
@@ -257,11 +277,15 @@ func TestDeleteOrganizationWhenInternalOnlyDeletingOrganizationError(t *testing.
 
 	organization := (*test.MakeOrganizationList())[0]
 	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
 
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Eq(organization.AgolaOrganizationRef)).Return(&organization, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(organization.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organization.Name).Return(true, nil)
+	db.EXPECT().GetUserByUserId(organization.UserIDConnected).Return(user, nil)
 	agolaApi.EXPECT().DeleteOrganization(gomock.Any(), gomock.Any()).Return(nil)
-	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
+	giteaApi.EXPECT().DeleteWebHook(gomock.Any(), gomock.Any(), gomock.Eq(organization.Name), gomock.Eq(organization.WebHookID)).Return(nil)
 	db.EXPECT().DeleteOrganization(gomock.Eq(organization.AgolaOrganizationRef)).Return(errors.New(string("someError")))
 
 	serviceOrganization := OrganizationService{
@@ -271,7 +295,7 @@ func TestDeleteOrganizationWhenInternalOnlyDeletingOrganizationError(t *testing.
 		CommonMutex: &commonMutex,
 	}
 
-	router := mux.NewRouter()
+	router := test.SetupBaseRouter(user)
 	router.HandleFunc("/{organizationRef}", serviceOrganization.DeleteOrganization)
 	ts := httptest.NewServer(router)
 

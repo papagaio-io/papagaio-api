@@ -1,8 +1,21 @@
 appName: "papagaio-api"
 targetMap: [ master: 'dev', stable: 'stable', release: 'release']
-branch: env.AGOLA_GIT_BRANCH
+branch: AGOLA_GIT_BRANCH
 target: targetMap[branch]
 label: appName + "-${UUID.randomUUID().toString()}"
+
+
+
+
+
+
+
+
+
+
+
+**********************************
+**********************************
 
 local go_runtime(version, arch) = {
   type: 'pod',

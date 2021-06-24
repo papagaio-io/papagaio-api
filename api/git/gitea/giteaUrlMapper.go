@@ -16,7 +16,8 @@ const listBranchPath string = "%s/api/v1/repos/%s/%s/branches"
 const listMetadataPath string = "%s/api/v1/repos/%s/%s/contents/%s?ref=%s"
 const commitMetadataPath string = "%s/api/v1/repos/%s/%s/commits?sha=%s&page=1&limit=1"
 const organizationsPath string = "%s/api/v1/user/orgs"
-const userInfoPath string = "%s/api/v1/user"
+const loggedUserInfoPath string = "%s/api/v1/user"
+const userInfoPath string = "%s/api/v1/users/%s"
 const createOauth2AppPath string = "%s/api/v1/user/applications/oauth2"
 
 const oauth2AuthorizePath string = "%s/login/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=&state=%s"
@@ -66,8 +67,12 @@ func getOrganizationsUrl(gitApiUrl string) string {
 	return fmt.Sprintf(organizationsPath, gitApiUrl)
 }
 
-func getUserInfoUrl(gitApiUrl string) string {
-	return fmt.Sprintf(userInfoPath, gitApiUrl)
+func getLoggedUserInfoUrl(gitApiUrl string) string {
+	return fmt.Sprintf(loggedUserInfoPath, gitApiUrl)
+}
+
+func getUserInfoUrl(gitApiUrl string, login string) string {
+	return fmt.Sprintf(userInfoPath, gitApiUrl, login)
 }
 
 func GetOauth2AuthorizeUrl(gitApiUrl string, gitClientId string, redirectUrl string, state string) string {

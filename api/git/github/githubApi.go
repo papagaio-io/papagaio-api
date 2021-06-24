@@ -39,6 +39,7 @@ type GithubInterface interface {
 	IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error)
 
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
+	GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error)
 
 	GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error)
 	RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error)
@@ -272,9 +273,11 @@ func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *m
 
 func (githubApi *GithubApi) IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error) {
 	githubUsers, _ := githubApi.GetOrganizationMembers(gitSource, user, gitOrgRef)
-	for _, u := range *githubUsers {
-		if u.ID == int(user.ID) {
-			return u.HasOwnerPermission(), nil
+	if githubUsers != nil {
+		for _, u := range *githubUsers {
+			if u.ID == int(user.ID) {
+				return u.HasOwnerPermission(), nil
+			}
 		}
 	}
 
@@ -299,6 +302,32 @@ func (githubApi *GithubApi) GetUserInfo(gitSource *model.GitSource, user *model.
 	}
 
 	return response, nil
+}
+
+func (githubApi *GithubApi) GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error) {
+	ctx := context.Background()
+	tc := oauth2.NewClient(ctx, nil)
+	client := github.NewClient(tc)
+
+	user, resp, err := client.Users.Get(context.Background(), login)
+	if err != nil {
+		log.Println("error in GetUserByLogin:", err)
+		return nil, err
+	}
+
+	if resp.StatusCode == 404 {
+		return nil, nil
+	}
+
+	userInfo := dto.UserInfoDto{
+		ID:        *user.ID,
+		Login:     *user.Login,
+		Email:     *user.Email,
+		FullName:  *user.Name,
+		IsAdmin:   *user.SiteAdmin,
+		AvatarURL: *user.AvatarURL,
+	}
+	return &userInfo, nil
 }
 
 func (githubApi *GithubApi) getClient(gitSource *model.GitSource, user *model.User) (*github.Client, error) {

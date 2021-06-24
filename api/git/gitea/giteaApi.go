@@ -35,6 +35,7 @@ type GiteaInterface interface {
 	IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error)
 
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
+	GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error)
 	CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*CreateOauth2AppResponseDto, error)
 
 	GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error)
@@ -397,7 +398,13 @@ func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource, user *mod
 }
 
 func (giteaApi *GiteaApi) IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error) {
-	teams, _ := giteaApi.GetOrganizationTeams(gitSource, user, gitOrgRef)
+	teams, err := giteaApi.GetOrganizationTeams(gitSource, user, gitOrgRef)
+
+	if err != nil || teams == nil {
+		log.Println("IsUserOwner error in GetOrganizationTeams:", err)
+		return false, err
+	}
+
 	for _, team := range *teams {
 		if team.HasOwnerPermission() {
 			members, _ := giteaApi.GetTeamMembers(gitSource, user, team.ID)
@@ -417,7 +424,7 @@ func (giteaApi *GiteaApi) GetUserInfo(gitSource *model.GitSource, user *model.Us
 
 	client, _ := giteaApi.getClient(gitSource, user)
 
-	URLApi := getUserInfoUrl(gitSource.GitAPIURL)
+	URLApi := getLoggedUserInfoUrl(gitSource.GitAPIURL)
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
 
@@ -432,6 +439,37 @@ func (giteaApi *GiteaApi) GetUserInfo(gitSource *model.GitSource, user *model.Us
 		json.Unmarshal(body, &response)
 
 		log.Println("GetUserInfo end")
+
+		return &response, nil
+	}
+
+	return nil, err
+}
+
+func (giteaApi *GiteaApi) GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error) {
+	log.Println("GetUserByLogin start")
+
+	client := &http.Client{}
+
+	URLApi := getUserInfoUrl(gitSource.GitAPIURL, login)
+	req, _ := http.NewRequest("GET", URLApi, nil)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return nil, nil
+	}
+
+	if api.IsResponseOK(resp.StatusCode) {
+		body, _ := ioutil.ReadAll(resp.Body)
+		var response dto.UserInfoDto
+		json.Unmarshal(body, &response)
+
+		log.Println("GetUserByLogin end")
 
 		return &response, nil
 	}

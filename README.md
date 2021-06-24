@@ -38,3 +38,7 @@ example: papagaio user add --email {userEmail} --token {papagaioAdminToken}
 
 * Use command line "swag init" to update swag autogenerate files
 * URL: /swagger/index.html or /swagger/
+
+# Test
+
+ go test wecode.sorint.it/opensource/papagaio-api/service -v

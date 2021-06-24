@@ -32,11 +32,12 @@ type Database interface {
 	GetUsersTriggerTime() int
 	SaveUsersTriggerTime(value int)
 
+	GetUsersID() ([]uint64, error)
 	GetUsersIDByGitSourceName(gitSourceName string) ([]uint64, error)
 	GetUserByUserId(userId uint64) (*model.User, error)
 	GetUserByGitSourceNameAndID(gitSourceName string, id uint64) (*model.User, error)
 	SaveUser(user *model.User) (*model.User, error)
-	DeleteUser(userId uint) error
+	DeleteUser(userId uint64) error
 }
 
 type AppDb struct {

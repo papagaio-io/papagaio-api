@@ -45,7 +45,7 @@ func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Re
 
 	for _, v := range *gitSources {
 		login := config.Config.Server.LocalHostAddress + "/api/auth/login/" + v.Name
-		gs = append(gs, dto.GitSourcesDto{Name: v.Name, GitAPIURL: v.GitAPIURL, LoginURL: login})
+		gs = append(gs, dto.GitSourcesDto{Name: v.Name, GitAPIURL: v.GitAPIURL, LoginURL: login, GitType: v.GitType})
 	}
 
 	JSONokResponse(w, &gs)

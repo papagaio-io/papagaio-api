@@ -8,9 +8,10 @@ import (
 )
 
 type GitSourcesDto struct {
-	Name      string `json:"name"`
-	GitAPIURL string `json:"gitApiUrl"`
-	LoginURL  string `json:"loginUrl"`
+	Name      string        `json:"name"`
+	GitAPIURL string        `json:"gitApiUrl"`
+	LoginURL  string        `json:"loginUrl"`
+	GitType   types.GitType `json:"gitType"`
 }
 
 type UpdateGitSourceRequestDto struct {

@@ -4,7 +4,7 @@ def appName = "papagaio-api"
 def targetMap = [ master: 'dev', stable: 'stable', release: 'release']
 def branch = env.BRANCH_NAME
 def target = targetMap[branch]
-def label = appName + "-${UUID.randomUUID().toString()}"
+//def label = appName + "-${UUID.randomUUID().toString()}"
 
 podTemplate(
     label: 'node',

@@ -1,33 +1,27 @@
-appName: "papagaio-api"
-targetMap: [ master: 'dev', stable: 'stable', release: 'release']
-branch: AGOLA_GIT_BRANCH
-target: targetMap[branch]
-label: appName + "-${UUID.randomUUID().toString()}"
+local appName = "papagaio-api"
+local targetMap = [ master: 'dev', stable: 'stable', release: 'release']
+local branch = AGOLA_GIT_BRANCH
+local target = targetMap[branch]
+local label = appName + "-${UUID.randomUUID().toString()}"
+local version = "0.1.1"
 
+if branch == master then
+   version = "latest"
+;
 
-
-
-
-
-
-
-
-
-
-**********************************
-**********************************
-
-local go_runtime(version, arch) = {
+local go_runtime() = {
   type: 'pod',
-  arch: arch,
+  arch: 'amd64',
   containers: [
-    { image: 'registry.sorintdev.it/golang:' + version + '-stretch' },
+    { image: 'registry.sorintdev.it/golang:1.15.8' },
   ],
 };
 
-local task_build_go(version, arch) = {
-  name: 'build go ' + version + ' ' + arch,
-  runtime: go_runtime(version, arch),
+tarball = "papagaio-api-" + version + ".tar.gz"
+
+local task_build_go() = {
+  name: 'build go',
+  runtime: go_runtime(),
   steps: [
     { type: 'clone' },
     { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
@@ -35,37 +29,62 @@ local task_build_go(version, arch) = {
     { type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '/bin/', paths: ['agola-example-go'] }] },
     { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
     { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
+    //TODO CREAZIONE tar.gz (TODO aggiungere if branch==master/stable/release)
+    { type: 'run', name: 'Creazione tar.gz', command: 'mkdir dist && cp papagaio-api dist/ && tar -zcvf ' + tarball + ' dist' },
+    //TODO deploy tar.gz su nexus (TODO aggiungere if branch==master/stable)
+    { type: 'run', name: 'Deploy su Nexus', command: '"curl -v -k -u ${SORINT_DOCKER_USERNAME}:${SORINT_DOCKER_PASSWORD} --upload-file ' + tarball + " https://nexus.sorintdev.it/repository/binaries/it.sorintdev.papagaio/papagaio-api-" + version + ".tar.gz" }
   ],
+};
+
+local task_docker_build_push() = {
+  name: 'docker build and push',
+  runtime:
+  {
+    containers:
+    {
+      image: "gcr.io/kaniko-project/executor:debug"
+    }
+  },
+  environment:
+  {
+    DOCKERAUTH: {
+      from_variable: "dockerauth"
+    }
+  },
+  shell: "/busybox/sh"
+  steps: 
+  {
+    restore_workspace: 
+    {
+      dest_dir: "."
+    },
+    run: "/kaniko/executor --destination registry/image"
+  },
+  depends: "build go"
 };
 
 {
   runs: [
     {
-      name: 'agola go example',
-      tasks: [
-        task_build_go(version, arch)
-        for version in ['1.11', '1.12']
-        # uncomment additional archs if there's an available executor
-        for arch in ['amd64' /*'arm64'*/]
-      ] + [
+      name: 'papagaio backend',
+      docker_registries_auth:
+      {
+        'registry.sorintdev.it':
         {
-          name: 'run',
-          runtime: {
-            type: 'pod',
-            arch: 'amd64',
-            containers: [
-              { image: 'registry.sorintdev.it/debian:stretch' },
-            ],
+          username:
+          {
+            from_variable: "SORINT_DOCKER_USERNAME" //TODO agola variable from secret
           },
-          steps: [
-            { type: 'restore_workspace', dest_dir: '.' },
-            { type: 'run', command: './bin/agola-example-go' },
-          ],
-          depends: [
-            'build go 1.12 amd64',
-          ],
-        },
-      ],
+          password:
+          {
+            from_variable: "SORINT_DOCKER_PASSWORD" //TODO agola variable from secret
+          }
+        }
+      },
+      tasks: [
+        task_build_go(),
+        task_docker_build_push()
+      ]
     },
   ],
 }

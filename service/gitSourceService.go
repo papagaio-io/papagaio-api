@@ -89,7 +89,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 		GitSecret:   gitGitSourceDto.GitClientSecret,
 	}
 
-	if gitGitSourceDto.AgolaRemoteSourceName == nil {
+	if gitGitSourceDto.AgolaRemoteSourceName == nil || len(*gitGitSourceDto.AgolaRemoteSourceName) == 0 {
 		gsList, err := service.AgolaApi.GetRemoteSources()
 		if err != nil {
 			log.Println("Error in GetRemoteSources:", err)
@@ -118,7 +118,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 
 		gitGitSourceDto.AgolaRemoteSourceName = &findRemoteSourceName
 
-		err = service.AgolaApi.CreateRemoteSource(*gitGitSourceDto.AgolaRemoteSourceName, string(gitGitSourceDto.GitType), gitGitSourceDto.GitAPIURL, gitGitSourceDto.GitClientID, gitGitSourceDto.GitClientSecret)
+		err = service.AgolaApi.CreateRemoteSource(*gitGitSourceDto.AgolaRemoteSourceName, string(gitGitSourceDto.GitType), gitGitSourceDto.GitAPIURL, *gitGitSourceDto.AgolaClientID, *gitGitSourceDto.AgolaClientSecret)
 		if err != nil {
 			log.Println("Error in CreateRemoteSource:", err)
 			InternalServerError(w)

@@ -124,6 +124,8 @@ func readConfig() {
 
 // SetupConfig load the configuration from config.json and set config.Config to it
 func SetupConfig() {
+	log.Println("SetupConfig...")
+
 	readConfig()
 }
 

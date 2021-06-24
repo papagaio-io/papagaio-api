@@ -242,6 +242,21 @@ func (mr *MockGiteaInterfaceMockRecorder) GetUserInfo(gitSource, user interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserInfo", reflect.TypeOf((*MockGiteaInterface)(nil).GetUserInfo), gitSource, user)
 }
 
+// GetUserByLogin mocks base method
+func (m *MockGiteaInterface) GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByLogin", gitSource, login)
+	ret0, _ := ret[0].(*dto.UserInfoDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByLogin indicates an expected call of GetUserByLogin
+func (mr *MockGiteaInterfaceMockRecorder) GetUserByLogin(gitSource, login interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByLogin", reflect.TypeOf((*MockGiteaInterface)(nil).GetUserByLogin), gitSource, login)
+}
+
 // CreateAgolaApp mocks base method
 func (m *MockGiteaInterface) CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*gitea.CreateOauth2AppResponseDto, error) {
 	m.ctrl.T.Helper()

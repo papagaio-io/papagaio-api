@@ -72,7 +72,7 @@ local task_docker_build_push() = {
           cat << EOF > /kaniko/.docker/config.json
                 {
                   "auths": {
-                    "registry.sorintdev.it": { "auth" : "$DOCKERAUTH" }
+                    "registry.sorintdev.it": { "auth" : "$DOCKERAUTHUSERNAME:$DOCKERAUTHPASSWORD" }
                   }
                 }
           EOF

@@ -58,6 +58,10 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
 
 			user, _ := db.GetUserByUserId(org.UserIDConnected)
+			if user == nil {
+				log.Println("user not found")
+				continue
+			}
 			membersManager.SynkMembers(org, gitSource, agolaApi, gitGateway, user)
 			repositoryManager.SynkGitRepositorys(db, user, org, gitSource, agolaApi, gitGateway)
 

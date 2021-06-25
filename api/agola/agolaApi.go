@@ -618,6 +618,9 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		return c.c.Do(req)
 	}
 
+	log.Println("c.user:", c.user)
+	log.Println("c.user", c.user.AgolaToken, c.user.AgolaTokenName, c.user.AgolaUserRef)
+
 	req.Header.Set("Authorization", "token "+*c.user.AgolaToken)
 	response, err := c.c.Do(req)
 	if err != nil {

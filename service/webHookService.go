@@ -59,6 +59,11 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	}
 
 	user, _ := service.Db.GetUserByUserId(organization.UserIDConnected)
+	if user == nil {
+		log.Println("user not found")
+		InternalServerError(w)
+		return
+	}
 
 	if webHookMessage.IsRepositoryCreated() {
 		log.Println("repository created: ", webHookMessage.Repository.Name)

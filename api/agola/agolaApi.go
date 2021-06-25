@@ -621,13 +621,18 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	log.Println("c.user:", c.user)
 	log.Println("c.user", c.user.AgolaToken, c.user.AgolaTokenName, c.user.AgolaUserRef)
 
-	req.Header.Set("Authorization", "token "+*c.user.AgolaToken)
-	response, err := c.c.Do(req)
-	if err != nil {
-		return nil, err
+	var response *http.Response
+	var err error
+
+	if c.user.AgolaToken != nil {
+		req.Header.Set("Authorization", "token "+*c.user.AgolaToken)
+		response, err = c.c.Do(req)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if response.StatusCode == 401 {
+	if response == nil || response.StatusCode == 401 {
 		err = c.agolaApi.CreateUserToken(c.user)
 		if err != nil {
 			log.Println("error in agola CreateUserToken:", err)

@@ -1,13 +1,12 @@
-local appName = "papagaio-api"
-local targetMap = [ master: 'dev', stable: 'stable', release: 'release']
-local branch = AGOLA_GIT_BRANCH
-local target = targetMap[branch]
-local label = appName + "-${UUID.randomUUID().toString()}"
-local version = "0.1.1"
+local appName = "papagaio-api";
+local targetMap = {master: "dev", stable: "stable", release: "release"};
+local branch = std.extVar("AGOLA_GIT_BRANCH");
+local target = targetMap[branch];
+local label = appName + "-${UUID.randomUUID().toString()}";
 
-if branch == master then
-   version = "latest"
-;
+local versionNumber = "0.1.1";
+local versionMap = {master: "laster", "stable": versionNumber, "release": versionNumber};
+local version = versionMap[branch];
 
 local go_runtime() = {
   type: 'pod',
@@ -17,23 +16,28 @@ local go_runtime() = {
   ],
 };
 
-tarball = "papagaio-api-" + version + ".tar.gz"
+local tarball = "papagaio-api-" + version + ".tar.gz";
 
 local task_build_go() = {
   name: 'build go',
   runtime: go_runtime(),
-  steps: [
-    { type: 'clone' },
-    { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
-    { type: 'run', name: 'build the program', command: 'go build .' },
-    { type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '/bin/', paths: ['agola-example-go'] }] },
-    { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
-    { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
-    //TODO CREAZIONE tar.gz (TODO aggiungere if branch==master/stable/release)
-    { type: 'run', name: 'Creazione tar.gz', command: 'mkdir dist && cp papagaio-api dist/ && tar -zcvf ' + tarball + ' dist' },
-    //TODO deploy tar.gz su nexus (TODO aggiungere if branch==master/stable)
-    { type: 'run', name: 'Deploy su Nexus', command: '"curl -v -k -u ${SORINT_DOCKER_USERNAME}:${SORINT_DOCKER_PASSWORD} --upload-file ' + tarball + " https://nexus.sorintdev.it/repository/binaries/it.sorintdev.papagaio/papagaio-api-" + version + ".tar.gz" }
-  ],
+  steps: 
+    [
+      { type: 'clone' },
+      { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
+      { type: 'run', name: 'build the program', command: 'go build .' },
+      { type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '/bin/', paths: ['papagaio-api'] }] },
+      { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
+      { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] }
+    ] +
+    if branch == "master" || branch == "stable" || branch == "release" then
+    [
+      { type: 'run', name: 'Creazione tar.gz', command: 'mkdir dist && cp papagaio-api dist/ && tar -zcvf ' + tarball + ' dist' },
+    ] +
+    if branch == master || branch == "stable" then
+    [
+      { type: 'run', name: 'Deploy su Nexus', command: '"curl -v -k -u $sorint-docker-username:$sorint-docker-password --upload-file ' + tarball + " https://nexus.sorintdev.it/repository/binaries/it.sorintdev.papagaio/papagaio-api-" + version + ".tar.gz" }
+    ],
 };
 
 local task_docker_build_push() = {
@@ -47,18 +51,35 @@ local task_docker_build_push() = {
   },
   environment:
   {
-    DOCKERAUTH: {
-      from_variable: "dockerauth"
-    }
+    DOCKERAUTHUSERNAME: {
+      from_variable: "sorint-docker-username"
+    },
+    DOCKERAUTHPASSWORD: {
+      from_variable: "dockersorint-docker-password"
+    },
   },
-  shell: "/busybox/sh"
+  shell: "/busybox/sh",
   steps: 
   {
     restore_workspace: 
     {
       dest_dir: "."
     },
-    run: "/kaniko/executor --destination registry/image"
+    run: [
+      {
+        name: "generate docker config",
+        command: |||
+          cat << EOF > /kaniko/.docker/config.json
+                {
+                  "auths": {
+                    "registry.sorintdev.it": { "auth" : "$DOCKERAUTH" }
+                  }
+                }
+          EOF
+          |||,
+      },
+        "/kaniko/executor --destination registry.sorintdev.it/" + appName + ":" + version
+    ]
   },
   depends: "build go"
 };
@@ -73,11 +94,11 @@ local task_docker_build_push() = {
         {
           username:
           {
-            from_variable: "SORINT_DOCKER_USERNAME" //TODO agola variable from secret
+            from_variable: "sorint-docker-username"
           },
           password:
           {
-            from_variable: "SORINT_DOCKER_PASSWORD" //TODO agola variable from secret
+            from_variable: "sorint-docker-password"
           }
         }
       },

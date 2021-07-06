@@ -1,4 +1,4 @@
-FROM registry.sorintdev.it/fedora:33
+FROM registry.sorintdev.it/alpine
 COPY papagaio-api /app/
 
 ENTRYPOINT ["/app/papagaio-api", "serve"]

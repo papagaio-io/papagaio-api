@@ -1,7 +1,7 @@
 {
     "Server": {
       "Port": "8080",
-      "LocalHostAddress": "http://79.54.189.190:8080"
+      "LocalHostAddress": "http://localhost:8080"
     },
     "Database": {
       "DbPath": "/badger",

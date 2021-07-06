@@ -1,6 +1,4 @@
-FROM registry.sorintdev.it/alpine:latest
+FROM registry.sorintdev.it/fedora:33
 COPY papagaio-api /app/
 
-RUN apk update && apk add bash
-RUN apk add tzdata
 ENTRYPOINT ["/app/papagaio-api", "serve"]

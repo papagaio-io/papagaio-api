@@ -71,7 +71,6 @@ local task_docker_build_push(branch) = {
   steps: 
    [
     { type: "restore_workspace", name: "restore workspace", dest_dir: "/kaniko/papagaio-api" },
-    { type: 'run', name: 'test1', command: 'ls -la /kaniko/papagaio-api' },
     {
       type: "run",
       name: "generate docker config", 

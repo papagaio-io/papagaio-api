@@ -35,7 +35,6 @@ local task_build_go(branch) =
       [
         { type: 'clone' },
         { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
-        { type: 'run', name: 'set env variable', command:'export CGO_ENABLE=0'},
         { type: 'run', name: 'build the program', command: 'go build .' },
         { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
         { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },

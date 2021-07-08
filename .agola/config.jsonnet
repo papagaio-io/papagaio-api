@@ -44,8 +44,8 @@ local task_build_go() =
       ],
   };
 
-local task_docker_build_push() = {
-  name: 'docker build and push',
+local task_docker_build_push_private() = {
+  name: 'docker build and push private',
   when: {
     branch: 'master',
     tag: '#.*#',
@@ -62,8 +62,56 @@ local task_docker_build_push() = {
       from_variable: "dockerauth"
     },
     "APPNAME": appName,
+  },
+  shell: "/busybox/sh",
+  working_dir: '/kaniko',
+  steps: 
+   [
+    { type: "restore_workspace", name: "restore workspace", dest_dir: "/kaniko/papagaio-api" },
+    {
+      type: "run",
+      name: "generate docker config", 
+      command: |||
+        cat << EOF > /kaniko/.docker/config.json
+        {
+          "auths": {
+            "registry.sorintdev.it": { "auth": "$PRIVATE_DOCKERAUTH" }
+          }
+        }
+        EOF
+      |||,
+    },
+     {
+      type: "run",
+      name: "kanico executor",
+      command: |||
+        echo "branch" $AGOLA_GIT_BRANCH
+        if [ $AGOLA_GIT_TAG ]; then
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
+        else
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
+      |||,
+    },
+   ],
+  depends: ["build go"]
+};
+
+local task_docker_build_push_public() = {
+  name: 'docker build and push public',
+  when: {
+    tag: '#.*#',
+  },
+  runtime:
+  {
+    containers: [
+      { image: "gcr.io/kaniko-project/executor:debug"},
+    ],
+  },
+  environment:
+  {
+    "APPNAME": appName,
     "PUBLIC_DOCKERAUTH": {
-      from_variable: "SORINTLAB_DOCKERAUTH"
+      from_variable: "TULLIO-DOCKERAUTH"
     },
   },
   shell: "/busybox/sh",
@@ -78,25 +126,13 @@ local task_docker_build_push() = {
         cat << EOF > /kaniko/.docker/config.json
         {
           "auths": {
-            "registry.sorintdev.it": { "auth": "$PRIVATE_DOCKERAUTH" },
-            "sorintlab": { "auth": "$PUBLIC_DOCKERAUTH" }
+            "https://index.docker.io/v1/": { "auth": "$PUBLIC_DOCKERAUTH" }
           }
         }
         EOF
       |||,
     },
-    {
-      type: "run",
-      name: "kanico executor",
-      command: |||
-        echo "branch" $AGOLA_GIT_BRANCH
-        if [ ${AGOLA_GIT_TAG} ]; then
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination sorintlab/$APPNAME:$AGOLA_GIT_TAG;
-        else
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
-      |||,
-    },
+    { type: "run", name: "kanico executor", command: "/kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination tulliobotti/$APPNAME:$AGOLA_GIT_TAG" },
    ],
   depends: ["build go"]
 };
@@ -134,7 +170,6 @@ local task_kubernetes_deploy(target) =
       { type: 'run', name: 'sed version release', command: 'sed -i s/VERSION/$AGOLA_GIT_TAG/g k8s/release/deployment.yml' },
       { type: 'run', name: 'kubectl replace', command: 'kubectl replace --force --kubeconfig=kubernetes/kubernetes.conf -f k8s/' + target },
     ],
-    depends: ["docker build and push"],
   };
 
 {
@@ -157,22 +192,26 @@ local task_kubernetes_deploy(target) =
       },
       tasks: [
         task_build_go(),
-        task_docker_build_push(),
+        task_docker_build_push_private(),
+        task_docker_build_push_public(),
         task_kubernetes_deploy('dev')+ {
           when: {
             branch: 'master',
           },
+          depends: ["docker build and push private"],
         },
         task_kubernetes_deploy('stable')+ {
           when: {
             tag: '#.*#',
           },
+          depends: ["docker build and push private", "docker build and push public"],
         },
         task_kubernetes_deploy('release')+ {
           when: {
             tag: '#.*#',
           },
           approval: true,
+          depends: ["docker build and push private", "docker build and push public"],
         },
       ]
     },

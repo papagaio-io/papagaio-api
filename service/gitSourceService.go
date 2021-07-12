@@ -20,7 +20,6 @@ import (
 )
 
 const githubDefaultApiUrl = "https://api.github.com"
-const githubDefaultUrl = "https://github.com"
 
 type GitSourceService struct {
 	Db         repository.Database
@@ -86,7 +85,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 	}
 
 	if gitSourceDto.GitAPIURL == nil && gitSourceDto.GitType == types.Github {
-		gitUrl := githubDefaultUrl
+		gitUrl := githubDefaultApiUrl
 		gitSourceDto.GitAPIURL = &gitUrl
 	}
 
@@ -127,12 +126,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 
 		gitSourceDto.AgolaRemoteSourceName = &findRemoteSourceName
 
-		agolaGitApiUrl := *gitSourceDto.GitAPIURL
-		if gitSourceDto.GitType == types.Github {
-			agolaGitApiUrl = githubDefaultApiUrl
-		}
-
-		err = service.AgolaApi.CreateRemoteSource(*gitSourceDto.AgolaRemoteSourceName, string(gitSourceDto.GitType), agolaGitApiUrl, *gitSourceDto.AgolaClientID, *gitSourceDto.AgolaClientSecret)
+		err = service.AgolaApi.CreateRemoteSource(*gitSourceDto.AgolaRemoteSourceName, string(gitSourceDto.GitType), *gitSourceDto.GitAPIURL, *gitSourceDto.AgolaClientID, *gitSourceDto.AgolaClientSecret)
 		if err != nil {
 			log.Println("Error in CreateRemoteSource:", err)
 			InternalServerError(w)

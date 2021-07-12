@@ -421,6 +421,8 @@ func (giteaApi *GiteaApi) GetUserInfo(gitSource *model.GitSource, user *model.Us
 		var response dto.UserInfoDto
 		json.Unmarshal(body, &response)
 
+		response.UserPageURL = gitSource.GitAPIURL + "/" + response.Login
+
 		log.Println("GetUserInfo end")
 
 		return &response, nil

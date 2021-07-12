@@ -290,10 +290,11 @@ func (githubApi *GithubApi) GetUserInfo(gitSource *model.GitSource, user *model.
 	}
 
 	response := &dto.UserInfoDto{
-		ID:        *userInfo.ID,
-		Login:     *userInfo.Login,
-		AvatarURL: *userInfo.AvatarURL,
-		IsAdmin:   *userInfo.SiteAdmin,
+		ID:          *userInfo.ID,
+		Login:       *userInfo.Login,
+		AvatarURL:   *userInfo.AvatarURL,
+		IsAdmin:     *userInfo.SiteAdmin,
+		UserPageURL: *userInfo.HTMLURL,
 	}
 	if userInfo.Name != nil {
 		response.FullName = *userInfo.Name

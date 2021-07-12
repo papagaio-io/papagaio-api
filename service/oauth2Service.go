@@ -94,7 +94,7 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	accessToken, err := service.GitGateway.GetOauth2AccessToken(gitSource, code)
-	if err != nil {
+	if err != nil || accessToken == nil {
 		log.Println("error during access token request:", err)
 		InternalServerError(w)
 		return

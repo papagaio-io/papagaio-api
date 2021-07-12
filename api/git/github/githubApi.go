@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v37/github"
 	"golang.org/x/oauth2"
 	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
@@ -120,7 +120,14 @@ func (githubApi *GithubApi) GetOrganizationTeams(gitSource *model.GitSource, use
 
 func (githubApi *GithubApi) GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error) {
 	client, _ := githubApi.getClient(gitSource, user)
-	users, _, err := client.Teams.ListTeamMembers(context.Background(), int64(teamId), nil)
+	org, _, err := client.Organizations.Get(context.Background(), organizationName)
+	if err != nil {
+		return nil, err
+	}
+	users, _, err := client.Teams.ListTeamMembersByID(context.Background(), *org.ID, int64(teamId), nil) //TODO change getting the organization ID by a parameter
+	if err != nil {
+		return nil, err
+	}
 
 	retVal := make([]dto.UserTeamResponseDto, 0)
 	for _, user := range users {
@@ -295,10 +302,14 @@ func (githubApi *GithubApi) GetUserInfo(gitSource *model.GitSource, user *model.
 	response := &dto.UserInfoDto{
 		ID:        *userInfo.ID,
 		Login:     *userInfo.Login,
-		Email:     *userInfo.Email,
-		FullName:  *userInfo.Name,
 		AvatarURL: *userInfo.AvatarURL,
 		IsAdmin:   *userInfo.SiteAdmin,
+	}
+	if userInfo.Name != nil {
+		response.FullName = *userInfo.Name
+	}
+	if userInfo.Email != nil {
+		response.Email = *userInfo.Email
 	}
 
 	return response, nil
@@ -332,6 +343,7 @@ func (githubApi *GithubApi) GetUserByLogin(gitSource *model.GitSource, login str
 
 func (githubApi *GithubApi) getClient(gitSource *model.GitSource, user *model.User) (*github.Client, error) {
 	if common.IsAccessTokenExpired(user.Oauth2AccessTokenExpiresAt) {
+		log.Println("Token expired is to refresh")
 		token, err := githubApi.RefreshToken(gitSource, user.Oauth2RefreshToken)
 
 		if err != nil {
@@ -368,11 +380,9 @@ func GetOauth2AuthorizeUrl(gitClientId string, redirectUrl string, state string)
 func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
 	client := &http.Client{}
 
-	URLApi := oauth2AccessTokenPath
-	accessTokenRequest := dto.AccessTokenRequestDto{ClientID: gitSource.GitClientID, ClientSecret: gitSource.GitSecret, GrantType: "authorization_code", Code: code, RedirectURL: controller.GetRedirectUrl()}
-	data, _ := json.Marshal(accessTokenRequest)
-	reqBody := strings.NewReader(string(data))
-	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	URLApi := oauth2AccessTokenPath + "?client_id=" + gitSource.GitClientID + "&client_secret=" + gitSource.GitSecret + "&code=" + code + "&redirect_uri=" + controller.GetRedirectUrl()
+	req, _ := http.NewRequest("POST", URLApi, nil)
+	req.Header.Set("Accept", "application/json")
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -385,7 +395,9 @@ func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, cod
 		var response common.Token
 		json.Unmarshal(body, &response)
 
-		response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
+		if response.Expiry > 0 {
+			response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
+		}
 
 		return &response, nil
 	}
@@ -396,11 +408,8 @@ func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, cod
 func (githubApi *GithubApi) RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error) {
 	client := &http.Client{}
 
-	URLApi := oauth2AccessTokenPath
-	accessTokenRequest := dto.AccessTokenRequestDto{ClientID: gitSource.GitClientID, ClientSecret: gitSource.GitSecret, GrantType: "refresh_token", RedirectURL: controller.GetRedirectUrl()}
-	data, _ := json.Marshal(accessTokenRequest)
-	reqBody := strings.NewReader(string(data))
-	req, _ := http.NewRequest("POST", URLApi, reqBody)
+	URLApi := oauth2AccessTokenPath + "?client_id=" + gitSource.GitClientID + "&client_secret=" + gitSource.GitSecret + "&grant_type=refresh_token&refresh_token=" + refreshToken
+	req, _ := http.NewRequest("POST", URLApi, nil)
 	resp, err := client.Do(req)
 
 	if err != nil {

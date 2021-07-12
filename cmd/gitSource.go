@@ -77,7 +77,7 @@ func addGitSource(cmd *cobra.Command, args []string) {
 	gitSourceRequest := dto.CreateGitSourceRequestDto{
 		Name:                  cfgGitSource.name,
 		GitType:               types.GitType(cfgGitSource.gitType),
-		GitAPIURL:             cfgGitSource.gitAPIURL,
+		GitAPIURL:             &cfgGitSource.gitAPIURL,
 		GitClientID:           cfgGitSource.gitClientID,
 		GitClientSecret:       cfgGitSource.gitClientSecret,
 		AgolaRemoteSourceName: &cfgGitSource.agolaRemoteSourceName,

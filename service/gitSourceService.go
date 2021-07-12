@@ -16,7 +16,11 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 )
+
+const githubDefaultApiUrl = "https://api.github.com"
+const githubDefaultUrl = "https://github.com"
 
 type GitSourceService struct {
 	Db         repository.Database
@@ -81,10 +85,15 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	if gitSourceDto.GitAPIURL == nil && gitSourceDto.GitType == types.Github {
+		gitUrl := githubDefaultUrl
+		gitSourceDto.GitAPIURL = &gitUrl
+	}
+
 	gitSource := model.GitSource{
 		Name:        gitSourceDto.Name,
 		GitType:     gitSourceDto.GitType,
-		GitAPIURL:   gitSourceDto.GitAPIURL,
+		GitAPIURL:   *gitSourceDto.GitAPIURL,
 		GitClientID: gitSourceDto.GitClientID,
 		GitSecret:   gitSourceDto.GitClientSecret,
 	}
@@ -118,7 +127,12 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 
 		gitSourceDto.AgolaRemoteSourceName = &findRemoteSourceName
 
-		err = service.AgolaApi.CreateRemoteSource(*gitSourceDto.AgolaRemoteSourceName, string(gitSourceDto.GitType), gitSourceDto.GitAPIURL, *gitSourceDto.AgolaClientID, *gitSourceDto.AgolaClientSecret)
+		agolaGitApiUrl := *gitSourceDto.GitAPIURL
+		if gitSourceDto.GitType == types.Github {
+			agolaGitApiUrl = githubDefaultApiUrl
+		}
+
+		err = service.AgolaApi.CreateRemoteSource(*gitSourceDto.AgolaRemoteSourceName, string(gitSourceDto.GitType), agolaGitApiUrl, *gitSourceDto.AgolaClientID, *gitSourceDto.AgolaClientSecret)
 		if err != nil {
 			log.Println("Error in CreateRemoteSource:", err)
 			InternalServerError(w)

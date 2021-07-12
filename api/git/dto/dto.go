@@ -50,10 +50,11 @@ type AccessTokenRequestDto struct {
 }
 
 type UserInfoDto struct {
-	ID        int64  `json:"id"`
-	Login     string `json:"login"`
-	Email     string `json:"email"`
-	FullName  string `json:"full_name"`
-	AvatarURL string `json:"avatar_url"`
-	IsAdmin   bool   `json:"is_admin"`
+	ID          int64  `json:"id"`
+	Login       string `json:"login"`
+	Email       string `json:"email"`
+	FullName    string `json:"full_name"`
+	AvatarURL   string `json:"avatar_url"`
+	IsAdmin     bool   `json:"is_admin"`
+	UserPageURL string `json:"user_page_url"`
 }

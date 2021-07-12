@@ -146,6 +146,7 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 		InternalServerError(w)
 	}
 
+	userInfo.UserPageURL = gitSource.GitAPIURL + "/" + userInfo.Login
 	response := dto.OauthCallbackResponseDto{Token: userToken, UserID: *user.UserID, UserInfo: *userInfo}
 	JSONokResponse(w, response)
 

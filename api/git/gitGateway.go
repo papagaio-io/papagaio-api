@@ -46,11 +46,11 @@ func (gitGateway *GitGateway) GetOrganizationTeams(gitSource *model.GitSource, u
 	}
 }
 
-func (gitGateway *GitGateway) GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error) {
+func (gitGateway *GitGateway) GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationId int64, teamId int) (*[]dto.UserTeamResponseDto, error) {
 	if gitSource.GitType == types.Gitea {
 		return gitGateway.GiteaApi.GetTeamMembers(gitSource, user, teamId)
 	} else {
-		return gitGateway.GithubApi.GetTeamMembers(gitSource, user, organizationName, teamId)
+		return gitGateway.GithubApi.GetTeamMembers(gitSource, user, organizationId, teamId)
 	}
 }
 

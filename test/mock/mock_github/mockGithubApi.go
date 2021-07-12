@@ -111,18 +111,18 @@ func (mr *MockGithubInterfaceMockRecorder) GetOrganizationTeams(gitSource, user,
 }
 
 // GetTeamMembers mocks base method
-func (m *MockGithubInterface) GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error) {
+func (m *MockGithubInterface) GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationId int64, teamId int) (*[]dto.UserTeamResponseDto, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTeamMembers", gitSource, user, organizationName, teamId)
+	ret := m.ctrl.Call(m, "GetTeamMembers", gitSource, user, organizationId, teamId)
 	ret0, _ := ret[0].(*[]dto.UserTeamResponseDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTeamMembers indicates an expected call of GetTeamMembers
-func (mr *MockGithubInterfaceMockRecorder) GetTeamMembers(gitSource, user, organizationName, teamId interface{}) *gomock.Call {
+func (mr *MockGithubInterfaceMockRecorder) GetTeamMembers(gitSource, user, organizationId, teamId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamMembers", reflect.TypeOf((*MockGithubInterface)(nil).GetTeamMembers), gitSource, user, organizationName, teamId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamMembers", reflect.TypeOf((*MockGithubInterface)(nil).GetTeamMembers), gitSource, user, organizationId, teamId)
 }
 
 // GetOrganizationMembers mocks base method

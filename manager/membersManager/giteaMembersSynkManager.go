@@ -24,7 +24,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	gitTeamMembers := make(map[int]dto.UserTeamResponseDto)
 
 	for _, team := range *gitTeams {
-		teamMembers, _ := gitGateway.GetTeamMembers(gitSource, user, organization.Name, team.ID)
+		teamMembers, _ := gitGateway.GetTeamMembers(gitSource, user, organization.GitOrganizationID, team.ID)
 
 		var teamToCheck *map[int]dto.UserTeamResponseDto
 		if strings.Compare(team.Permission, "owner") == 0 {

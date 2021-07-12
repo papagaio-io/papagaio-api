@@ -27,7 +27,7 @@ type GithubInterface interface {
 	GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error)
 	GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error)
 	GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error)
-	GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error)
+	GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationId int64, teamId int) (*[]dto.UserTeamResponseDto, error)
 	GetOrganizationMembers(gitSource *model.GitSource, user *model.User, organizationName string) (*[]GitHubUser, error)
 	GetRepositoryMembers(gitSource *model.GitSource, user *model.User, organizationName string, repositoryRef string) (*[]GitHubUser, error)
 	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool
@@ -111,13 +111,10 @@ func (githubApi *GithubApi) GetOrganizationTeams(gitSource *model.GitSource, use
 	return &retVal, err
 }
 
-func (githubApi *GithubApi) GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error) {
+func (githubApi *GithubApi) GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationId int64, teamId int) (*[]dto.UserTeamResponseDto, error) {
 	client, _ := githubApi.getClient(gitSource, user)
-	org, _, err := client.Organizations.Get(context.Background(), organizationName)
-	if err != nil {
-		return nil, err
-	}
-	users, _, err := client.Teams.ListTeamMembersByID(context.Background(), *org.ID, int64(teamId), nil) //TODO change getting the organization ID by a parameter
+
+	users, _, err := client.Teams.ListTeamMembersByID(context.Background(), organizationId, int64(teamId), nil)
 	if err != nil {
 		return nil, err
 	}

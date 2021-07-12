@@ -501,7 +501,9 @@ func (giteaApi *GiteaApi) GetOauth2AccessToken(gitSource *model.GitSource, code 
 		var response common.Token
 		json.Unmarshal(body, &response)
 
-		response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
+		if response.Expiry > 0 {
+			response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
+		}
 
 		log.Println("GetOauth2AccessToken end")
 

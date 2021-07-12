@@ -108,14 +108,15 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	gitOrgExists := service.GitGateway.CheckOrganizationExists(gitSource, user, org.Name)
-	log.Println("gitOrgExists:", gitOrgExists)
-	if !gitOrgExists {
+	gitOrganization := service.GitGateway.GetOrganization(gitSource, user, org.Name)
+	log.Println("gitOrgExists:", gitOrganization != nil)
+	if gitOrganization == nil {
 		log.Println("failed to find organization", org.Name, "from git")
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.GitOrganizationNotFoundError}
 		JSONokResponse(w, response)
 		return
 	}
+	org.GitOrganizationID = gitOrganization.ID
 
 	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, user, org.Name)
 	if !isOwner {

@@ -38,14 +38,6 @@ func (gitGateway *GitGateway) GetRepositories(gitSource *model.GitSource, user *
 	}
 }
 
-func (gitGateway *GitGateway) CheckOrganizationExists(gitSource *model.GitSource, user *model.User, gitOrgRef string) bool {
-	if gitSource.GitType == types.Gitea {
-		return gitGateway.GiteaApi.CheckOrganizationExists(gitSource, user, gitOrgRef)
-	} else {
-		return gitGateway.GithubApi.CheckOrganizationExists(gitSource, user, gitOrgRef)
-	}
-}
-
 func (gitGateway *GitGateway) GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
 	if gitSource.GitType == types.Gitea {
 		return gitGateway.GiteaApi.GetOrganizationTeams(gitSource, user, gitOrgRef)

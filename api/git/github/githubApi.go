@@ -25,7 +25,6 @@ type GithubInterface interface {
 	CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error)
 	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error
 	GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error)
-	CheckOrganizationExists(gitSource *model.GitSource, user *model.User, gitOrgRef string) bool
 	GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error)
 	GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error)
 	GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationName string, teamId int) (*[]dto.UserTeamResponseDto, error)
@@ -86,12 +85,6 @@ func (githubApi *GithubApi) GetRepositories(gitSource *model.GitSource, user *mo
 	}
 
 	return &retVal, err
-}
-
-func (githubApi *GithubApi) CheckOrganizationExists(gitSource *model.GitSource, user *model.User, gitOrgRef string) bool {
-	client, _ := githubApi.getClient(gitSource, user)
-	_, _, err := client.Organizations.Get(context.Background(), gitOrgRef)
-	return err == nil
 }
 
 func (githubApi *GithubApi) GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
@@ -256,7 +249,7 @@ func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, user *mo
 		return nil
 	}
 
-	return &dto.OrganizationDto{Name: *org.Name, ID: int(*org.ID), AvatarURL: *org.AvatarURL}
+	return &dto.OrganizationDto{Name: *org.Name, ID: *org.ID, AvatarURL: *org.AvatarURL}
 }
 
 func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error) {

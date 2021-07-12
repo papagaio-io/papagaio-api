@@ -37,7 +37,7 @@ type CommitParentDto struct {
 type OrganizationDto struct {
 	Name      string
 	AvatarURL string
-	ID        int
+	ID        int64
 }
 
 type AccessTokenRequestDto struct {

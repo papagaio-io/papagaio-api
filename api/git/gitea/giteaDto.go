@@ -47,7 +47,7 @@ type OrganizationResponseDto struct {
 	Username   string `json:"username"`
 	Name       string `json:"full_name"`
 	AvatarURL  string `json:"avatar_url"`
-	ID         int    `json:"id"`
+	ID         int64  `json:"id"`
 	Visibility string `json:"visibility"`
 }
 

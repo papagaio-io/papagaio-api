@@ -94,20 +94,6 @@ func (mr *MockGiteaInterfaceMockRecorder) GetOrganization(gitSource, user, gitOr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganization", reflect.TypeOf((*MockGiteaInterface)(nil).GetOrganization), gitSource, user, gitOrgRef)
 }
 
-// CheckOrganizationExists mocks base method
-func (m *MockGiteaInterface) CheckOrganizationExists(gitSource *model.GitSource, user *model.User, gitOrgRef string) bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckOrganizationExists", gitSource, user, gitOrgRef)
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// CheckOrganizationExists indicates an expected call of CheckOrganizationExists
-func (mr *MockGiteaInterfaceMockRecorder) CheckOrganizationExists(gitSource, user, gitOrgRef interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckOrganizationExists", reflect.TypeOf((*MockGiteaInterface)(nil).CheckOrganizationExists), gitSource, user, gitOrgRef)
-}
-
 // GetRepositoryTeams mocks base method
 func (m *MockGiteaInterface) GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef, repositoryRef string) (*[]dto.TeamResponseDto, error) {
 	m.ctrl.T.Helper()

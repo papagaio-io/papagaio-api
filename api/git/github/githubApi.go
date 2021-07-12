@@ -323,11 +323,16 @@ func (githubApi *GithubApi) GetUserByLogin(gitSource *model.GitSource, login str
 	userInfo := dto.UserInfoDto{
 		ID:        *user.ID,
 		Login:     *user.Login,
-		Email:     *user.Email,
-		FullName:  *user.Name,
 		IsAdmin:   *user.SiteAdmin,
 		AvatarURL: *user.AvatarURL,
 	}
+	if user.Name != nil {
+		userInfo.FullName = *user.Name
+	}
+	if user.Email != nil {
+		userInfo.Email = *user.Email
+	}
+
 	return &userInfo, nil
 }
 

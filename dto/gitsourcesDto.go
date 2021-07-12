@@ -26,7 +26,7 @@ type UpdateGitSourceRequestDto struct {
 type CreateGitSourceRequestDto struct {
 	Name      string        `json:"name"`
 	GitType   types.GitType `json:"gitType"`
-	GitAPIURL string        `json:"gitApiUrl"`
+	GitAPIURL *string       `json:"gitApiUrl"`
 
 	GitClientID     string `json:"gitClientId"`
 	GitClientSecret string `json:"gitClientSecret"`
@@ -47,9 +47,13 @@ func (gitSource *CreateGitSourceRequestDto) IsValid() error {
 
 	}
 
-	_, err = url.ParseRequestURI(gitSource.GitAPIURL)
-	if err != nil {
-		return errors.New("gitApiUrl is not valid")
+	if gitSource.GitAPIURL != nil {
+		_, err = url.ParseRequestURI(*gitSource.GitAPIURL)
+		if err != nil {
+			return errors.New("gitApiUrl is not valid")
+		}
+	} else if gitSource.GitType == types.Gitea {
+		return errors.New("gitApiUrl is nil")
 	}
 
 	if len(gitSource.GitClientID) == 0 {

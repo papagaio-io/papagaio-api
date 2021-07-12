@@ -64,17 +64,17 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var gitGitSourceDto dto.CreateGitSourceRequestDto
+	var gitSourceDto dto.CreateGitSourceRequestDto
 	data, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(data, &gitGitSourceDto)
+	json.Unmarshal(data, &gitSourceDto)
 
-	oldGitSource, _ := service.Db.GetGitSourceByName(gitGitSourceDto.Name)
+	oldGitSource, _ := service.Db.GetGitSourceByName(gitSourceDto.Name)
 	if oldGitSource != nil {
-		UnprocessableEntityResponse(w, "Gitsource "+gitGitSourceDto.Name+" already exists")
+		UnprocessableEntityResponse(w, "Gitsource "+gitSourceDto.Name+" already exists")
 		return
 	}
 
-	err := gitGitSourceDto.IsValid()
+	err := gitSourceDto.IsValid()
 	if err != nil {
 		log.Println("request is not valid:", err)
 		UnprocessableEntityResponse(w, err.Error())
@@ -82,14 +82,14 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 	}
 
 	gitSource := model.GitSource{
-		Name:        gitGitSourceDto.Name,
-		GitType:     gitGitSourceDto.GitType,
-		GitAPIURL:   gitGitSourceDto.GitAPIURL,
-		GitClientID: gitGitSourceDto.GitClientID,
-		GitSecret:   gitGitSourceDto.GitClientSecret,
+		Name:        gitSourceDto.Name,
+		GitType:     gitSourceDto.GitType,
+		GitAPIURL:   gitSourceDto.GitAPIURL,
+		GitClientID: gitSourceDto.GitClientID,
+		GitSecret:   gitSourceDto.GitClientSecret,
 	}
 
-	if gitGitSourceDto.AgolaRemoteSourceName == nil || len(*gitGitSourceDto.AgolaRemoteSourceName) == 0 {
+	if gitSourceDto.AgolaRemoteSourceName == nil || len(*gitSourceDto.AgolaRemoteSourceName) == 0 {
 		gsList, err := service.AgolaApi.GetRemoteSources()
 		if err != nil {
 			log.Println("Error in GetRemoteSources:", err)
@@ -97,7 +97,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 			return
 		}
 
-		findRemoteSourceName := gitGitSourceDto.Name
+		findRemoteSourceName := gitSourceDto.Name
 		search := true
 		i := 0
 		for search {
@@ -111,14 +111,14 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 			if !found {
 				search = false
 			} else {
-				findRemoteSourceName = gitGitSourceDto.Name + fmt.Sprint(i)
+				findRemoteSourceName = gitSourceDto.Name + fmt.Sprint(i)
 				i++
 			}
 		}
 
-		gitGitSourceDto.AgolaRemoteSourceName = &findRemoteSourceName
+		gitSourceDto.AgolaRemoteSourceName = &findRemoteSourceName
 
-		err = service.AgolaApi.CreateRemoteSource(*gitGitSourceDto.AgolaRemoteSourceName, string(gitGitSourceDto.GitType), gitGitSourceDto.GitAPIURL, *gitGitSourceDto.AgolaClientID, *gitGitSourceDto.AgolaClientSecret)
+		err = service.AgolaApi.CreateRemoteSource(*gitSourceDto.AgolaRemoteSourceName, string(gitSourceDto.GitType), gitSourceDto.GitAPIURL, *gitSourceDto.AgolaClientID, *gitSourceDto.AgolaClientSecret)
 		if err != nil {
 			log.Println("Error in CreateRemoteSource:", err)
 			InternalServerError(w)
@@ -126,7 +126,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	gitSource.AgolaRemoteSource = *gitGitSourceDto.AgolaRemoteSourceName
+	gitSource.AgolaRemoteSource = *gitSourceDto.AgolaRemoteSourceName
 
 	service.Db.SaveGitSource(&gitSource)
 	JSONokResponse(w, gitSource.ID)

@@ -12,8 +12,9 @@ type Organization struct {
 	UserIDConnected      uint64               `json:"userIdConnected" example:"1"`
 	Visibility           types.VisibilityType `json:"visibility" example:"public"`
 
-	GitSourceName string `json:"gitSourceName" example:"wecodedev"`
-	WebHookID     int    `json:"webHookId"`
+	GitSourceName     string `json:"gitSourceName" example:"wecodedev"`
+	WebHookID         int    `json:"webHookId"`
+	GitOrganizationID int64  `json:"gitOrganizationId"`
 
 	BehaviourInclude string              `json:"behaviourInclude"`
 	BehaviourExclude string              `json:"behaviourExclude"`

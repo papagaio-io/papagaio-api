@@ -24,7 +24,6 @@ type GiteaInterface interface {
 	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error
 	GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error)
 	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto
-	CheckOrganizationExists(gitSource *model.GitSource, user *model.User, gitOrgRef string) bool
 	GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error)
 	GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error)
 	GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int) (*[]dto.UserTeamResponseDto, error)
@@ -157,22 +156,6 @@ func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, user *mode
 	}
 
 	return nil
-}
-
-func (giteaApi *GiteaApi) CheckOrganizationExists(gitSource *model.GitSource, user *model.User, gitOrgRef string) bool {
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef)
-
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return false
-	}
-	defer resp.Body.Close()
-
-	return api.IsResponseOK(resp.StatusCode)
 }
 
 func (giteaApi *GiteaApi) GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {

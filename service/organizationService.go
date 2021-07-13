@@ -186,7 +186,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 
 	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, user, org.Name, org.AgolaOrganizationRef)
 	if err != nil {
-		log.Println("failed to creare webhook")
+		log.Println("failed to creare webhook:", err)
 		InternalServerError(w)
 		return
 	}

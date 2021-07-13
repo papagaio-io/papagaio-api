@@ -33,6 +33,11 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 			org, _ := db.GetOrganizationByAgolaRef(organizationRef)
 			if org == nil {
 				log.Println("syncOrganizationRun organization ", organizationRef, "not found")
+
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
+
 				continue
 			}
 
@@ -41,12 +46,22 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 				gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
 				if gitSource == nil {
 					log.Println("gitSource", org.GitSourceName, "not found")
+
+					mutex.Unlock()
+					utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+					locked = false
+
 					continue
 				}
 
 				orgID, err := agolaApi.CreateOrganization(org, org.Visibility)
 				if err != nil {
 					log.Println("failed to recreate organization", org.AgolaOrganizationRef, "in agola:", err)
+
+					mutex.Unlock()
+					utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+					locked = false
+
 					continue
 				}
 
@@ -61,6 +76,11 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 			user, _ := db.GetUserByUserId(org.UserIDConnected)
 			if user == nil {
 				log.Println("user not found")
+
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
+
 				continue
 			}
 			membersManager.SynkMembers(org, gitSource, agolaApi, gitGateway, user)

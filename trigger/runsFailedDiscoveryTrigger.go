@@ -39,12 +39,22 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 			org, _ := db.GetOrganizationByAgolaRef(organizationRef)
 			if org == nil {
 				log.Println("discoveryRunFails organization ", organizationRef, "not found")
+
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
+
 				continue
 			}
 
 			gitSource, err := db.GetGitSourceByName(org.GitSourceName)
 			if gitSource == nil || err != nil || org.Projects == nil {
 				log.Println("discoveryRunFails gitsource not fount for", organizationRef, "organization")
+
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
+
 				continue
 			}
 

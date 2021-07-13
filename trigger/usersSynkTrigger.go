@@ -68,6 +68,11 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 			org, _ := db.GetOrganizationByAgolaRef(organizationRef)
 			if org == nil {
 				log.Println("synkUsersRun organization ", organizationRef, "not found")
+
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
+
 				continue
 			}
 
@@ -76,12 +81,21 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
 			if err != nil || gitSource == nil {
 				log.Println("gitSource", org.GitSourceName, "not found:", err)
+
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
+
 				continue
 			}
 
 			if user != nil {
 				isOwner, _ := gitGateway.IsUserOwner(gitSource, user, org.Name)
 				if isOwner {
+					mutex.Unlock()
+					utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+					locked = false
+
 					continue
 				}
 			}

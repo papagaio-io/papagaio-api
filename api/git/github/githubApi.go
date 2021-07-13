@@ -137,7 +137,8 @@ func (githubApi *GithubApi) GetOrganizationMembers(gitSource *model.GitSource, u
 
 	for _, user := range users {
 		userMembership, _, err := client.Organizations.GetOrgMembership(context.Background(), *user.Login, organizationName)
-		if err == nil {
+
+		if err == nil && userMembership != nil {
 			var role string
 			if strings.Compare(*userMembership.Role, "admin") == 0 {
 				role = "owner"
@@ -145,7 +146,11 @@ func (githubApi *GithubApi) GetOrganizationMembers(gitSource *model.GitSource, u
 				role = "member"
 			}
 
-			retVal = append(retVal, GitHubUser{ID: int(*user.ID), Username: *user.Login, Role: role, Email: *user.Email})
+			githubUser := GitHubUser{ID: int(*user.ID), Username: *user.Login, Role: role}
+			if user.Email != nil {
+				githubUser.Email = *user.Email
+			}
+			retVal = append(retVal, githubUser)
 		}
 	}
 
@@ -246,7 +251,7 @@ func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, user *mo
 		return nil
 	}
 
-	response := &dto.OrganizationDto{Name: *org.Name, ID: *org.ID}
+	response := &dto.OrganizationDto{Name: *org.Login, ID: *org.ID}
 	if org.AvatarURL != nil {
 		response.AvatarURL = *org.AvatarURL
 	}
@@ -275,6 +280,7 @@ func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *m
 
 func (githubApi *GithubApi) IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error) {
 	githubUsers, _ := githubApi.GetOrganizationMembers(gitSource, user, gitOrgRef)
+
 	if githubUsers != nil {
 		for _, u := range *githubUsers {
 			if u.ID == int(user.ID) {
@@ -371,13 +377,13 @@ func (githubApi *GithubApi) getClient(gitSource *model.GitSource, user *model.Us
 	return github.NewClient(tc), nil
 }
 
-const oauth2AuthorizePath string = "https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=&state=%s"
+const oauth2AuthorizePath string = "https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s"
 
 const oauth2AccessTokenPath string = "https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&code=%s&redirect_uri=%s"
 const oauth2RefreshTokenPath string = "https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s"
 
 func GetOauth2AuthorizeUrl(gitClientId string, redirectUrl string, state string) string {
-	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, redirectUrl, state)
+	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, redirectUrl, "admin:org%20admin:org_hook", state)
 }
 
 func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {

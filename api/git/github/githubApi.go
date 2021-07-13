@@ -241,8 +241,8 @@ func (githubApi *GithubApi) GetCommitMetadata(gitSource *model.GitSource, user *
 
 func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto {
 	client, _ := githubApi.getClient(gitSource, user)
-	org, _, err := client.Organizations.Get(context.Background(), gitOrgRef)
-	if err != nil {
+	org, _, _ := client.Organizations.Get(context.Background(), gitOrgRef)
+	if org == nil {
 		return nil
 	}
 
@@ -367,7 +367,9 @@ func (githubApi *GithubApi) getClient(gitSource *model.GitSource, user *model.Us
 }
 
 const oauth2AuthorizePath string = "https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=&state=%s"
-const oauth2AccessTokenPath string = "https://github.com/login/oauth/access_token"
+
+const oauth2AccessTokenPath string = "https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&code=%s&redirect_uri=%s"
+const oauth2RefreshTokenPath string = "https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s"
 
 func GetOauth2AuthorizeUrl(gitClientId string, redirectUrl string, state string) string {
 	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, redirectUrl, state)
@@ -376,7 +378,7 @@ func GetOauth2AuthorizeUrl(gitClientId string, redirectUrl string, state string)
 func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
 	client := &http.Client{}
 
-	URLApi := oauth2AccessTokenPath + "?client_id=" + gitSource.GitClientID + "&client_secret=" + gitSource.GitSecret + "&code=" + code + "&redirect_uri=" + controller.GetRedirectUrl()
+	URLApi := fmt.Sprintf(oauth2AccessTokenPath, gitSource.GitClientID, gitSource.GitSecret, code, controller.GetRedirectUrl())
 	req, _ := http.NewRequest("POST", URLApi, nil)
 	req.Header.Set("Accept", "application/json")
 	resp, err := client.Do(req)
@@ -404,7 +406,7 @@ func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, cod
 func (githubApi *GithubApi) RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error) {
 	client := &http.Client{}
 
-	URLApi := oauth2AccessTokenPath + "?client_id=" + gitSource.GitClientID + "&client_secret=" + gitSource.GitSecret + "&grant_type=refresh_token&refresh_token=" + refreshToken
+	URLApi := fmt.Sprintf(oauth2RefreshTokenPath, gitSource.GitClientID, gitSource.GitSecret, refreshToken)
 	req, _ := http.NewRequest("POST", URLApi, nil)
 	resp, err := client.Do(req)
 

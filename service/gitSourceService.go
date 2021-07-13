@@ -185,6 +185,7 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 		if err != nil {
 			log.Println("DeleteRemotesource error:", err)
 			InternalServerError(w)
+			return
 		}
 	}
 

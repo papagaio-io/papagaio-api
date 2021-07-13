@@ -178,6 +178,8 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 		}
 	}
 
+	service.deleteOrganizationsAndMembersByGitsourceRef(gitSourceName)
+
 	if deleteRemotesource {
 		err := service.AgolaApi.DeleteRemotesource(gitSource.AgolaRemoteSource)
 		if err != nil {
@@ -192,6 +194,24 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 		UnprocessableEntityResponse(w, error.Error())
 		return
 	}
+}
+
+func (service *GitSourceService) deleteOrganizationsAndMembersByGitsourceRef(gitsourceRef string) {
+	orgs, _ := service.Db.GetOrganizationsByGitSource(gitsourceRef)
+
+	if orgs != nil {
+		for _, org := range *orgs {
+			service.Db.DeleteOrganization(org.Name)
+		}
+	}
+
+	users, _ := service.Db.GetUsersIDByGitSourceName(gitsourceRef)
+	if users != nil {
+		for _, userId := range users {
+			service.Db.DeleteUser(userId)
+		}
+	}
+
 }
 
 // @Summary Update a GitSource

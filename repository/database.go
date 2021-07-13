@@ -16,7 +16,7 @@ type Database interface {
 	SaveOrganization(organization *model.Organization) error
 	GetOrganizationByAgolaRef(organizationName string) (*model.Organization, error)
 	GetOrganizationById(organizationID string) (*model.Organization, error)
-	DeleteOrganization(organizationID string) error
+	DeleteOrganization(organizationName string) error
 	GetOrganizationsByGitSource(gitSource string) (*[]model.Organization, error)
 
 	GetGitSources() (*[]model.GitSource, error)

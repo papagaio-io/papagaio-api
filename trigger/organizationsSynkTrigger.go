@@ -19,10 +19,11 @@ func StartOrganizationSync(db repository.Database, tr utils.ConfigUtils, commonM
 //Synchronize projects and members of organizations
 func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	for {
-		log.Println("start members synk")
+		log.Println("start syncOrganizationRun")
 
 		organizationsRef, _ := db.GetOrganizationsRef()
 		for _, organizationRef := range organizationsRef {
+			log.Println("syncOrganizationRun organizationRef:", organizationRef)
 			mutex := utils.ReserveOrganizationMutex(organizationRef, commonMutex)
 			mutex.Lock()
 

@@ -383,7 +383,7 @@ const oauth2AccessTokenPath string = "https://github.com/login/oauth/access_toke
 const oauth2RefreshTokenPath string = "https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s"
 
 func GetOauth2AuthorizeUrl(gitClientId string, redirectUrl string, state string) string {
-	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, redirectUrl, "admin:org%20admin:org_hook", state)
+	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, redirectUrl, "admin:org%20admin:org_hook%20repo", state)
 }
 
 func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {

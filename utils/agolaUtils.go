@@ -28,11 +28,13 @@ func GetUsersMapByRemotesource(agolaApi agola.AgolaApiInterface, agolaRemoteSour
 
 	usersMap := make(map[string]string)
 
-	for _, user := range *users {
-		for _, linkedAccount := range user.LinkedAccounts {
-			if strings.Compare(gitSource.ID, linkedAccount.RemoteSourceID) == 0 {
-				usersMap[linkedAccount.RemoteUserName] = user.Username
-				break
+	if users != nil {
+		for _, user := range *users {
+			for _, linkedAccount := range user.LinkedAccounts {
+				if strings.Compare(gitSource.ID, linkedAccount.RemoteSourceID) == 0 {
+					usersMap[linkedAccount.RemoteUserName] = user.Username
+					break
+				}
 			}
 		}
 	}

@@ -105,13 +105,13 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 			locked = false
 		}
 
-		log.Println("discoveryRunFails wait for", time.Duration(tr.GetUsersTriggerTime())*time.Minute)
-		time.Sleep(time.Duration(tr.GetRunFailedTriggerTime()) * time.Minute)
+		log.Println("discoveryRunFails wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetRunFailedTriggerTime())))
+		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetRunFailedTriggerTime())))
 	}
 }
 
 func getUsersEmailMap(gitSource *model.GitSource, user *model.User, organization *model.Organization, gitRepoPath string, failedRun agola.RunDto, gitGateway *git.GitGateway) map[string]bool {
-	emails := make(map[string]bool, 0)
+	emails := make(map[string]bool)
 
 	//Find all users that commited the failed run and parents
 	emailUsersCommitted := getEmailByRun(&failedRun, gitSource, user, organization.Name, gitRepoPath, gitGateway)

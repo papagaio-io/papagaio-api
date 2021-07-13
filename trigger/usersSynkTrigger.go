@@ -99,8 +99,8 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 			locked = false
 		}
 
-		log.Println("synkUsersRun wait for", time.Duration(tr.GetUsersTriggerTime())*time.Minute)
-		time.Sleep(time.Duration(tr.GetUsersTriggerTime()) * time.Minute)
+		log.Println("synkUsersRun wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetUsersTriggerTime())))
+		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetUsersTriggerTime())))
 	}
 }
 

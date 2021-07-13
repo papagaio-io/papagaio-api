@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -160,6 +161,29 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 	if gitSource == nil {
 		UnprocessableEntityResponse(w, "Gitsource "+gitSourceName+" not found")
 		return
+	}
+
+	deleteRemotesourceQuery, ok := r.URL.Query()["deleteremotesource"]
+	deleteRemotesource := false
+	if ok {
+		if len(deleteRemotesourceQuery[0]) == 0 {
+			deleteRemotesource = true
+		} else {
+			var parsError error
+			deleteRemotesource, parsError = strconv.ParseBool(deleteRemotesourceQuery[0])
+			if parsError != nil {
+				UnprocessableEntityResponse(w, "forceCreate param value is not valid")
+				return
+			}
+		}
+	}
+
+	if deleteRemotesource {
+		err := service.AgolaApi.DeleteRemotesource(gitSource.AgolaRemoteSource)
+		if err != nil {
+			log.Println("DeleteRemotesource error:", err)
+			InternalServerError(w)
+		}
 	}
 
 	error := service.Db.DeleteGitSource(gitSourceName)

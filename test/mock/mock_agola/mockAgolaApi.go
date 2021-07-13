@@ -341,3 +341,17 @@ func (mr *MockAgolaApiInterfaceMockRecorder) CreateRemoteSource(remoteSourceName
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRemoteSource", reflect.TypeOf((*MockAgolaApiInterface)(nil).CreateRemoteSource), remoteSourceName, gitType, apiUrl, oauth2ClientId, oauth2ClientSecret)
 }
+
+// DeleteRemotesource mocks base method
+func (m *MockAgolaApiInterface) DeleteRemotesource(remoteSourceName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteRemotesource", remoteSourceName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteRemotesource indicates an expected call of DeleteRemotesource
+func (mr *MockAgolaApiInterfaceMockRecorder) DeleteRemotesource(remoteSourceName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRemotesource", reflect.TypeOf((*MockAgolaApiInterface)(nil).DeleteRemotesource), remoteSourceName)
+}

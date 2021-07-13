@@ -40,6 +40,7 @@ type AgolaApiInterface interface {
 	CreateUserToken(user *model.User) error
 	GetRemoteSources() (*[]RemoteSourceDto, error)
 	CreateRemoteSource(remoteSourceName string, gitType string, apiUrl string, oauth2ClientId string, oauth2ClientSecret string) error
+	DeleteRemotesource(remoteSourceName string) error
 }
 
 type AgolaApi struct {
@@ -597,6 +598,28 @@ func (agolaApi *AgolaApi) CreateRemoteSource(remoteSourceName string, gitType st
 	return nil
 }
 
+func (agolaApi *AgolaApi) DeleteRemotesource(remoteSourceName string) error {
+	log.Println("DeleteRemotesource ", remoteSourceName)
+
+	client := agolaApi.getClient(nil, true)
+	URLApi := getDeleteRemotesourceUrl(remoteSourceName)
+
+	req, _ := http.NewRequest("DELETE", URLApi, nil)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if !api.IsResponseOK(resp.StatusCode) {
+		respMessage, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(respMessage))
+	}
+
+	return nil
+}
+
 ///////////////
 
 func (agolaApi *AgolaApi) getClient(user *model.User, isAdminUser bool) *httpClient {
@@ -617,9 +640,6 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 		req.Header.Set("Authorization", config.Config.Agola.AdminToken)
 		return c.c.Do(req)
 	}
-
-	log.Println("c.user:", c.user)
-	log.Println("c.user", c.user.AgolaToken, c.user.AgolaTokenName, c.user.AgolaUserRef)
 
 	var response *http.Response
 	var err error

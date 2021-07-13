@@ -70,6 +70,7 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 			locked = false
 		}
 
+		log.Println("syncOrganizationRun wait for", time.Duration(tr.GetUsersTriggerTime())*time.Minute)
 		time.Sleep(time.Duration(tr.GetOrganizationsTriggerTime()) * time.Minute)
 	}
 }

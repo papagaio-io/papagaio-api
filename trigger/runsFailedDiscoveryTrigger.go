@@ -105,7 +105,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 			locked = false
 		}
 
-		log.Println("End discoveryRunFails")
+		log.Println("discoveryRunFails wait for", time.Duration(tr.GetUsersTriggerTime())*time.Minute)
 		time.Sleep(time.Duration(tr.GetRunFailedTriggerTime()) * time.Minute)
 	}
 }

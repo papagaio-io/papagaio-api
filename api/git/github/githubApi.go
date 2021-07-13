@@ -246,7 +246,12 @@ func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, user *mo
 		return nil
 	}
 
-	return &dto.OrganizationDto{Name: *org.Name, ID: *org.ID, AvatarURL: *org.AvatarURL}
+	response := &dto.OrganizationDto{Name: *org.Name, ID: *org.ID}
+	if org.AvatarURL != nil {
+		response.AvatarURL = *org.AvatarURL
+	}
+
+	return response
 }
 
 func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error) {

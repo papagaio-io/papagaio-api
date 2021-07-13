@@ -23,10 +23,13 @@ func ConvertToAgolaProjectRef(projectName string) string {
 
 //Return the users map by the agola remoteSource. Key is the git username and value agola userref
 func GetUsersMapByRemotesource(agolaApi agola.AgolaApiInterface, agolaRemoteSource string) *map[string]string {
-	gitSource, _ := agolaApi.GetRemoteSource(agolaRemoteSource)
-	users, _ := agolaApi.GetUsers()
-
 	usersMap := make(map[string]string)
+
+	gitSource, _ := agolaApi.GetRemoteSource(agolaRemoteSource)
+	if gitSource == nil {
+		return &usersMap
+	}
+	users, _ := agolaApi.GetUsers()
 
 	if users != nil {
 		for _, user := range *users {

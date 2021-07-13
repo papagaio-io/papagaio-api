@@ -22,6 +22,7 @@ papagaio gitsource add
       --name string                  gitSource name
       --token string                 token
       --type string                  git type(gitea, github)
+      --delete-remotesource          true to delete the Agola remotesource(default false)
 
 
 example: papagaio gitsource add --name {gitSourceName} --type gitea --git-token {gitUserToken} --git-api-url  {gitUrl --agola-remotesource {agolaRemoteSource} --agola-token {agolaUserToken} --token {papagaioAdminToken}

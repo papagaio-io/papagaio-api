@@ -46,6 +46,8 @@ type configGitSourceCmd struct {
 	agolaRemoteSourceName string
 	agolaClientID         string
 	agolaClientSecret     string
+
+	deleteRemoteSource bool
 }
 
 func init() {
@@ -66,6 +68,8 @@ func init() {
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.agolaRemoteSourceName, "agola-remotesource", "", "agola remotesource name")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.agolaClientID, "agola-client-id", "", "agola oauth2 client id")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.agolaClientSecret, "agola-client-secret", "", "agola oauth2 client secret")
+
+	gitSourceCmd.PersistentFlags().BoolVar(&cfgGitSource.deleteRemoteSource, "delete-remotesource", false, "true to delete the Agola remotesource")
 }
 
 func addGitSource(cmd *cobra.Command, args []string) {
@@ -124,8 +128,13 @@ func removeGitSource(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	deleteRemoteSourceParam := ""
+	if cfgGitSource.deleteRemoteSource {
+		deleteRemoteSourceParam = "?deleteremotesource"
+	}
+
 	client := &http.Client{}
-	URLApi := cfgGitSource.gatewayURL + "/api/gitsource/" + cfgGitSource.name
+	URLApi := cfgGitSource.gatewayURL + "/api/gitsource/" + cfgGitSource.name + deleteRemoteSourceParam
 	req, _ := http.NewRequest("DELETE", URLApi, nil)
 	req.Header.Add("Authorization", "token "+cfgGitSource.token)
 
@@ -135,7 +144,7 @@ func removeGitSource(cmd *cobra.Command, args []string) {
 	} else {
 		if !api.IsResponseOK(resp.StatusCode) {
 			body, _ := ioutil.ReadAll(resp.Body)
-			cmd.PrintErrln("Somefing was wrong! " + string(body))
+			cmd.PrintErrln("Something was wrong! " + string(body))
 			os.Exit(1)
 		}
 	}

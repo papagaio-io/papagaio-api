@@ -11,12 +11,13 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/trigger/dto"
 	"wecode.sorint.it/opensource/papagaio-api/types"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
-	go discoveryRunFails(db, tr, commonMutex, agolaApi, gitGateway, c)
+func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string, rtDto *dto.TriggersRunTimeDto) {
+	go discoveryRunFails(db, tr, commonMutex, agolaApi, gitGateway, c, rtDto)
 	go discoveryRunFailsTimer(tr, c)
 }
 
@@ -32,9 +33,10 @@ func discoveryRunFailsTimer(tr utils.ConfigUtils, c chan string) {
 Scan Agola project runs and store it for elaborating of reports.
 If find failed runs send email to users
 */
-func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
+func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string, rtDto *dto.TriggersRunTimeDto) {
 	for {
 		log.Println("Start discoveryRunFails")
+		rtDto.DiscoveryRunFailedTriggerLastRun = time.Now()
 
 		organizationsRef, _ := db.GetOrganizationsRef()
 

@@ -532,6 +532,28 @@ var doc = `{
                 }
             }
         },
+        "/restarttriggers": {
+            "post": {
+                "security": [
+                    {
+                        "OAuth2Password": []
+                    }
+                ],
+                "description": "Restartr timers",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Triggers"
+                ],
+                "summary": "restart triggers",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/savetriggersconfig": {
             "post": {
                 "security": [
@@ -595,10 +617,22 @@ var doc = `{
         "dto.ConfigTriggersDto": {
             "type": "object",
             "properties": {
-                "organizationsDefaultTriggerTime": {
+                "discoveryRunFailedTriggerLastRun": {
+                    "type": "string"
+                },
+                "organizationsTriggerLastRun": {
+                    "type": "string"
+                },
+                "organizationsTriggerTime": {
                     "type": "integer"
                 },
-                "runFailedDefaultTriggerTime": {
+                "runFailedTriggerTime": {
+                    "type": "integer"
+                },
+                "usersTriggerLastRun": {
+                    "type": "string"
+                },
+                "usersTriggerTime": {
                     "type": "integer"
                 }
             }
@@ -641,6 +675,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "gitApiUrl": {
+                    "type": "string"
+                },
+                "gitType": {
                     "type": "string"
                 },
                 "loginUrl": {
@@ -809,6 +846,9 @@ var doc = `{
                     "additionalProperties": {
                         "type": "boolean"
                     }
+                },
+                "gitOrganizationId": {
+                    "type": "integer"
                 },
                 "gitSourceName": {
                     "type": "string",

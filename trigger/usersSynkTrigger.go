@@ -11,11 +11,12 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/common"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/trigger/dto"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartSynkUsers(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
-	go synkUsersRun(db, tr, commonMutex, agolaApi, gitGateway, c)
+func StartSynkUsers(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string, rtDto *dto.TriggersRunTimeDto) {
+	go synkUsersRun(db, tr, commonMutex, agolaApi, gitGateway, c, rtDto)
 	go userRunTimer(tr, c)
 }
 
@@ -27,9 +28,10 @@ func userRunTimer(tr utils.ConfigUtils, c chan string) {
 	}
 }
 
-func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
+func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string, rtDto *dto.TriggersRunTimeDto) {
 	for {
 		log.Println("start users synk")
+		rtDto.UsersTriggerLastRun = time.Now()
 
 		usersVerifiedOK := make(map[uint64]*model.User)
 

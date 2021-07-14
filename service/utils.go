@@ -2,9 +2,11 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"runtime"
+	"strconv"
 )
 
 func ConvertToJson(model interface{}) []byte {
@@ -61,4 +63,22 @@ func InternalServerError(w http.ResponseWriter) {
 		log.Println(file, ":", line)
 	}
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+
+func getBoolParameter(r *http.Request, parameterName string) (bool, error) {
+	forceCreateQuery, ok := r.URL.Query()[parameterName]
+	forceCreate := false
+	if ok {
+		if len(forceCreateQuery[0]) == 0 {
+			forceCreate = true
+		} else {
+			var parsError error
+			forceCreate, parsError = strconv.ParseBool(forceCreateQuery[0])
+			if parsError != nil {
+				return false, errors.New(parameterName + " is not valid")
+			}
+		}
+	}
+
+	return forceCreate, nil
 }

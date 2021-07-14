@@ -25,5 +25,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
 	golang.org/x/sys v0.0.0-20210525143221-35b2ab0089ea // indirect
 	golang.org/x/tools v0.1.2
+	google.golang.org/appengine v1.6.6
 	gotest.tools v2.2.0+incompatible
 )

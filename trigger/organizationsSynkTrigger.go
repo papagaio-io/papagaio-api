@@ -1,6 +1,7 @@
 package trigger
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -12,12 +13,21 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartOrganizationSync(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
-	go syncOrganizationRun(db, tr, commonMutex, agolaApi, gitGateway)
+func StartOrganizationSync(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
+	go syncOrganizationRun(db, tr, commonMutex, agolaApi, gitGateway, c)
+	go syncOrganizationRunTimer(tr, c)
+}
+
+func syncOrganizationRunTimer(tr utils.ConfigUtils, c chan string) {
+	for {
+		log.Println("syncOrganizationRunTimer wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetOrganizationsTriggerTime())))
+		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetOrganizationsTriggerTime())))
+		c <- "resume from timer"
+	}
 }
 
 //Synchronize projects and members of organizations
-func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
+func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
 	for {
 		log.Println("start syncOrganizationRun")
 
@@ -91,7 +101,6 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 			locked = false
 		}
 
-		log.Println("syncOrganizationRun wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetOrganizationsTriggerTime())))
-		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetOrganizationsTriggerTime())))
+		fmt.Println("syncOrganizationRun:", <-c)
 	}
 }

@@ -22,9 +22,17 @@ definitions:
     type: object
   dto.ConfigTriggersDto:
     properties:
-      organizationsDefaultTriggerTime:
+      discoveryRunFailedTriggerLastRun:
+        type: string
+      organizationsTriggerLastRun:
+        type: string
+      organizationsTriggerTime:
         type: integer
-      runFailedDefaultTriggerTime:
+      runFailedTriggerTime:
+        type: integer
+      usersTriggerLastRun:
+        type: string
+      usersTriggerTime:
         type: integer
     type: object
   dto.CreateOrganizationRequestDto:
@@ -52,6 +60,8 @@ definitions:
   dto.GitSourcesDto:
     properties:
       gitApiUrl:
+        type: string
+      gitType:
         type: string
       loginUrl:
         type: string
@@ -163,6 +173,8 @@ definitions:
         additionalProperties:
           type: boolean
         type: object
+      gitOrganizationId:
+        type: integer
       gitSourceName:
         example: wecodedev
         type: string
@@ -540,6 +552,19 @@ paths:
       summary: Get Report from a specific organization/project
       tags:
       - Organization
+  /restarttriggers:
+    post:
+      description: Restartr timers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - OAuth2Password: []
+      summary: restart triggers
+      tags:
+      - Triggers
   /savetriggersconfig:
     post:
       description: Save trigger timers

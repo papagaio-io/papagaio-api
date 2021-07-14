@@ -2,13 +2,13 @@ package service
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
-	"strconv"
 
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
+
+	triggerDto "wecode.sorint.it/opensource/papagaio-api/trigger/dto"
 )
 
 type TriggersService struct {
@@ -17,7 +17,13 @@ type TriggersService struct {
 	ChanOrganizationSynk  chan string
 	ChanDiscoveryRunFails chan string
 	ChanUserSynk          chan string
+	RtDto                 *triggerDto.TriggersRunTimeDto
 }
+
+const RESTART_ALL = "restartAll"
+const RESTART_ORGANIZATION_SYNK_TRIGGER = "restartorganizationsynktrigger"
+const RESTART_RUNS_FAILED_DISCOVERY_TRIGGER = "restartRunsFailedDiscoveryTrigger"
+const RESTART_USERS_SYNK_TRIGGER = "restartUsersSynkTrigger"
 
 // @Summary Return time triggers
 // @Description Get trigger timers
@@ -34,6 +40,10 @@ func (service *TriggersService) GetTriggersConfig(w http.ResponseWriter, r *http
 	dto.OrganizationsTriggerTime = service.Tr.GetOrganizationsTriggerTime()
 	dto.RunFailedTriggerTime = service.Tr.GetRunFailedTriggerTime()
 	dto.UsersTriggerTime = service.Tr.GetUsersTriggerTime()
+	dto.OrganizationsTriggerLastRun = service.RtDto.OrganizationsTriggerLastRun
+	dto.DiscoveryRunFailedTriggerLastRun = service.RtDto.DiscoveryRunFailedTriggerLastRun
+	dto.UsersTriggerLastRun = service.RtDto.UsersTriggerLastRun
+
 	JSONokResponse(w, dto)
 }
 
@@ -72,7 +82,7 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	restartAll, err := getBoolParameter(r, "restartAll")
+	restartAll, err := getBoolParameter(r, RESTART_ALL)
 	if err != nil {
 		UnprocessableEntityResponse(w, err.Error())
 		return
@@ -85,7 +95,7 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	restartOrganizationSynkTrigger, err := getBoolParameter(r, "restartorganizationsynktrigger")
+	restartOrganizationSynkTrigger, err := getBoolParameter(r, RESTART_ORGANIZATION_SYNK_TRIGGER)
 	if err != nil {
 		UnprocessableEntityResponse(w, err.Error())
 		return
@@ -94,7 +104,7 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		service.ChanOrganizationSynk <- "resume from TriggersService"
 	}
 
-	restartRunsFailedDiscoveryTrigger, err := getBoolParameter(r, "restartRunsFailedDiscoveryTrigger")
+	restartRunsFailedDiscoveryTrigger, err := getBoolParameter(r, RESTART_RUNS_FAILED_DISCOVERY_TRIGGER)
 	if err != nil {
 		UnprocessableEntityResponse(w, err.Error())
 		return
@@ -103,7 +113,7 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		service.ChanDiscoveryRunFails <- "resume from TriggersService"
 	}
 
-	restartUsersSynkTrigger, err := getBoolParameter(r, "restartUsersSynkTrigger")
+	restartUsersSynkTrigger, err := getBoolParameter(r, RESTART_USERS_SYNK_TRIGGER)
 	if err != nil {
 		UnprocessableEntityResponse(w, err.Error())
 		return
@@ -111,22 +121,4 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 	if restartUsersSynkTrigger {
 		service.ChanUserSynk <- "resume from TriggersService"
 	}
-}
-
-func getBoolParameter(r *http.Request, parameterName string) (bool, error) {
-	forceCreateQuery, ok := r.URL.Query()[parameterName]
-	forceCreate := false
-	if ok {
-		if len(forceCreateQuery[0]) == 0 {
-			forceCreate = true
-		} else {
-			var parsError error
-			forceCreate, parsError = strconv.ParseBool(forceCreateQuery[0])
-			if parsError != nil {
-				return false, errors.New(parameterName + " is not valid")
-			}
-		}
-	}
-
-	return forceCreate, nil
 }

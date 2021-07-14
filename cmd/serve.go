@@ -18,6 +18,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/service"
 	"wecode.sorint.it/opensource/papagaio-api/trigger"
+	triggerDto "wecode.sorint.it/opensource/papagaio-api/trigger/dto"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
@@ -52,6 +53,7 @@ func serve(cmd *cobra.Command, args []string) {
 	chanOrganizationSynk := make(chan string)
 	chanDiscoveryRunFails := make(chan string)
 	chanUserSynk := make(chan string)
+	rtDto := triggerDto.TriggersRunTimeDto{}
 
 	ctrlOrganization := service.OrganizationService{
 		Db:          &db,
@@ -79,6 +81,7 @@ func serve(cmd *cobra.Command, args []string) {
 		ChanOrganizationSynk:  chanOrganizationSynk,
 		ChanDiscoveryRunFails: chanDiscoveryRunFails,
 		ChanUserSynk:          chanUserSynk,
+		RtDto:                 &rtDto,
 	}
 
 	sd, err := config.InitTokenSigninData(&config.Config.TokenSigning)
@@ -106,9 +109,9 @@ func serve(cmd *cobra.Command, args []string) {
 		logRouter = router
 	}
 
-	trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanOrganizationSynk)
-	trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanDiscoveryRunFails)
-	trigger.StartSynkUsers(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanUserSynk)
+	trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanOrganizationSynk, &rtDto)
+	trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanDiscoveryRunFails, &rtDto)
+	trigger.StartSynkUsers(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanUserSynk, &rtDto)
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

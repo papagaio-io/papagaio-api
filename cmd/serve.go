@@ -37,7 +37,7 @@ func serve(cmd *cobra.Command, args []string) {
 
 	if _, err := os.Stat(config.Config.Database.DbPath); os.IsNotExist(err) {
 		err := os.Mkdir(config.Config.Database.DbPath, os.ModeDir)
-		if err != err {
+		if err != nil {
 			panic("Error during mkdir" + config.Config.Database.DbPath)
 		}
 	}
@@ -48,6 +48,10 @@ func serve(cmd *cobra.Command, args []string) {
 	gitGateway := git.GitGateway{GiteaApi: &gitea.GiteaApi{Db: &db}, GithubApi: &github.GithubApi{Db: &db}}
 
 	commonMutex := utils.NewEventMutex()
+
+	chanOrganizationSynk := make(chan string)
+	chanDiscoveryRunFails := make(chan string)
+	chanUserSynk := make(chan string)
 
 	ctrlOrganization := service.OrganizationService{
 		Db:          &db,
@@ -70,8 +74,11 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	ctrlTrigger := service.TriggersService{
-		Db: &db,
-		Tr: tr,
+		Db:                    &db,
+		Tr:                    tr,
+		ChanOrganizationSynk:  chanOrganizationSynk,
+		ChanDiscoveryRunFails: chanDiscoveryRunFails,
+		ChanUserSynk:          chanUserSynk,
 	}
 
 	sd, err := config.InitTokenSigninData(&config.Config.TokenSigning)
@@ -99,9 +106,9 @@ func serve(cmd *cobra.Command, args []string) {
 		logRouter = router
 	}
 
-	trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway)
-	trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway)
-	trigger.StartSynkUsers(&db, tr, &commonMutex, &agolaApi, &gitGateway)
+	trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanOrganizationSynk)
+	trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanDiscoveryRunFails)
+	trigger.StartSynkUsers(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanUserSynk)
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

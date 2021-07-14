@@ -15,15 +15,24 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
-	go discoveryRunFails(db, tr, commonMutex, agolaApi, gitGateway)
+func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
+	go discoveryRunFails(db, tr, commonMutex, agolaApi, gitGateway, c)
+	go discoveryRunFailsTimer(tr, c)
+}
+
+func discoveryRunFailsTimer(tr utils.ConfigUtils, c chan string) {
+	for {
+		log.Println("discoveryRunFailsTimer wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetRunFailedTriggerTime())))
+		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetRunFailedTriggerTime())))
+		c <- "resume"
+	}
 }
 
 /*
 Scan Agola project runs and store it for elaborating of reports.
 If find failed runs send email to users
 */
-func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
+func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
 	for {
 		log.Println("Start discoveryRunFails")
 
@@ -115,8 +124,7 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 			locked = false
 		}
 
-		log.Println("discoveryRunFails wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetRunFailedTriggerTime())))
-		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetRunFailedTriggerTime())))
+		fmt.Println("discoveryRunFails:", <-c)
 	}
 }
 

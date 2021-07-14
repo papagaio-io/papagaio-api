@@ -2,6 +2,7 @@ package trigger
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -13,11 +14,20 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartSynkUsers(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
-	go synkUsersRun(db, tr, commonMutex, agolaApi, gitGateway)
+func StartSynkUsers(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
+	go synkUsersRun(db, tr, commonMutex, agolaApi, gitGateway, c)
+	go userRunTimer(tr, c)
 }
 
-func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
+func userRunTimer(tr utils.ConfigUtils, c chan string) {
+	for {
+		log.Println("userRunTimer wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetUsersTriggerTime())))
+		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetUsersTriggerTime())))
+		c <- "resume"
+	}
+}
+
+func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string) {
 	for {
 		log.Println("start users synk")
 
@@ -113,8 +123,7 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 			locked = false
 		}
 
-		log.Println("synkUsersRun wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetUsersTriggerTime())))
-		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetUsersTriggerTime())))
+		fmt.Println("synkUsersRun:", <-c)
 	}
 }
 

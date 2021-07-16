@@ -13,11 +13,11 @@ import (
 func GetOrganizationDto(user *model.User, organization *model.Organization, gitsource *model.GitSource, gitGateway *git.GitGateway) dto.OrganizationDto {
 	retVal := dto.OrganizationDto{
 		ID:         organization.ID,
-		Name:       organization.Name,
+		Name:       organization.GitName,
 		AgolaRef:   organization.AgolaOrganizationRef,
 		Visibility: organization.Visibility,
 	}
-	orgDto := gitGateway.GetOrganization(gitsource, user, organization.Name)
+	orgDto := gitGateway.GetOrganization(gitsource, user, organization.GitPath)
 	if orgDto != nil {
 		retVal.AvatarURL = orgDto.AvatarURL
 	}
@@ -126,7 +126,7 @@ func GetBranchDto(branch model.Branch, project *model.Project, organization *mod
 		}
 	}
 
-	retVal.Report = GetBranchReport(branch, project.GitRepoPath, organization.Name)
+	retVal.Report = GetBranchReport(branch, project.GitRepoPath, organization.GitPath)
 
 	lastSuccessRun := branch.LastSuccessRun
 	if !lastSuccessRun.RunEndDate.IsZero() {

@@ -6,6 +6,7 @@ mockgen -source repository/database.go -destination .\test\mock\mock_repository\
 mockgen -source api/agola/agolaApi.go -destination .\test\mock\mock_agola\mockAgolaApi.go
 mockgen -source api/git/gitea/giteaApi.go -destination .\test\mock\mock_gitea\mockGiteaApi.go
 mockgen -source api/git/github/githubApi.go -destination .\test\mock\mock_github\mockGithubApi.go
+mockgen -source api/git/gitlab/gitlabApi.go -destination .\test\mock\mock_gitlab\mockGitlabApi.go
 
 # Configuration
 
@@ -21,7 +22,7 @@ papagaio gitsource add
   -h, --help                         help for gitsource
       --name string                  gitSource name
       --token string                 token
-      --type string                  git type(gitea, github)
+      --type string                  git type(gitea, github, gitlab)
       --delete-remotesource          true to delete the Agola remotesource(default false)
 
 

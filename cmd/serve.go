@@ -13,6 +13,7 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/gitlab"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/controller"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
@@ -46,7 +47,11 @@ func serve(cmd *cobra.Command, args []string) {
 	db := repository.NewAppDb(config.Config)
 	tr := utils.ConfigUtils{Db: &db}
 	agolaApi := agola.AgolaApi{Db: &db}
-	gitGateway := git.GitGateway{GiteaApi: &gitea.GiteaApi{Db: &db}, GithubApi: &github.GithubApi{Db: &db}}
+	gitGateway := git.GitGateway{
+		GiteaApi:  &gitea.GiteaApi{Db: &db},
+		GithubApi: &github.GithubApi{Db: &db},
+		GitlabApi: &gitlab.GitlabApi{Db: &db},
+	}
 
 	commonMutex := utils.NewEventMutex()
 

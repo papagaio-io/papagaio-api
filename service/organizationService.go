@@ -92,7 +92,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	log.Println("req CreateOrganizationDto: ", req)
 
 	org := &model.Organization{}
-	org.Name = req.Name
+	org.GitPath = req.Name
 	org.AgolaOrganizationRef = req.AgolaRef
 	org.GitSourceName = user.GitSourceName
 	org.Visibility = req.Visibility
@@ -108,17 +108,18 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	gitOrganization := service.GitGateway.GetOrganization(gitSource, user, org.Name)
+	gitOrganization := service.GitGateway.GetOrganization(gitSource, user, org.GitPath)
 	log.Println("gitOrgExists:", gitOrganization != nil)
 	if gitOrganization == nil {
-		log.Println("failed to find organization", org.Name, "from git")
+		log.Println("failed to find organization", org.GitPath, "from git")
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.GitOrganizationNotFoundError}
 		JSONokResponse(w, response)
 		return
 	}
 	org.GitOrganizationID = gitOrganization.ID
+	org.GitName = gitOrganization.Name
 
-	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, user, org.Name)
+	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, user, org.GitPath)
 	if !isOwner {
 		log.Println("User", user.UserID, "is not owner")
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
@@ -171,8 +172,8 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	} else {
 		organizations, _ := service.Db.GetOrganizationsByGitSource(org.GitSourceName)
 		for _, organization := range *organizations {
-			if strings.Compare(organization.Name, org.Name) == 0 {
-				log.Println("organization name", org.Name, "just present in papagaio with gitSource", org.GitSourceName)
+			if strings.Compare(organization.GitPath, org.GitPath) == 0 {
+				log.Println("organization name", org.GitPath, "just present in papagaio with gitSource", org.GitSourceName)
 
 				response := dto.CreateOrganizationResponseDto{ErrorCode: dto.PapagaioOrganizationExistsError}
 				JSONokResponse(w, response)
@@ -184,7 +185,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	org.UserIDCreator = *user.UserID
 	org.UserIDConnected = *user.UserID
 
-	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, user, org.Name, org.AgolaOrganizationRef)
+	org.WebHookID, err = service.GitGateway.CreateWebHook(gitSource, user, org.GitPath, org.AgolaOrganizationRef)
 	if err != nil {
 		log.Println("failed to creare webhook:", err)
 		InternalServerError(w)
@@ -196,7 +197,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	if agolaOrganizationExists {
 		log.Println("organization", org.AgolaOrganizationRef, "just exists in Agola")
 		if !forceCreate {
-			service.GitGateway.DeleteWebHook(gitSource, user, org.Name, org.WebHookID)
+			service.GitGateway.DeleteWebHook(gitSource, user, org.GitPath, org.WebHookID)
 			response := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaOrganizationExistsError}
 			JSONokResponse(w, response)
 			return
@@ -206,7 +207,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		org.ID, err = service.AgolaApi.CreateOrganization(org, org.Visibility)
 		if err != nil {
 			log.Println("failed to create organization", org.AgolaOrganizationRef, "in agola:", err)
-			service.GitGateway.DeleteWebHook(gitSource, user, org.Name, org.WebHookID)
+			service.GitGateway.DeleteWebHook(gitSource, user, org.GitPath, org.WebHookID)
 			InternalServerError(w)
 			return
 		}
@@ -294,7 +295,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, userRequest, organization.Name)
+	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, userRequest, organization.GitPath)
 	if !isOwner {
 		log.Println("User", userRequest.UserID, "is not owner")
 		response := dto.DeleteOrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
@@ -318,7 +319,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	service.GitGateway.DeleteWebHook(gitSource, userCreator, organization.Name, organization.WebHookID)
+	service.GitGateway.DeleteWebHook(gitSource, userCreator, organization.GitPath, organization.WebHookID)
 	err = service.Db.DeleteOrganization(organization.AgolaOrganizationRef)
 
 	mutex.Unlock()
@@ -377,7 +378,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 		log.Println("gitSource not found err:", err)
 	}
 
-	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.Name)
+	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.GitPath)
 	if err != nil {
 		log.Println("Error from IsUserOwner:", err)
 		InternalServerError(w)
@@ -448,7 +449,7 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 		log.Println("gitSource not found err:", err)
 	}
 
-	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.Name)
+	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.GitPath)
 	if err != nil {
 		log.Println("Error from IsUserOwner:", err)
 		InternalServerError(w)
@@ -550,7 +551,7 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 	if strings.Compare(organization.GitSourceName, user.GitSourceName) != 0 {
 		log.Println("user not authorized to get report of organizarion", organizationRef)
 
-		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError} //TODO change message error to "different gitsource error"
 		JSONokResponse(w, response)
 		return
 	}
@@ -598,7 +599,7 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	if strings.Compare(organization.GitSourceName, user.GitSourceName) != 0 {
 		log.Println("user not authorized to get report of organizarion", organizationRef)
 
-		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError}
+		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError} //TODO change message
 		JSONokResponse(w, response)
 		return
 	}

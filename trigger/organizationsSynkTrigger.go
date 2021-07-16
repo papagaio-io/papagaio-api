@@ -81,7 +81,7 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 				db.SaveOrganization(org)
 			}
 
-			log.Println("start synk organization", org.Name)
+			log.Println("start synk organization", org.GitPath)
 
 			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
 

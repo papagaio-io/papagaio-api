@@ -187,7 +187,7 @@ func (agolaApi *AgolaApi) CreateProject(projectName string, agolaProjectRef stri
 		ParentRef:        "org/" + organization.AgolaOrganizationRef,
 		Visibility:       organization.Visibility,
 		RemoteSourceName: remoteSourceName,
-		RepoPath:         organization.Name + "/" + projectName,
+		RepoPath:         organization.GitName + "/" + projectName,
 	}
 	data, _ := json.Marshal(projectRequest)
 	reqBody := strings.NewReader(string(data))
@@ -239,7 +239,7 @@ func (agolaApi *AgolaApi) DeleteProject(organization *model.Organization, agolaP
 func (agolaApi *AgolaApi) AddOrUpdateOrganizationMember(organization *model.Organization, agolaUserRef string, role string) error {
 	log.Println("AddOrUpdateOrganizationMember start")
 
-	log.Println("AddOrUpdateOrganizationMember", agolaUserRef, "for", organization.Name, "with role:", role)
+	log.Println("AddOrUpdateOrganizationMember", agolaUserRef, "for", organization.GitName, "with role:", role)
 
 	var err error
 	client := agolaApi.getClient(nil, true)
@@ -264,7 +264,7 @@ func (agolaApi *AgolaApi) AddOrUpdateOrganizationMember(organization *model.Orga
 }
 
 func (agolaApi *AgolaApi) RemoveOrganizationMember(organization *model.Organization, agolaUserRef string) error {
-	log.Println("RemoveOrganizationMember", organization.Name, "with agolaUserRef", agolaUserRef)
+	log.Println("RemoveOrganizationMember", organization.GitName, "with agolaUserRef", agolaUserRef)
 
 	var err error
 	client := agolaApi.getClient(nil, true)

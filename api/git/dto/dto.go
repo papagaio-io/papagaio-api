@@ -35,9 +35,10 @@ type CommitParentDto struct {
 }
 
 type OrganizationDto struct {
-	Name      string
-	AvatarURL string
-	ID        int64
+	Path      string `json:"path"`
+	Name      string `json:"name"`
+	AvatarURL string `json:"avatarUrl"`
+	ID        int64  `json:"id"`
 }
 
 type AccessTokenRequestDto struct {

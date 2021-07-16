@@ -21,6 +21,7 @@ import (
 )
 
 const githubDefaultApiUrl = "https://api.github.com"
+const gitlabDefaultApiUrl = "https://gitlab.com"
 
 type GitSourceService struct {
 	Db         repository.Database
@@ -85,9 +86,14 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if gitSourceDto.GitAPIURL == nil && gitSourceDto.GitType == types.Github {
-		gitUrl := githubDefaultApiUrl
-		gitSourceDto.GitAPIURL = &gitUrl
+	if gitSourceDto.GitAPIURL == nil {
+		if gitSourceDto.GitType == types.Github {
+			gitUrl := githubDefaultApiUrl
+			gitSourceDto.GitAPIURL = &gitUrl
+		} else if gitSourceDto.GitType == types.Gitlab {
+			gitUrl := gitlabDefaultApiUrl
+			gitSourceDto.GitAPIURL = &gitUrl
+		}
 	}
 
 	gitSource := model.GitSource{
@@ -202,7 +208,7 @@ func (service *GitSourceService) deleteOrganizationsAndMembersByGitsourceRef(git
 
 	if orgs != nil {
 		for _, org := range *orgs {
-			service.Db.DeleteOrganization(org.Name)
+			service.Db.DeleteOrganization(org.GitPath)
 		}
 	}
 

@@ -7,11 +7,12 @@ type GitType string
 const (
 	Gitea  GitType = "gitea"
 	Github GitType = "github"
+	Gitlab GitType = "gitlab"
 )
 
 func (gt GitType) IsValid() error {
 	switch gt {
-	case Gitea, Github:
+	case Gitea, Github, Gitlab:
 		return nil
 	}
 	return errors.New("invalid git type")

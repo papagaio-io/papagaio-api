@@ -102,7 +102,7 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 			}
 
 			if user != nil {
-				isOwner, _ := gitGateway.IsUserOwner(gitSource, user, org.Name)
+				isOwner, _ := gitGateway.IsUserOwner(gitSource, user, org.GitPath)
 				if isOwner {
 					mutex.Unlock()
 					utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
@@ -112,8 +112,8 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 				}
 			}
 
-			log.Println("findUserToConnect for organization ", org.Name)
-			user = findUserToConnect(db, gitGateway, agolaApi, gitSource, org.Name, usersVerifiedOK)
+			log.Println("findUserToConnect for organization ", org.GitPath)
+			user = findUserToConnect(db, gitGateway, agolaApi, gitSource, org.GitPath, usersVerifiedOK)
 			if user != nil {
 				log.Println("findUserToConnect result UserID", user.UserID)
 				org.UserIDConnected = *user.UserID
@@ -152,7 +152,7 @@ func verifyUserAccount(user *model.User, db repository.Database, gitGateway *git
 }
 
 func verifyUserGiteaAccount(user *model.User, gitGateway *git.GitGateway, gitSource *model.GitSource) (bool, error) {
-	userInfo, err := gitGateway.GetUserByLogin(gitSource, user.Login)
+	userInfo, err := gitGateway.GetUserByLogin(gitSource, user)
 
 	if userInfo == nil && err == nil {
 		return true, errors.New("user not found in git")

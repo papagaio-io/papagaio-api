@@ -94,6 +94,21 @@ func (mr *MockGiteaInterfaceMockRecorder) GetOrganization(gitSource, user, gitOr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganization", reflect.TypeOf((*MockGiteaInterface)(nil).GetOrganization), gitSource, user, gitOrgRef)
 }
 
+// GetEmailsRepositoryUsersOwner mocks base method
+func (m *MockGiteaInterface) GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef, repositoryRef string) (*[]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEmailsRepositoryUsersOwner", gitSource, user, gitOrgRef, repositoryRef)
+	ret0, _ := ret[0].(*[]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEmailsRepositoryUsersOwner indicates an expected call of GetEmailsRepositoryUsersOwner
+func (mr *MockGiteaInterfaceMockRecorder) GetEmailsRepositoryUsersOwner(gitSource, user, gitOrgRef, repositoryRef interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmailsRepositoryUsersOwner", reflect.TypeOf((*MockGiteaInterface)(nil).GetEmailsRepositoryUsersOwner), gitSource, user, gitOrgRef, repositoryRef)
+}
+
 // GetRepositoryTeams mocks base method
 func (m *MockGiteaInterface) GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef, repositoryRef string) (*[]dto.TeamResponseDto, error) {
 	m.ctrl.T.Helper()
@@ -184,10 +199,10 @@ func (mr *MockGiteaInterfaceMockRecorder) GetCommitMetadata(gitSource, user, git
 }
 
 // GetOrganizations mocks base method
-func (m *MockGiteaInterface) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error) {
+func (m *MockGiteaInterface) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrganizations", gitSource, user)
-	ret0, _ := ret[0].(*[]string)
+	ret0, _ := ret[0].(*[]dto.OrganizationDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

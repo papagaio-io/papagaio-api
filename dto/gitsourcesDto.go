@@ -47,7 +47,7 @@ func (gitSource *CreateGitSourceRequestDto) IsValid() error {
 
 	}
 
-	if gitSource.GitAPIURL != nil {
+	if gitSource.GitAPIURL != nil && len(*gitSource.GitAPIURL) > 0 {
 		_, err = url.ParseRequestURI(*gitSource.GitAPIURL)
 		if err != nil {
 			return errors.New("gitApiUrl is not valid")

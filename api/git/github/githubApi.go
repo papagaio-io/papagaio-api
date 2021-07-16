@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -25,16 +26,13 @@ type GithubInterface interface {
 	CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error)
 	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error
 	GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error)
-	GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error)
-	GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error)
-	GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationId int64, teamId int) (*[]dto.UserTeamResponseDto, error)
+	GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error)
 	GetOrganizationMembers(gitSource *model.GitSource, user *model.User, organizationName string) (*[]GitHubUser, error)
-	GetRepositoryMembers(gitSource *model.GitSource, user *model.User, organizationName string, repositoryRef string) (*[]GitHubUser, error)
 	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
 	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto
-	GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error)
+	GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error)
 	IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error)
 
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
@@ -75,7 +73,7 @@ func (githubApi *GithubApi) DeleteWebHook(gitSource *model.GitSource, user *mode
 func (githubApi *GithubApi) GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error) {
 	client, _ := githubApi.getClient(gitSource, user)
 
-	opt := &github.RepositoryListByOrgOptions{Type: "public"}
+	opt := &github.RepositoryListByOrgOptions{Type: "all"}
 	repos, _, err := client.Repositories.ListByOrg(context.Background(), gitOrgRef, opt)
 
 	retVal := make([]string, 0)
@@ -87,46 +85,21 @@ func (githubApi *GithubApi) GetRepositories(gitSource *model.GitSource, user *mo
 	return &retVal, err
 }
 
-func (githubApi *GithubApi) GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
-	client, _ := githubApi.getClient(gitSource, user)
-	teams, _, err := client.Repositories.ListTeams(context.Background(), gitOrgRef, repositoryRef, nil)
+func (githubApi *GithubApi) GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error) {
+	retVal := make([]string, 0)
 
-	retVal := make([]dto.TeamResponseDto, 0)
-	for _, team := range teams {
-		retVal = append(retVal, dto.TeamResponseDto{ID: int(*team.ID), Name: *team.Name, Permission: *team.Permission})
-	}
-
-	return &retVal, err
-}
-
-func (githubApi *GithubApi) GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
-	client, _ := githubApi.getClient(gitSource, user)
-	teams, _, err := client.Teams.ListTeams(context.Background(), gitOrgRef, nil)
-
-	retVal := make([]dto.TeamResponseDto, 0)
-	for _, team := range teams {
-		retVal = append(retVal, dto.TeamResponseDto{ID: int(*team.ID), Name: *team.Name, Permission: *team.Permission})
-	}
-
-	return &retVal, err
-}
-
-func (githubApi *GithubApi) GetTeamMembers(gitSource *model.GitSource, user *model.User, organizationId int64, teamId int) (*[]dto.UserTeamResponseDto, error) {
-	client, _ := githubApi.getClient(gitSource, user)
-
-	users, _, err := client.Teams.ListTeamMembersByID(context.Background(), organizationId, int64(teamId), nil)
+	users, err := githubApi.getRepositoryMembers(gitSource, user, gitOrgRef, repositoryRef)
 	if err != nil {
 		return nil, err
 	}
 
-	retVal := make([]dto.UserTeamResponseDto, 0)
-	for _, user := range users {
-		if err == nil {
-			retVal = append(retVal, dto.UserTeamResponseDto{ID: int(*user.ID), Username: *user.Name})
+	for _, user := range *users {
+		if strings.Compare(user.Role, "owner") == 0 {
+			retVal = append(retVal, user.Email)
 		}
 	}
 
-	return &retVal, err
+	return &retVal, nil
 }
 
 func (githubApi *GithubApi) GetOrganizationMembers(gitSource *model.GitSource, user *model.User, organizationName string) (*[]GitHubUser, error) {
@@ -157,7 +130,7 @@ func (githubApi *GithubApi) GetOrganizationMembers(gitSource *model.GitSource, u
 	return &retVal, err
 }
 
-func (githubApi *GithubApi) GetRepositoryMembers(gitSource *model.GitSource, user *model.User, organizationName string, repositoryRef string) (*[]GitHubUser, error) {
+func (githubApi *GithubApi) getRepositoryMembers(gitSource *model.GitSource, user *model.User, organizationName string, repositoryRef string) (*[]GitHubUser, error) {
 	client, _ := githubApi.getClient(gitSource, user)
 	users, _, err := client.Repositories.ListCollaborators(context.Background(), organizationName, repositoryRef, nil)
 
@@ -251,7 +224,7 @@ func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, user *mo
 		return nil
 	}
 
-	response := &dto.OrganizationDto{Name: *org.Login, ID: *org.ID}
+	response := &dto.OrganizationDto{Name: *org.Name, Path: *org.Login, ID: *org.ID}
 	if org.AvatarURL != nil {
 		response.AvatarURL = *org.AvatarURL
 	}
@@ -259,7 +232,7 @@ func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, user *mo
 	return response
 }
 
-func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error) {
+func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error) {
 	client, _ := githubApi.getClient(gitSource, user)
 	organizations, _, err := client.Organizations.List(context.Background(), "", nil)
 
@@ -267,11 +240,15 @@ func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *m
 		return nil, err
 	}
 
-	retVal := make([]string, 0)
+	retVal := make([]dto.OrganizationDto, 0)
 	for _, org := range organizations {
 		isUserOwner, _ := githubApi.IsUserOwner(gitSource, user, *org.Login)
 		if isUserOwner {
-			retVal = append(retVal, *org.Login)
+			orgDto := dto.OrganizationDto{Name: *org.Name, Path: *org.Login, ID: *org.ID}
+			if org.AvatarURL != nil {
+				orgDto.AvatarURL = *org.AvatarURL
+			}
+			retVal = append(retVal, orgDto)
 		}
 	}
 
@@ -318,9 +295,7 @@ func (githubApi *GithubApi) GetUserInfo(gitSource *model.GitSource, user *model.
 }
 
 func (githubApi *GithubApi) GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error) {
-	ctx := context.Background()
-	tc := oauth2.NewClient(ctx, nil)
-	client := github.NewClient(tc)
+	client, _ := githubApi.getClient(gitSource, nil)
 
 	user, resp, err := client.Users.Get(context.Background(), login)
 	if err != nil {
@@ -349,6 +324,12 @@ func (githubApi *GithubApi) GetUserByLogin(gitSource *model.GitSource, login str
 }
 
 func (githubApi *GithubApi) getClient(gitSource *model.GitSource, user *model.User) (*github.Client, error) {
+	if user == nil {
+		ctx := context.Background()
+		tc := oauth2.NewClient(ctx, nil)
+		return github.NewClient(tc), nil
+	}
+
 	if common.IsAccessTokenExpired(user.Oauth2AccessTokenExpiresAt) {
 		log.Println("Token expired is to refresh")
 		token, err := githubApi.RefreshToken(gitSource, user.Oauth2RefreshToken)
@@ -383,13 +364,13 @@ const oauth2AccessTokenPath string = "https://github.com/login/oauth/access_toke
 const oauth2RefreshTokenPath string = "https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s"
 
 func GetOauth2AuthorizeUrl(gitClientId string, redirectUrl string, state string) string {
-	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, redirectUrl, "admin:org%20admin:org_hook%20repo", state)
+	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, url.QueryEscape(redirectUrl), "admin:org%20admin:org_hook%20repo", state)
 }
 
 func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
 	client := &http.Client{}
 
-	URLApi := fmt.Sprintf(oauth2AccessTokenPath, gitSource.GitClientID, gitSource.GitSecret, code, controller.GetRedirectUrl())
+	URLApi := fmt.Sprintf(oauth2AccessTokenPath, gitSource.GitClientID, gitSource.GitSecret, code, url.QueryEscape(controller.GetRedirectUrl()))
 	req, _ := http.NewRequest("POST", URLApi, nil)
 	req.Header.Set("Accept", "application/json")
 	resp, err := client.Do(req)

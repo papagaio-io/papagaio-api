@@ -3,7 +3,6 @@ package trigger
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -134,16 +133,12 @@ func getUsersEmailMap(gitSource *model.GitSource, user *model.User, organization
 	emails := make(map[string]bool)
 
 	//Find all users that commited the failed run and parents
-	emailUsersCommitted := getEmailByRun(&failedRun, gitSource, user, organization.Name, gitRepoPath, gitGateway)
+	emailUsersCommitted := getEmailByRun(&failedRun, gitSource, user, organization.GitPath, gitRepoPath, gitGateway)
 
 	//Users owner of the organization and users owner of the repository
 	var usersRepoOwners *[]string
 
-	if gitSource.GitType == types.Gitea {
-		usersRepoOwners, _ = findGiteaUsersEmailRepositoryOwner(gitSource, user, organization.Name, gitRepoPath, gitGateway)
-	} else {
-		usersRepoOwners, _ = findGithubUsersRepositoryOwner(gitSource, user, organization.Name, gitRepoPath, gitGateway)
-	}
+	usersRepoOwners, _ = gitGateway.GetEmailsRepositoryUsersOwner(gitSource, user, organization.GitPath, gitRepoPath)
 
 	for _, email := range emailUsersCommitted {
 		emails[email] = true
@@ -170,7 +165,7 @@ const subjectTemplate string = "Run failed in Agola: %s » %s » release #%s"
 const runAgolaPath string = "%s/org/%s/projects/%s.proj/runs/%s"
 
 func makeSubject(organization *model.Organization, projectName string, failedRun agola.RunDto) string {
-	return fmt.Sprintf(subjectTemplate, organization.Name, projectName, fmt.Sprint(failedRun.Counter))
+	return fmt.Sprintf(subjectTemplate, organization.GitPath, projectName, fmt.Sprint(failedRun.Counter))
 }
 
 func getRunAgolaUrl(organization *model.Organization, projectName string, runID string) string {
@@ -179,7 +174,7 @@ func getRunAgolaUrl(organization *model.Organization, projectName string, runID 
 
 func makeBody(organization *model.Organization, projectName string, failedRun agola.RunDto, agolaApi agola.AgolaApiInterface) (string, error) {
 	runUrl := getRunAgolaUrl(organization, projectName, failedRun.ID)
-	body := fmt.Sprintf(bodyMessageTemplate, organization.Name, projectName, fmt.Sprint(failedRun.Counter))
+	body := fmt.Sprintf(bodyMessageTemplate, organization.GitPath, projectName, fmt.Sprint(failedRun.Counter))
 	body += fmt.Sprintf(bodyLinkTemplate, runUrl)
 
 	run, err := agolaApi.GetRun(failedRun.ID)
@@ -227,49 +222,6 @@ func CheckIfNewRunsPresent(project *model.Project, agolaApi agola.AgolaApiInterf
 	runList, _ := agolaApi.GetRuns(project.AgolaProjectID, true, "finished", nil, 1, false)
 
 	return runList != nil && len(*runList) != 0 && (*runList)[0].StartTime.After(lastRun.RunStartDate)
-}
-
-func findGiteaUsersEmailRepositoryOwner(gitSource *model.GitSource, user *model.User, organizationName string, gitRepoPath string, gitGateway *git.GitGateway) (*[]string, error) {
-	retVal := make([]string, 0)
-
-	teams, err := gitGateway.GiteaApi.GetRepositoryTeams(gitSource, user, organizationName, gitRepoPath)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, team := range *teams {
-		if strings.Compare(team.Permission, "owner") != 0 {
-			continue
-		}
-
-		users, err := gitGateway.GiteaApi.GetTeamMembers(gitSource, user, team.ID)
-		if err != nil {
-			continue
-		}
-
-		for _, user := range *users {
-			retVal = append(retVal, user.Email)
-		}
-	}
-
-	return &retVal, nil
-}
-
-func findGithubUsersRepositoryOwner(gitSource *model.GitSource, user *model.User, organizationName string, gitRepoPath string, gitGateway *git.GitGateway) (*[]string, error) {
-	retVal := make([]string, 0)
-
-	users, err := gitGateway.GithubApi.GetRepositoryMembers(gitSource, user, organizationName, gitRepoPath)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, user := range *users {
-		if strings.Compare(user.Role, "owner") == 0 {
-			retVal = append(retVal, user.Email)
-		}
-	}
-
-	return &retVal, nil
 }
 
 func getEmailByRun(run *agola.RunDto, gitSource *model.GitSource, user *model.User, organizationName string, gitRepoPath string, gitGateway *git.GitGateway) []string {

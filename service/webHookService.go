@@ -69,7 +69,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		log.Println("repository created: ", webHookMessage.Repository.Name)
 		project := model.Project{GitRepoPath: webHookMessage.Repository.Name, Archivied: true, AgolaProjectRef: utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)}
 
-		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConfExists(gitSource, user, organization.Name, webHookMessage.Repository.Name)
+		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConfExists(gitSource, user, organization.GitPath, webHookMessage.Repository.Name)
 		if agolaConfExists {
 			projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, project.AgolaProjectRef, organization, gitSource.AgolaRemoteSource, user)
 			project.AgolaProjectID = projectID
@@ -103,7 +103,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		log.Println("repository push: ", webHookMessage.Repository.Name)
 
 		project, projectExist := organization.Projects[webHookMessage.Repository.Name]
-		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConfExists(gitSource, user, organization.Name, webHookMessage.Repository.Name)
+		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConfExists(gitSource, user, organization.GitPath, webHookMessage.Repository.Name)
 
 		if agolaConfExists {
 			if !projectExist {

@@ -5,36 +5,42 @@ import (
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
-	"wecode.sorint.it/opensource/papagaio-api/api/git/github"
+	"wecode.sorint.it/opensource/papagaio-api/api/git/gitlab"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
 //Sincronizzo i membri della organization tra github e agola
-func SyncMembersForGithub(organization *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway, user *model.User) {
-	githubUsers, _ := gitGateway.GithubApi.GetOrganizationMembers(gitSource, user, organization.GitPath)
+func SyncMembersForGitlab(organization *model.Organization, gitSource *model.GitSource, agolaApi agolaApi.AgolaApiInterface, gitGateway *git.GitGateway, user *model.User) {
+	gitlabUsers, _ := gitGateway.GitlabApi.GetOrganizationMembers(gitSource, user, organization.GitPath)
 	agolaMembers, _ := agolaApi.GetOrganizationMembers(organization)
 
 	agolaUsersMap := utils.GetUsersMapByRemotesource(agolaApi, gitSource.AgolaRemoteSource)
 
-	for _, gitMember := range *githubUsers {
+	for _, gitMember := range *gitlabUsers {
 		agolaUserRef, usersExists := (*agolaUsersMap)[gitMember.Username]
 		if !usersExists {
 			continue
 		}
 
-		agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, gitMember.Role)
+		var role string
+		if gitMember.HasOwnerPermission() {
+			role = "owner"
+		} else {
+			role = "member"
+		}
+		agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, role)
 	}
 
 	//Verifico i membri eliminati su git
 	for _, agolaMember := range agolaMembers.Members {
-		if findGithubMemberByAgolaUserRef(githubUsers, agolaUsersMap, agolaMember.User.Username) == nil {
+		if findGitlabMemberByAgolaUserRef(gitlabUsers, agolaUsersMap, agolaMember.User.Username) == nil {
 			agolaApi.RemoveOrganizationMember(organization, agolaMember.User.Username)
 		}
 	}
 }
 
-func findGithubMemberByAgolaUserRef(gitMembers *[]github.GitHubUser, agolaUsersMap *map[string]string, agolaUserRef string) *github.GitHubUser {
+func findGitlabMemberByAgolaUserRef(gitMembers *[]gitlab.GitlabUser, agolaUsersMap *map[string]string, agolaUserRef string) *gitlab.GitlabUser {
 	for _, gitMember := range *gitMembers {
 		if strings.Compare(agolaUserRef, (*agolaUsersMap)[gitMember.Username]) == 0 {
 			return &gitMember

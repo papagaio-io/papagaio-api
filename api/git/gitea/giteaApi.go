@@ -24,13 +24,14 @@ type GiteaInterface interface {
 	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error
 	GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error)
 	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto
+	GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error)
 	GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error)
 	GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error)
 	GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int) (*[]dto.UserTeamResponseDto, error)
 	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
-	GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error)
+	GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error)
 	IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error)
 
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
@@ -151,7 +152,7 @@ func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, user *mode
 		var data OrganizationResponseDto
 		json.Unmarshal(body, &data)
 
-		organization := dto.OrganizationDto{Name: data.Name, ID: data.ID, AvatarURL: data.AvatarURL}
+		organization := dto.OrganizationDto{Name: data.Name, Path: data.Name, ID: data.ID, AvatarURL: data.AvatarURL}
 		return &organization
 	}
 
@@ -182,6 +183,32 @@ func (giteaApi *GiteaApi) GetRepositoryTeams(gitSource *model.GitSource, user *m
 	json.Unmarshal(body, &teamsResponse)
 
 	return &teamsResponse, err
+}
+
+func (giteaApi *GiteaApi) GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error) {
+	retVal := make([]string, 0)
+
+	teams, err := giteaApi.GetRepositoryTeams(gitSource, user, gitOrgRef, repositoryRef)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, team := range *teams {
+		if strings.Compare(team.Permission, "owner") != 0 {
+			continue
+		}
+
+		users, err := giteaApi.GetTeamMembers(gitSource, user, team.ID)
+		if err != nil {
+			continue
+		}
+
+		for _, user := range *users {
+			retVal = append(retVal, user.Email)
+		}
+	}
+
+	return &retVal, nil
 }
 
 func (giteaApi *GiteaApi) GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
@@ -349,7 +376,7 @@ func (giteaApi *GiteaApi) GetCommitMetadata(gitSource *model.GitSource, user *mo
 	}
 }
 
-func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]string, error) {
+func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error) {
 	client, _ := giteaApi.getClient(gitSource, user)
 
 	URLApi := getOrganizationsUrl(gitSource.GitAPIURL)
@@ -366,11 +393,11 @@ func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource, user *mod
 		var organizations []OrganizationResponseDto
 		json.Unmarshal(body, &organizations)
 
-		retVal := make([]string, 0)
+		retVal := make([]dto.OrganizationDto, 0)
 		for _, org := range organizations {
 			isUserOwner, _ := giteaApi.IsUserOwner(gitSource, user, org.Username)
 			if isUserOwner {
-				retVal = append(retVal, org.Username)
+				retVal = append(retVal, dto.OrganizationDto{Name: org.Name, Path: org.Name, ID: org.ID, AvatarURL: org.AvatarURL})
 			}
 		}
 

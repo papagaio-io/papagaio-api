@@ -15,7 +15,7 @@ import (
 func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, user *model.User) {
 	log.Println("SyncMembersForGitea start")
 
-	gitTeams, err := gitGateway.GetOrganizationTeams(gitSource, user, organization.Name)
+	gitTeams, err := gitGateway.GiteaApi.GetOrganizationTeams(gitSource, user, organization.GitPath)
 	if err != nil {
 		log.Println("error in GetOrganizationTeams:", err)
 		return
@@ -24,7 +24,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	gitTeamMembers := make(map[int]dto.UserTeamResponseDto)
 
 	for _, team := range *gitTeams {
-		teamMembers, _ := gitGateway.GetTeamMembers(gitSource, user, organization.GitOrganizationID, team.ID)
+		teamMembers, _ := gitGateway.GiteaApi.GetTeamMembers(gitSource, user, team.ID)
 
 		var teamToCheck *map[int]dto.UserTeamResponseDto
 		if strings.Compare(team.Permission, "owner") == 0 {

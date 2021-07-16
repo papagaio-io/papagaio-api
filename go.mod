@@ -9,6 +9,7 @@ require (
 	github.com/go-openapi/spec v0.20.3 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/golang/mock v1.5.0
+	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v37 v37.0.0
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/handlers v1.5.1
@@ -20,6 +21,7 @@ require (
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/http-swagger v1.0.0
 	github.com/swaggo/swag v1.7.0
+	github.com/xanzy/go-gitlab v0.50.1
 	github.com/xhit/go-simple-mail v2.2.2+incompatible
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c

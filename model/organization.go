@@ -6,7 +6,8 @@ import (
 
 type Organization struct {
 	ID                   string               `json:"id"`
-	Name                 string               `json:"name" example:"TestDemo"`
+	GitName              string               `json:"gitName" example:"TestDemo"`
+	GitPath              string               `json:"gitPath" example:"TestDemo"`
 	AgolaOrganizationRef string               `json:"agolaOrganizationRef" example:"TestDemo"`
 	UserIDCreator        uint64               `json:"userIdCreator" example:"1"`
 	UserIDConnected      uint64               `json:"userIdConnected" example:"1"`

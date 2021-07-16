@@ -61,7 +61,7 @@ func init() {
 	AddCommonFlags(gitSourceCmd, &cfgGitSource.CommonConfig)
 
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.name, "name", "", "gitSource name")
-	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitType, "type", "", "git type(gitea, github)")
+	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitType, "type", "", "git type(gitea, github, gitlab)")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitAPIURL, "git-api-url", "", "api url")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitClientID, "git-client-id", "", "git oauth2 client id")
 	gitSourceCmd.PersistentFlags().StringVar(&cfgGitSource.gitClientSecret, "git-client-secret", "", "git oauth2 client secret")
@@ -109,7 +109,7 @@ func addGitSource(cmd *cobra.Command, args []string) {
 	} else {
 		if !api.IsResponseOK(resp.StatusCode) {
 			body, _ := ioutil.ReadAll(resp.Body)
-			cmd.PrintErrln("Somefing was wrong! " + string(body))
+			cmd.PrintErrln("Something was wrong! " + string(body))
 			os.Exit(1)
 		}
 
@@ -169,7 +169,7 @@ func updateGitSource(cmd *cobra.Command, args []string) {
 		requestDto.GitAPIURL = &cfgGitSource.gitAPIURL
 	}
 	if len(cfgGitSource.gitType) != 0 {
-		if strings.Compare(cfgGitSource.gitType, "gitea") != 0 && strings.Compare(cfgGitSource.gitType, "github") != 0 {
+		if strings.Compare(cfgGitSource.gitType, "gitea") != 0 && strings.Compare(cfgGitSource.gitType, "github") != 0 && strings.Compare(cfgGitSource.gitType, "gitlab") != 0 {
 			cmd.PrintErrln("type must be gitea or github")
 			os.Exit(1)
 		}
@@ -196,7 +196,7 @@ func updateGitSource(cmd *cobra.Command, args []string) {
 	} else {
 		if !api.IsResponseOK(resp.StatusCode) {
 			body, _ := ioutil.ReadAll(resp.Body)
-			cmd.PrintErrln("Somefing was wrong! " + string(body))
+			cmd.PrintErrln("Something was wrong! " + string(body))
 			os.Exit(1)
 		}
 	}

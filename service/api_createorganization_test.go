@@ -130,7 +130,7 @@ func TestCreateOrganizationJustExistsInPapagaio(t *testing.T) {
 
 	user := test.MakeUser()
 
-	organizationModel := model.Organization{Name: organizationReqDto.Name, AgolaOrganizationRef: organizationReqDto.AgolaRef}
+	organizationModel := model.Organization{GitPath: organizationReqDto.Name, AgolaOrganizationRef: organizationReqDto.AgolaRef}
 
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
@@ -452,7 +452,7 @@ func TestCreateOrganizationWhenOrgNameAlreadyExistsInPapagaio(t *testing.T) {
 	client := ts.Client()
 
 	organization := (*test.MakeOrganizationList())[0]
-	organizationReqDto.Name = organization.Name
+	organizationReqDto.Name = organization.GitPath
 	insertRunsData(&organization)
 	organizationList := make([]model.Organization, 0)
 	organizationList = append(organizationList, organization)

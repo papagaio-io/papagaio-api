@@ -68,7 +68,7 @@ func TestAddExternalUser(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.Name).Return(true, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.GitPath).Return(true, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
 	router := test.SetupBaseRouter(user)
@@ -144,7 +144,7 @@ func TestRemoveExternalUserOk(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.Name).Return(true, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.GitPath).Return(true, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 
 	router := test.SetupBaseRouter(user)

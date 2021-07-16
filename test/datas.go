@@ -29,6 +29,7 @@ func MakeOrganizationMap() *map[string]model.Organization {
 		organizationName := "Organization" + fmt.Sprint(i)
 		retVal[organizationName] = model.Organization{
 			GitPath:              organizationName,
+			GitName:              organizationName,
 			AgolaOrganizationRef: organizationName,
 			Visibility:           types.Public,
 			GitSourceName:        "gitea",

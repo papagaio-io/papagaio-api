@@ -36,7 +36,7 @@ func TestGetReportOK(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizations().Return(&organizationList, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.GitPath).Return(&gitDto.OrganizationDto{})
 
 	serviceOrganization := OrganizationService{
 		Db:         db,
@@ -147,7 +147,7 @@ func TestGetOrganizationReportOk(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&organization, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.Name).Return(&gitDto.OrganizationDto{})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.GitPath).Return(&gitDto.OrganizationDto{})
 
 	serviceOrganization := OrganizationService{
 		Db:         db,
@@ -204,7 +204,7 @@ func assertOrganizationDto(t *testing.T, organization *model.Organization, organ
 	organizationDto.Projects = test.SortProjectsDto(organizationDto.Projects)
 
 	assert.Equal(t, organization.AgolaOrganizationRef, organizationDto.AgolaRef, "AgolaRef is not correct")
-	assert.Equal(t, organization.Name, organizationDto.Name, "Name is not correct")
+	assert.Equal(t, organization.GitPath, organizationDto.Name, "Name is not correct")
 	assert.Equal(t, len(organization.Projects), len(organizationDto.Projects), "There are not all the projects")
 
 	projectA := organizationDto.Projects[0]

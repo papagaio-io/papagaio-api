@@ -135,18 +135,13 @@ func TestCreateOrganizationUserAgolaNotFound(t *testing.T) {
 
 	remotesource := agola.RemoteSourceDto{ID: "remotesource_test", Name: gitSource.AgolaRemoteSource}
 
-	users := make([]agola.UserDto, 0)
-	userDto := agola.UserDto{ID: "test", Username: "agola_user_test"}
-	userDto.LinkedAccounts = make([]agola.LinkedAccountDto, 0)
-	userDto.LinkedAccounts = append(userDto.LinkedAccounts, agola.LinkedAccountDto{ID: "test", RemoteSourceID: remotesource.ID, RemoteUserName: user.Login})
-
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.Name).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.Name})
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.Name).Return(true, nil)
 	agolaApiInt.EXPECT().GetRemoteSource(gitSource.AgolaRemoteSource).Return(&remotesource, nil)
-	agolaApiInt.EXPECT().GetUsers().Return(&users, nil)
+	agolaApiInt.EXPECT().GetUsers().Return(nil, nil)
 
 	ts := httptest.NewServer(setupRouter(user))
 
@@ -163,6 +158,57 @@ func TestCreateOrganizationUserAgolaNotFound(t *testing.T) {
 	test.ParseBody(resp, &responseDto)
 
 	assert.Equal(t, responseDto.ErrorCode, dto.UserAgolaRefNotFoundError, "ErrorCode is not correct")
+}
+
+func TestCreateOrganizationUserAgolaCreateToken(t *testing.T) {
+	setupMock(t)
+	/////TODO
+	user := test.MakeUser()
+	user.AgolaUserRef = nil
+	agolaToken := "user_token_test"
+	user.AgolaToken = &agolaToken
+
+	remotesource := agola.RemoteSourceDto{ID: "remotesource_test", Name: gitSource.AgolaRemoteSource}
+
+	users := make([]agola.UserDto, 0)
+	users = append(users, agola.UserDto{ID: "test", Username: "agola_user_test"})
+	users[0].LinkedAccounts = make([]agola.LinkedAccountDto, 0)
+	users[0].LinkedAccounts = append(users[0].LinkedAccounts, agola.LinkedAccountDto{ID: "test", RemoteSourceID: remotesource.ID, RemoteUserName: user.Login})
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.Name).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.Name})
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.Name).Return(true, nil)
+	agolaApiInt.EXPECT().GetRemoteSource(gitSource.AgolaRemoteSource).Return(&remotesource, nil)
+	agolaApiInt.EXPECT().GetUsers().Return(&users, nil)
+	agolaApiInt.EXPECT().CreateUserToken(user).Return(nil)
+	db.EXPECT().SaveUser(user).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
+	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), organizationReqDto.Name, organizationReqDto.AgolaRef).Return(1, nil)
+	agolaApiInt.EXPECT().CheckOrganizationExists(gomock.Any()).Return(false, "")
+	agolaApiInt.EXPECT().CreateOrganization(gomock.Any(), organizationReqDto.Visibility).Return("123456", nil)
+	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
+
+	setupSynkMembersUserTestMocks(agolaApiInt, giteaApi, organizationReqDto.Name, gitSource.AgolaRemoteSource)
+	setupCheckoutAllGitRepositoryEmptyMocks(giteaApi, organizationReqDto.Name)
+
+	ts := httptest.NewServer(setupRouter(user))
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+
+	var responseDto dto.CreateOrganizationResponseDto
+	test.ParseBody(resp, &responseDto)
+
+	assert.Equal(t, responseDto.ErrorCode, dto.NoError, "ErrorCode is not correct")
+	assert.Check(t, strings.Contains(responseDto.OrganizationURL, "/org/"+organizationReqDto.AgolaRef), "OrganizationURL is not correct")
 }
 
 func TestCreateOrganizationJustExistsInPapagaio(t *testing.T) {

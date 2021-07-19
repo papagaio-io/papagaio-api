@@ -178,7 +178,6 @@ func (agolaApi *AgolaApi) CreateProject(projectName string, agolaProjectRef stri
 		log.Println("project already exists with ID:", projectID)
 		return projectID, nil
 	}
-
 	client := agolaApi.getClient(user, false)
 	URLApi := getCreateProjectUrl()
 
@@ -187,8 +186,9 @@ func (agolaApi *AgolaApi) CreateProject(projectName string, agolaProjectRef stri
 		ParentRef:        "org/" + organization.AgolaOrganizationRef,
 		Visibility:       organization.Visibility,
 		RemoteSourceName: remoteSourceName,
-		RepoPath:         organization.GitName + "/" + projectName,
+		RepoPath:         organization.GitPath + "/" + projectName,
 	}
+
 	data, _ := json.Marshal(projectRequest)
 	reqBody := strings.NewReader(string(data))
 

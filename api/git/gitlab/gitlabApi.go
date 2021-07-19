@@ -83,7 +83,7 @@ func (gitlabApi *GitlabApi) GetRepositories(gitSource *model.GitSource, user *mo
 
 func (gitlabApi *GitlabApi) GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error) {
 	client, _ := gitlabApi.getClient(gitSource, user)
-	users, _, err := client.ProjectMembers.ListAllProjectMembers(url.QueryEscape(gitOrgRef+"/"+repositoryRef), nil)
+	users, _, err := client.ProjectMembers.ListAllProjectMembers(gitOrgRef+"/"+repositoryRef, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (gitlabApi *GitlabApi) GetOrganizationMembers(gitSource *model.GitSource, u
 
 func (gitlabApi *GitlabApi) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool {
 	client, _ := gitlabApi.getClient(gitSource, user)
-	branches, _, _ := client.Branches.ListBranches(url.QueryEscape(gitOrgRef+"/"+repositoryRef), nil)
+	branches, _, _ := client.Branches.ListBranches(gitOrgRef+"/"+repositoryRef, nil)
 
 	retVal := make(map[string]bool)
 
@@ -136,7 +136,7 @@ func (gitlabApi *GitlabApi) GetBranches(gitSource *model.GitSource, user *model.
 
 func (gitlabApi *GitlabApi) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error) {
 	client, _ := gitlabApi.getClient(gitSource, user)
-	branchList, _, err := client.Branches.ListBranches(url.QueryEscape(gitOrgRef+"/"+repositoryRef), nil)
+	branchList, _, err := client.Branches.ListBranches(gitOrgRef+"/"+repositoryRef, nil)
 
 	if err != nil {
 		return false, err
@@ -147,7 +147,9 @@ func (gitlabApi *GitlabApi) CheckRepositoryAgolaConfExists(gitSource *model.GitS
 			return false, err
 		}
 
-		tree, _, err := client.Repositories.ListTree(url.QueryEscape(gitOrgRef+"/"+repositoryRef+"/"+branch.Name), nil)
+		optionPath := ".agola"
+		options := gitlab.ListTreeOptions{Ref: &branch.Name, Path: &optionPath}
+		tree, _, err := client.Repositories.ListTree(gitOrgRef+"/"+repositoryRef, &options)
 		if err != nil {
 			return false, err
 		}
@@ -164,7 +166,7 @@ func (gitlabApi *GitlabApi) CheckRepositoryAgolaConfExists(gitSource *model.GitS
 
 func (gitlabApi *GitlabApi) GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error) {
 	client, _ := gitlabApi.getClient(gitSource, user)
-	commit, _, err := client.Commits.GetCommit(url.QueryEscape(gitOrgRef+"/"+repositoryRef), commitSha)
+	commit, _, err := client.Commits.GetCommit(gitOrgRef+"/"+repositoryRef, commitSha)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +304,7 @@ const oauth2AccessTokenPath string = "https://gitlab.com/oauth/token?client_id=%
 const oauth2RefreshTokenPath string = "https://gitlab.com/oauth/token?client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s"
 
 func GetOauth2AuthorizeUrl(gitClientId string, redirectUrl string, state string) string {
-	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, url.QueryEscape(redirectUrl), state, "api%20read_repository")
+	return fmt.Sprintf(oauth2AuthorizePath, gitClientId, url.QueryEscape(redirectUrl), state, "api%20read_repository%20read_api")
 }
 
 func (gitlabApi *GitlabApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {

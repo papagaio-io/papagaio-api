@@ -244,7 +244,12 @@ func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *m
 	for _, org := range organizations {
 		isUserOwner, _ := githubApi.IsUserOwner(gitSource, user, *org.Login)
 		if isUserOwner {
-			orgDto := dto.OrganizationDto{Name: *org.Name, Path: *org.Login, ID: *org.ID}
+			orgDto := dto.OrganizationDto{Path: *org.Login, ID: *org.ID}
+			if org.Name != nil {
+				orgDto.Name = *org.Name
+			} else {
+				orgDto.Name = *org.Login
+			}
 			if org.AvatarURL != nil {
 				orgDto.AvatarURL = *org.AvatarURL
 			}

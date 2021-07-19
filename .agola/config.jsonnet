@@ -20,6 +20,9 @@ local task_build_go() =
        "PASSWORD": {
         from_variable: "NEXUSPASSWORD"
       },
+        "urlrepoupload": {
+        from_variable: "URLREPOUPLOAD"
+      },
     },
     steps: 
       [
@@ -32,13 +35,14 @@ local task_build_go() =
         { type: 'run',
           name: 'Create and deploy Nexus', 
           command: |||
+            export
             if [ ${AGOLA_GIT_TAG} ]; then
               export TARBALL=papagaio-api-${AGOLA_GIT_TAG}.tar.gz ;
             else
               export TARBALL=papagaio-api-latest.tar.gz ; fi
 
             mkdir dist && cp papagaio-api dist/ && tar -zcvf ${TARBALL} dist
-            curl -v -k -u $USERNAME:$PASSWORD --upload-file ${TARBALL} https://nexus.sorintdev.it/repository/binaries/it.sorintdev.papagaio/${TARBALL}
+            curl -v -k -u $USERNAME:$PASSWORD --upload-file ${TARBALL} ${urlrepoupload}${TARBALL}
           |||,
         },
       ],
@@ -75,7 +79,7 @@ local task_docker_build_push_private() = {
         cat << EOF > /kaniko/.docker/config.json
         {
           "auths": {
-            "registry.sorintdev.it": { "auth": "$PRIVATE_DOCKERAUTH" }
+            "$urldockersorint": { "auth": "$PRIVATE_DOCKERAUTH" }
           }
         }
         EOF
@@ -87,9 +91,9 @@ local task_docker_build_push_private() = {
       command: |||
         echo "branch" $AGOLA_GIT_BRANCH
         if [ $AGOLA_GIT_TAG ]; then
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination $urldockersorint/$APPNAME:$AGOLA_GIT_TAG;
         else
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination $urldockersorint/$APPNAME:latest ; fi
       |||,
     },
    ],
@@ -140,6 +144,15 @@ local task_docker_build_push_public() = {
 local task_kubernetes_deploy(target) = 
   {
     name: "kubernetes deploy " + target,
+    environment:
+    {
+      "KUBERNETESCONF": {
+        from_variable: "SORINTDEVKUBERNETESCONF"
+      },
+      "urldockersorint": {
+        from_variable: "URLDOCKERSORINT"
+      },
+    },
     runtime:
     {
       containers: [
@@ -153,12 +166,6 @@ local task_kubernetes_deploy(target) =
           ],
         },
       ],
-    },
-    environment:
-    {
-      "KUBERNETESCONF": {
-        from_variable: "SORINTDEVKUBERNETESCONF"
-      },
     },
     working_dir: '/mnt/data',
     steps: 

@@ -65,6 +65,9 @@ local task_docker_build_push_private() = {
     "PRIVATE_DOCKERAUTH": {
       from_variable: "dockerauth"
     },
+    "urldockersorint": {
+      from_variable: "URLDOCKERSORINT"
+    },
     "APPNAME": appName,
   },
   shell: "/busybox/sh",

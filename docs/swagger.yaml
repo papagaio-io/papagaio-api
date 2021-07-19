@@ -173,15 +173,18 @@ definitions:
         additionalProperties:
           type: boolean
         type: object
+      gitName:
+        example: TestDemo
+        type: string
       gitOrganizationId:
         type: integer
+      gitPath:
+        example: TestDemo
+        type: string
       gitSourceName:
         example: wecodedev
         type: string
       id:
-        type: string
-      name:
-        example: TestDemo
         type: string
       projects:
         additionalProperties:

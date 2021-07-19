@@ -847,8 +847,16 @@ var doc = `{
                         "type": "boolean"
                     }
                 },
+                "gitName": {
+                    "type": "string",
+                    "example": "TestDemo"
+                },
                 "gitOrganizationId": {
                     "type": "integer"
+                },
+                "gitPath": {
+                    "type": "string",
+                    "example": "TestDemo"
                 },
                 "gitSourceName": {
                     "type": "string",
@@ -856,10 +864,6 @@ var doc = `{
                 },
                 "id": {
                     "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "TestDemo"
                 },
                 "projects": {
                     "type": "object",

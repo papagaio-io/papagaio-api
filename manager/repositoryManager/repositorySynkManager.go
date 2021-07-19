@@ -62,6 +62,7 @@ func SynkGitRepositorys(db repository.Database, user *model.User, organization *
 	gitRepositoryList, _ := gitGateway.GetRepositories(gitSource, user, organization.GitPath)
 
 	for projectName, project := range organization.Projects {
+		log.Println("SynkGitRepositorys git repository:", projectName)
 		gitRepoExists := false
 		for _, gitRepo := range *gitRepositoryList {
 			if strings.Compare(projectName, gitRepo) == 0 {

@@ -59,91 +59,93 @@ func SynkGitRepositorys(db repository.Database, user *model.User, organization *
 		organization.Projects = make(map[string]model.Project)
 	}
 
-	gitRepositoryList, _ := gitGateway.GetRepositories(gitSource, user, organization.GitPath)
+	gitRepositoryList, err := gitGateway.GetRepositories(gitSource, user, organization.GitPath)
 
-	for projectName, project := range organization.Projects {
-		log.Println("SynkGitRepositorys git repository:", projectName)
-		gitRepoExists := false
-		for _, gitRepo := range *gitRepositoryList {
-			if strings.Compare(projectName, gitRepo) == 0 {
-				gitRepoExists = true
-				break
-			}
-		}
-		if !gitRepoExists {
-			agolaApi.DeleteProject(organization, project.AgolaProjectRef, user)
-			delete(organization.Projects, projectName)
-		} else {
-			agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization, project.AgolaProjectRef)
-			if !agolaExists && !project.Archivied {
-				delete(organization.Projects, projectName)
-			} else {
-				project.AgolaProjectID = agolaProjectID
-				organization.Projects[projectName] = project
-			}
-		}
-	}
-
-	for _, repo := range *gitRepositoryList {
-		if !utils.EvaluateBehaviour(organization, repo) {
-			delete(organization.Projects, repo)
-
-			agolaProjectRef := utils.ConvertToAgolaProjectRef(repo)
-			if exists, _ := agolaApi.CheckProjectExists(organization, agolaProjectRef); exists {
-				agolaApi.DeleteProject(organization, agolaProjectRef, user)
-			}
-
-			continue
-		}
-
-		var project model.Project
-		if p, ok := organization.Projects[repo]; !ok {
-			project = model.Project{GitRepoPath: repo, AgolaProjectRef: utils.ConvertToAgolaProjectRef(repo)}
-			organization.Projects[repo] = project
-		} else {
-			project = p
-		}
-
-		BranchSynck(db, user, gitSource, organization, repo, gitGateway)
-
-		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConfExists(gitSource, user, organization.GitPath, repo)
-		if !agolaConfExists {
-			if project, ok := organization.Projects[repo]; ok && !project.Archivied {
-				err := agolaApi.ArchiveProject(organization, project.AgolaProjectRef)
-				if err == nil {
-					project.Archivied = true
-					organization.Projects[repo] = project
+	if err != nil && gitRepositoryList != nil {
+		for projectName, project := range organization.Projects {
+			log.Println("SynkGitRepositorys git repository:", projectName)
+			gitRepoExists := false
+			for _, gitRepo := range *gitRepositoryList {
+				if strings.Compare(projectName, gitRepo) == 0 {
+					gitRepoExists = true
+					break
 				}
 			}
-
-			continue
+			if !gitRepoExists {
+				agolaApi.DeleteProject(organization, project.AgolaProjectRef, user)
+				delete(organization.Projects, projectName)
+			} else {
+				agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization, project.AgolaProjectRef)
+				if !agolaExists && !project.Archivied {
+					delete(organization.Projects, projectName)
+				} else {
+					project.AgolaProjectID = agolaProjectID
+					organization.Projects[projectName] = project
+				}
+			}
 		}
 
-		if exists, projectID := agolaApi.CheckProjectExists(organization, utils.ConvertToAgolaProjectRef(repo)); exists {
-			if project, ok := organization.Projects[repo]; ok {
-				project.AgolaProjectID = projectID
-				if project.Archivied {
-					err := agolaApi.UnarchiveProject(organization, utils.ConvertToAgolaProjectRef(repo))
+		for _, repo := range *gitRepositoryList {
+			if !utils.EvaluateBehaviour(organization, repo) {
+				delete(organization.Projects, repo)
+
+				agolaProjectRef := utils.ConvertToAgolaProjectRef(repo)
+				if exists, _ := agolaApi.CheckProjectExists(organization, agolaProjectRef); exists {
+					agolaApi.DeleteProject(organization, agolaProjectRef, user)
+				}
+
+				continue
+			}
+
+			var project model.Project
+			if p, ok := organization.Projects[repo]; !ok {
+				project = model.Project{GitRepoPath: repo, AgolaProjectRef: utils.ConvertToAgolaProjectRef(repo)}
+				organization.Projects[repo] = project
+			} else {
+				project = p
+			}
+
+			BranchSynck(db, user, gitSource, organization, repo, gitGateway)
+
+			agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConfExists(gitSource, user, organization.GitPath, repo)
+			if !agolaConfExists {
+				if project, ok := organization.Projects[repo]; ok && !project.Archivied {
+					err := agolaApi.ArchiveProject(organization, project.AgolaProjectRef)
 					if err == nil {
-						project.Archivied = false
+						project.Archivied = true
 						organization.Projects[repo] = project
 					}
 				}
-				organization.Projects[repo] = project
+
+				continue
 			}
 
-			continue
-		}
+			if exists, projectID := agolaApi.CheckProjectExists(organization, utils.ConvertToAgolaProjectRef(repo)); exists {
+				if project, ok := organization.Projects[repo]; ok {
+					project.AgolaProjectID = projectID
+					if project.Archivied {
+						err := agolaApi.UnarchiveProject(organization, utils.ConvertToAgolaProjectRef(repo))
+						if err == nil {
+							project.Archivied = false
+							organization.Projects[repo] = project
+						}
+					}
+					organization.Projects[repo] = project
+				}
 
-		log.Println("Start add repository:", repo)
-		projectID, err := agolaApi.CreateProject(repo, utils.ConvertToAgolaProjectRef(repo), organization, gitSource.AgolaRemoteSource, user)
-		if err != nil {
-			log.Println("Warning!!! Agola CreateProject API error:", err.Error())
-			break
+				continue
+			}
+
+			log.Println("Start add repository:", repo)
+			projectID, err := agolaApi.CreateProject(repo, utils.ConvertToAgolaProjectRef(repo), organization, gitSource.AgolaRemoteSource, user)
+			if err != nil {
+				log.Println("Warning!!! Agola CreateProject API error:", err.Error())
+				break
+			}
+			project.AgolaProjectID = projectID
+			organization.Projects[repo] = project
+			log.Println("End add repository:", repo)
 		}
-		project.AgolaProjectID = projectID
-		organization.Projects[repo] = project
-		log.Println("End add repository:", repo)
 	}
 
 	db.SaveOrganization(organization)

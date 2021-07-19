@@ -25,8 +25,8 @@ func ConvertToAgolaProjectRef(projectName string) string {
 func GetUsersMapByRemotesource(agolaApi agola.AgolaApiInterface, agolaRemoteSource string) *map[string]string {
 	usersMap := make(map[string]string)
 
-	gitSource, _ := agolaApi.GetRemoteSource(agolaRemoteSource)
-	if gitSource == nil {
+	remotesource, _ := agolaApi.GetRemoteSource(agolaRemoteSource)
+	if remotesource == nil {
 		return &usersMap
 	}
 	users, _ := agolaApi.GetUsers()
@@ -34,7 +34,7 @@ func GetUsersMapByRemotesource(agolaApi agola.AgolaApiInterface, agolaRemoteSour
 	if users != nil {
 		for _, user := range *users {
 			for _, linkedAccount := range user.LinkedAccounts {
-				if strings.Compare(gitSource.ID, linkedAccount.RemoteSourceID) == 0 {
+				if strings.Compare(remotesource.ID, linkedAccount.RemoteSourceID) == 0 {
 					usersMap[linkedAccount.RemoteUserName] = user.Username
 					break
 				}

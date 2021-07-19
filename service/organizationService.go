@@ -128,14 +128,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	if user.AgolaUserRef == nil { //Se diverso da nil l'utente è registrato su Agola
-		userInfo, err := service.GitGateway.GetUserInfo(gitSource, user)
-		if err != nil || userInfo == nil {
-			log.Println("Error on getting user info from git:", err)
-			InternalServerError(w)
-			return
-		}
-
-		agolaUserRef := utils.GetAgolaUserRefByGitUsername(service.AgolaApi, gitSource.AgolaRemoteSource, userInfo.Login)
+		agolaUserRef := utils.GetAgolaUserRefByGitUsername(service.AgolaApi, gitSource.AgolaRemoteSource, user.Login)
 		if agolaUserRef == nil {
 			log.Println("User not found in Agola")
 			response := dto.CreateOrganizationResponseDto{ErrorCode: dto.UserAgolaRefNotFoundError}

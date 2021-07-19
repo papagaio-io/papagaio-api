@@ -125,6 +125,46 @@ func TestCreateOrganizationOK(t *testing.T) {
 	assert.Check(t, strings.Contains(responseDto.OrganizationURL, "/org/"+organizationReqDto.AgolaRef), "OrganizationURL is not correct")
 }
 
+func TestCreateOrganizationUserAgolaNotFound(t *testing.T) {
+	setupMock(t)
+
+	user := test.MakeUser()
+	user.AgolaUserRef = nil
+	agolaToken := "user_token_test"
+	user.AgolaToken = &agolaToken
+
+	remotesource := agola.RemoteSourceDto{ID: "remotesource_test", Name: gitSource.AgolaRemoteSource}
+
+	users := make([]agola.UserDto, 0)
+	userDto := agola.UserDto{ID: "test", Username: "agola_user_test"}
+	userDto.LinkedAccounts = make([]agola.LinkedAccountDto, 0)
+	userDto.LinkedAccounts = append(userDto.LinkedAccounts, agola.LinkedAccountDto{ID: "test", RemoteSourceID: remotesource.ID, RemoteUserName: user.Login})
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.Name).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.Name})
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.Name).Return(true, nil)
+	agolaApiInt.EXPECT().GetRemoteSource(gitSource.AgolaRemoteSource).Return(&remotesource, nil)
+	agolaApiInt.EXPECT().GetUsers().Return(&users, nil)
+
+	ts := httptest.NewServer(setupRouter(user))
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(organizationReqDto)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+
+	var responseDto dto.CreateOrganizationResponseDto
+	test.ParseBody(resp, &responseDto)
+
+	assert.Equal(t, responseDto.ErrorCode, dto.UserAgolaRefNotFoundError, "ErrorCode is not correct")
+}
+
 func TestCreateOrganizationJustExistsInPapagaio(t *testing.T) {
 	setupMock(t)
 

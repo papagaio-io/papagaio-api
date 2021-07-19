@@ -10,7 +10,7 @@ import (
 func MakeUser() *model.User {
 	userId := uint64(1)
 	agolaUserRef := "AgolaUserRef"
-	return &model.User{UserID: &userId, GitSourceName: "gitea", ID: 1, Email: "email", AgolaUserRef: &agolaUserRef}
+	return &model.User{UserID: &userId, GitSourceName: "gitea", ID: 1, Email: "email", AgolaUserRef: &agolaUserRef, Login: "nome.cognome"}
 }
 
 func MakeGitSourceMap() *map[string]model.GitSource {

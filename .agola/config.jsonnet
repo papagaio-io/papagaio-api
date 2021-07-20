@@ -65,9 +65,6 @@ local task_docker_build_push_private() = {
     "PRIVATE_DOCKERAUTH": {
       from_variable: "dockerauth"
     },
-    "urldockersorint": {
-      from_variable: "URLDOCKERSORINT"
-    },
     "APPNAME": appName,
   },
   shell: "/busybox/sh",
@@ -82,7 +79,7 @@ local task_docker_build_push_private() = {
         cat << EOF > /kaniko/.docker/config.json
         {
           "auths": {
-            "$urldockersorint": { "auth": "$PRIVATE_DOCKERAUTH" }
+            "registry.sorintdev.it": { "auth": "$PRIVATE_DOCKERAUTH" }
           }
         }
         EOF
@@ -94,9 +91,9 @@ local task_docker_build_push_private() = {
       command: |||
         echo "branch" $AGOLA_GIT_BRANCH
         if [ $AGOLA_GIT_TAG ]; then
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination $urldockersorint/$APPNAME:$AGOLA_GIT_TAG;
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
         else
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination $urldockersorint/$APPNAME:latest ; fi
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
       |||,
     },
    ],
@@ -151,9 +148,6 @@ local task_kubernetes_deploy(target) =
     {
       "KUBERNETESCONF": {
         from_variable: "SORINTDEVKUBERNETESCONF"
-      },
-      "urldockersorint": {
-        from_variable: "URLDOCKERSORINT"
       },
     },
     runtime:

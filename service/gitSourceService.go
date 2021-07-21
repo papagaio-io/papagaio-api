@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -169,19 +168,10 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 		return
 	}
 
-	deleteRemotesourceQuery, ok := r.URL.Query()["deleteremotesource"]
-	deleteRemotesource := false
-	if ok {
-		if len(deleteRemotesourceQuery[0]) == 0 {
-			deleteRemotesource = true
-		} else {
-			var parsError error
-			deleteRemotesource, parsError = strconv.ParseBool(deleteRemotesourceQuery[0])
-			if parsError != nil {
-				UnprocessableEntityResponse(w, "forceCreate param value is not valid")
-				return
-			}
-		}
+	deleteRemotesource, err := getBoolParameter(r, "deleteremotesource")
+	if err != nil {
+		UnprocessableEntityResponse(w, err.Error())
+		return
 	}
 
 	service.deleteOrganizationsAndMembersByGitsourceRef(gitSourceName)

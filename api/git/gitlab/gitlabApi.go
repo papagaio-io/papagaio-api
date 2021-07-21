@@ -47,11 +47,9 @@ type GitlabApi struct {
 func (gitlabApi *GitlabApi) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error) {
 	client, _ := gitlabApi.getClient(gitSource, user)
 
-	url := config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + organizationRef
-	pushEvents := true
 	groupHook, _, err := client.Groups.AddGroupHook(gitOrgRef, &gitlab.AddGroupHookOptions{
-		URL:        &url,
-		PushEvents: &pushEvents,
+		URL:        gitlab.String(config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + organizationRef),
+		PushEvents: gitlab.Bool(true),
 	})
 	hookID := -1
 	if err == nil {
@@ -147,8 +145,7 @@ func (gitlabApi *GitlabApi) CheckRepositoryAgolaConfExists(gitSource *model.GitS
 			return false, err
 		}
 
-		optionPath := ".agola"
-		options := gitlab.ListTreeOptions{Ref: &branch.Name, Path: &optionPath}
+		options := gitlab.ListTreeOptions{Ref: &branch.Name, Path: gitlab.String(".agola")}
 		tree, _, err := client.Repositories.ListTree(gitOrgRef+"/"+repositoryRef, &options)
 		if err != nil {
 			return false, err
@@ -197,8 +194,7 @@ func (gitlabApi *GitlabApi) GetOrganization(gitSource *model.GitSource, user *mo
 
 func (gitlabApi *GitlabApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error) {
 	client, _ := gitlabApi.getClient(gitSource, user)
-	minAccessLevel := gitlab.OwnerPermissions
-	organizations, _, err := client.Groups.ListGroups(&gitlab.ListGroupsOptions{MinAccessLevel: &minAccessLevel})
+	organizations, _, err := client.Groups.ListGroups(&gitlab.ListGroupsOptions{MinAccessLevel: gitlab.AccessLevel(gitlab.OwnerPermissions)})
 
 	if err != nil {
 		return nil, err

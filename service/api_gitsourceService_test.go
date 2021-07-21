@@ -41,10 +41,6 @@ func setupGitsourceMock(t *testing.T) {
 	}
 }
 
-func newString(s string) *string {
-	return &s
-}
-
 func TestGetGitsourcesOK(t *testing.T) {
 	setupGitsourceMock(t)
 
@@ -74,7 +70,7 @@ func TestAddGitsourcesOK(t *testing.T) {
 		GitType:               "github",
 		GitClientID:           "test",
 		GitClientSecret:       "test",
-		AgolaRemoteSourceName: newString("test"),
+		AgolaRemoteSourceName: utils.NewString("test"),
 	}
 
 	db.EXPECT().GetGitSourceByName(reqDto.Name).Return(nil, nil)
@@ -103,8 +99,8 @@ func TestAddGitsourcesWithCreateRemotesourceOK(t *testing.T) {
 		GitType:           "github",
 		GitClientID:       "test",
 		GitClientSecret:   "test",
-		AgolaClientID:     newString("test"),
-		AgolaClientSecret: newString("test"),
+		AgolaClientID:     utils.NewString("test"),
+		AgolaClientSecret: utils.NewString("test"),
 	}
 
 	remoteSources := make([]agolaDto.RemoteSourceDto, 0)
@@ -212,10 +208,10 @@ func TestUpdateGitsourcesOK(t *testing.T) {
 	gitSource := (*test.MakeGitSourceMap())["gitea"]
 	reqDto := dto.UpdateGitSourceRequestDto{
 		GitType:           &giteaType,
-		GitAPIURL:         newString("http://test"),
-		GitClientID:       newString("test"),
-		GitClientSecret:   newString("test"),
-		AgolaRemoteSource: newString("test"),
+		GitAPIURL:         utils.NewString("http://test"),
+		GitClientID:       utils.NewString("test"),
+		GitClientSecret:   utils.NewString("test"),
+		AgolaRemoteSource: utils.NewString("test"),
 	}
 
 	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)

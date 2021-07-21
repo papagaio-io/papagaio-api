@@ -397,7 +397,13 @@ func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource, user *mod
 		for _, org := range organizations {
 			isUserOwner, _ := giteaApi.IsUserOwner(gitSource, user, org.Username)
 			if isUserOwner {
-				retVal = append(retVal, dto.OrganizationDto{Name: org.Name, Path: org.Name, ID: org.ID, AvatarURL: org.AvatarURL})
+				orgDto := dto.OrganizationDto{Path: org.Username, ID: org.ID, AvatarURL: org.AvatarURL}
+				if len(org.Name) > 0 {
+					orgDto.Name = org.Name
+				} else {
+					orgDto.Name = org.Username
+				}
+				retVal = append(retVal, orgDto)
 			}
 		}
 

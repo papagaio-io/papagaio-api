@@ -157,9 +157,59 @@ func TestRemoveExternalUserOk(t *testing.T) {
 	requestBody := strings.NewReader(string(data))
 	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode OK")
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode not correct")
 	exist := org.ExternalUsers[mail]
 	assert.Check(t, !exist, "")
+}
+
+func TestRemoveExternalUserNotOwner(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+	mail := "user@email.com"
+	user := test.MakeUser()
+
+	org := (*test.MakeOrganizationList())[0]
+	org.ExternalUsers = make(map[string]bool)
+	org.ExternalUsers[mail] = true
+
+	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.GitPath).Return(false, nil)
+
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/{organizationName}", serviceOrganization.RemoveExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mail})
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
+
+	exist := org.ExternalUsers[mail]
+	assert.Check(t, exist, "")
+
+	var responseDto dto.CreateOrganizationResponseDto
+	test.ParseBody(resp, &responseDto)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode not correct")
+	assert.Equal(t, responseDto.ErrorCode, dto.UserNotOwnerError, "ErrorCode is not correct")
 }
 
 func TestRemoveExternalUserWhenAgolaRefNotFound(t *testing.T) {

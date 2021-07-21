@@ -213,10 +213,8 @@ func (service *GitSourceService) deleteOrganizationsAndMembersByGitsourceRef(git
 	}
 
 	users, _ := service.Db.GetUsersIDByGitSourceName(gitsourceRef)
-	if users != nil {
-		for _, userId := range users {
-			service.Db.DeleteUser(userId)
-		}
+	for _, userId := range users {
+		service.Db.DeleteUser(userId)
 	}
 
 }

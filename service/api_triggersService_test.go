@@ -1,8 +1,10 @@
 package service
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -60,4 +62,73 @@ func TestGetTriggetsConfigOK(t *testing.T) {
 	assert.Equal(t, responseDto.OrganizationsTriggerTime, uint(1))
 	assert.Equal(t, responseDto.RunFailedTriggerTime, uint(2))
 	assert.Equal(t, responseDto.UsersTriggerTime, uint(3))
+}
+
+func TestSaveTriggetsConfigOK(t *testing.T) {
+	setupTriggerMock(t)
+
+	reqDto := dto.ConfigTriggersDto{}
+	reqDto.OrganizationsTriggerTime = 4
+	reqDto.RunFailedTriggerTime = 5
+	reqDto.UsersTriggerTime = 6
+
+	db.EXPECT().SaveOrganizationsTriggerTime(int(reqDto.OrganizationsTriggerTime))
+	db.EXPECT().SaveRunFailedTriggerTime(int(reqDto.RunFailedTriggerTime))
+	db.EXPECT().SaveUsersTriggerTime(int(reqDto.UsersTriggerTime))
+
+	router := test.SetupBaseRouter(nil)
+	router.HandleFunc("/savetriggersconfig", serviceTrigger.SaveTriggersConfig)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	data, _ := json.Marshal(reqDto)
+	requestBody := strings.NewReader(string(data))
+
+	client := ts.Client()
+	resp, err := client.Post(ts.URL+"/savetriggersconfig", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+}
+
+func getChannel(c chan string) {
+	<-c
+}
+
+func TestRestartTriggersOK(t *testing.T) {
+	setupTriggerMock(t)
+
+	router := test.SetupBaseRouter(nil)
+	router.HandleFunc("/restarttriggers", serviceTrigger.RestartTriggers)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	go getChannel(serviceTrigger.ChanOrganizationSynk)
+	go getChannel(serviceTrigger.ChanDiscoveryRunFails)
+	go getChannel(serviceTrigger.ChanUserSynk)
+
+	client := ts.Client()
+	resp, err := client.Get(ts.URL + "/restarttriggers?restartorganizationsynktrigger&restartRunsFailedDiscoveryTrigger&restartUsersSynkTrigger")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+}
+
+func TestRestartTriggersAllOK(t *testing.T) {
+	setupTriggerMock(t)
+
+	router := test.SetupBaseRouter(nil)
+	router.HandleFunc("/restarttriggers", serviceTrigger.RestartTriggers)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	go getChannel(serviceTrigger.ChanOrganizationSynk)
+	go getChannel(serviceTrigger.ChanDiscoveryRunFails)
+	go getChannel(serviceTrigger.ChanUserSynk)
+
+	client := ts.Client()
+	resp, err := client.Get(ts.URL + "/restarttriggers?restartAll")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
 }

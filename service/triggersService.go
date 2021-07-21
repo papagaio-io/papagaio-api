@@ -58,7 +58,7 @@ func (service *TriggersService) SaveTriggersConfig(w http.ResponseWriter, r *htt
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var req *dto.ConfigTriggersDto
+	var req dto.ConfigTriggersDto
 	json.NewDecoder(r.Body).Decode(&req)
 	if req.OrganizationsTriggerTime != 0 {
 		service.Db.SaveOrganizationsTriggerTime(int(req.OrganizationsTriggerTime))

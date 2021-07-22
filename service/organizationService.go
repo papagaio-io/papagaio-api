@@ -92,7 +92,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	log.Println("req CreateOrganizationDto: ", req)
 
 	org := &model.Organization{}
-	org.GitPath = req.Name
+	org.GitPath = req.GitPath
 	org.AgolaOrganizationRef = req.AgolaRef
 	org.GitSourceName = user.GitSourceName
 	org.Visibility = req.Visibility
@@ -117,7 +117,11 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 	org.GitOrganizationID = gitOrganization.ID
-	org.GitName = gitOrganization.Name
+	if len(gitOrganization.Name) > 0 {
+		org.GitName = gitOrganization.Name
+	} else {
+		org.GitName = req.GitPath
+	}
 
 	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, user, org.GitPath)
 	if !isOwner {

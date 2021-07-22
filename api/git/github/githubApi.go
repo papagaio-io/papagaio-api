@@ -31,7 +31,7 @@ type GithubInterface interface {
 	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
-	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto
+	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error)
 	GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error)
 	IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error)
 
@@ -217,19 +217,26 @@ func (githubApi *GithubApi) GetCommitMetadata(gitSource *model.GitSource, user *
 	return retVal, nil
 }
 
-func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto {
+func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error) {
 	client, _ := githubApi.getClient(gitSource, user)
-	org, _, _ := client.Organizations.Get(context.Background(), gitOrgRef)
-	if org == nil {
-		return nil
+	org, resp, err := client.Organizations.Get(context.Background(), gitOrgRef)
+
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 404 {
+		return nil, nil
 	}
 
-	response := &dto.OrganizationDto{Name: *org.Name, Path: *org.Login, ID: *org.ID}
-	if org.AvatarURL != nil {
-		response.AvatarURL = *org.AvatarURL
+	if org != nil {
+		response := &dto.OrganizationDto{Name: *org.Name, Path: *org.Login, ID: *org.ID}
+		if org.AvatarURL != nil {
+			response.AvatarURL = *org.AvatarURL
+		}
+		return response, nil
 	}
 
-	return response
+	return nil, nil
 }
 
 func (githubApi *GithubApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error) {

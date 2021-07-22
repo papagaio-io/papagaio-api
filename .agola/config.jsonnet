@@ -141,9 +141,9 @@ local task_docker_build_push_public() = {
   depends: ["build go"]
 };
 
-local task_kubernetes_deploy(target) = 
+local task_kubernetes_deploy(namespace, changeImageVersion) = 
   {
-    name: "kubernetes deploy " + target,
+    name: "kubernetes deploy " + namespace,
     environment:
     {
       "KUBERNETESCONF": {
@@ -165,14 +165,16 @@ local task_kubernetes_deploy(target) =
       ],
     },
     working_dir: '/mnt/data',
-    steps: 
+    steps:
     [
       { type: "restore_workspace", name: "restore workspace", dest_dir: "." },
       { type: 'run', name: 'create folder kubernetes', command: 'mkdir kubernetes' },
       { type: 'run', name: 'generate kubernetes config', command: 'echo $KUBERNETESCONF | base64 -d > kubernetes/kubernetes.conf' },
-      { type: 'run', name: 'sed version stable', command: 'sed -i s/VERSION/$AGOLA_GIT_TAG/g k8s/stable/deployment.yml' },
-      { type: 'run', name: 'sed version release', command: 'sed -i s/VERSION/$AGOLA_GIT_TAG/g k8s/release/deployment.yml' },
-      { type: 'run', name: 'kubectl replace', command: 'kubectl replace --force --kubeconfig=kubernetes/kubernetes.conf -f k8s/' + target },
+            
+      if changeImageVersion then
+        { type: 'run', name: 'kubectl replace', command:  'kubectl -n ' + namespace + ' set image deployment/papagaio-api papagaio-api=registry.sorintdev.it/papagaio-api:$AGOLA_GIT_TAG' }
+      else 
+        { type: 'run', name: 'kubectl replace', command:  'kubectl -n ' + namespace + ' delete pods -l app=papagaio-api' },
     ],
   };
 
@@ -198,19 +200,19 @@ local task_kubernetes_deploy(target) =
         task_build_go(),
         task_docker_build_push_private(),
         task_docker_build_push_public(),
-        task_kubernetes_deploy('dev')+ {
+        task_kubernetes_deploy('ci-dev', false)+ {
           when: {
             branch: 'master',
           },
           depends: ["docker build and push private"],
         },
-        task_kubernetes_deploy('stable')+ {
+        task_kubernetes_deploy('ci-stable', true)+ {
           when: {
             tag: '#.*#',
           },
           depends: ["docker build and push private", "docker build and push public"],
         },
-        task_kubernetes_deploy('release')+ {
+        task_kubernetes_deploy('ci', true)+ {
           when: {
             tag: '#.*#',
           },

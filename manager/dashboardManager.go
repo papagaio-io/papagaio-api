@@ -17,7 +17,7 @@ func GetOrganizationDto(user *model.User, organization *model.Organization, gits
 		AgolaRef:   organization.AgolaOrganizationRef,
 		Visibility: organization.Visibility,
 	}
-	orgDto := gitGateway.GetOrganization(gitsource, user, organization.GitPath)
+	orgDto, _ := gitGateway.GetOrganization(gitsource, user, organization.GitPath)
 	if orgDto != nil {
 		retVal.AvatarURL = orgDto.AvatarURL
 	}

@@ -53,19 +53,66 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 				continue
 			}
 
-			//If organization deleted in Agola, recreate
-			if agolaOrganizationExists, _ := agolaApi.CheckOrganizationExists(org); !agolaOrganizationExists {
-				gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
-				if gitSource == nil {
-					log.Println("gitSource", org.GitSourceName, "not found")
+			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
+			if gitSource == nil {
+				log.Println("gitSource", org.GitSourceName, "not found")
 
-					mutex.Unlock()
-					utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-					locked = false
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
 
-					continue
+				continue
+			}
+
+			user, _ := db.GetUserByUserId(org.UserIDConnected)
+			if user == nil {
+				log.Println("user not found")
+
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
+
+				continue
+			}
+
+			//if organization deleted in git, delete in Agola, else update data in db
+			gitOrganization, err := gitGateway.GetOrganization(gitSource, user, org.GitPath)
+			if err != nil {
+				log.Println("GetOrganization error:", err)
+
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
+
+				continue
+			}
+
+			if gitOrganization == nil {
+				log.Println("organization", organizationRef, "not found")
+
+				err = agolaApi.DeleteOrganization(org, user)
+				if err == nil {
+					db.DeleteOrganization(organizationRef)
+				} else {
+					log.Println("error in agola DeleteOrganization:", err)
 				}
 
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+				locked = false
+
+				continue
+			} else {
+				if len(gitOrganization.Name) > 0 {
+					org.GitName = gitOrganization.Name
+				} else {
+					org.GitName = gitOrganization.Path
+				}
+				db.SaveOrganization(org)
+			}
+
+			//If organization deleted in Agola, recreate
+			if agolaOrganizationExists, _ := agolaApi.CheckOrganizationExists(org); !agolaOrganizationExists {
 				orgID, err := agolaApi.CreateOrganization(org, org.Visibility)
 				if err != nil {
 					log.Println("failed to recreate organization", org.AgolaOrganizationRef, "in agola:", err)
@@ -83,18 +130,6 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 
 			log.Println("start synk organization", org.GitPath)
 
-			gitSource, _ := db.GetGitSourceByName(org.GitSourceName)
-
-			user, _ := db.GetUserByUserId(org.UserIDConnected)
-			if user == nil {
-				log.Println("user not found")
-
-				mutex.Unlock()
-				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
-
-				continue
-			}
 			membersManager.SynkMembers(org, gitSource, agolaApi, gitGateway, user)
 			repositoryManager.SynkGitRepositorys(db, user, org, gitSource, agolaApi, gitGateway)
 

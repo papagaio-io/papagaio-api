@@ -29,7 +29,7 @@ type GitlabInterface interface {
 	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
-	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto
+	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error)
 	GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error)
 	IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error)
 
@@ -180,16 +180,19 @@ func (gitlabApi *GitlabApi) GetCommitMetadata(gitSource *model.GitSource, user *
 	return retVal, nil
 }
 
-func (gitlabApi *GitlabApi) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto {
+func (gitlabApi *GitlabApi) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error) {
 	client, _ := gitlabApi.getClient(gitSource, user)
-	org, _, _ := client.Groups.GetGroup(gitOrgRef)
-	if org == nil {
-		return nil
+	org, resp, err := client.Groups.GetGroup(gitOrgRef)
+
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 404 {
+		return nil, nil
 	}
 
 	response := &dto.OrganizationDto{Name: org.Name, Path: org.Path, ID: int64(org.ID), AvatarURL: org.AvatarURL}
-
-	return response
+	return response, nil
 }
 
 func (gitlabApi *GitlabApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error) {

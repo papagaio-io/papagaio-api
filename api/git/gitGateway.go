@@ -86,7 +86,7 @@ func (gitGateway *GitGateway) GetBranches(gitSource *model.GitSource, user *mode
 	}
 }
 
-func (gitGateway *GitGateway) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto {
+func (gitGateway *GitGateway) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error) {
 	if gitSource.GitType == types.Gitea {
 		return gitGateway.GiteaApi.GetOrganization(gitSource, user, gitOrgRef)
 	} else if gitSource.GitType == types.Github {

@@ -36,7 +36,7 @@ func TestGetReportOK(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizations().Return(&organizationList, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.GitPath).Return(&gitDto.OrganizationDto{})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.GitPath).Return(&gitDto.OrganizationDto{}, nil)
 
 	serviceOrganization := OrganizationService{
 		Db:         db,
@@ -147,7 +147,7 @@ func TestGetOrganizationReportOk(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&organization, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.GitPath).Return(&gitDto.OrganizationDto{})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organization.GitPath).Return(&gitDto.OrganizationDto{}, nil)
 
 	serviceOrganization := OrganizationService{
 		Db:         db,

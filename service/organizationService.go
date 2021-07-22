@@ -108,7 +108,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	gitOrganization := service.GitGateway.GetOrganization(gitSource, user, org.GitPath)
+	gitOrganization, _ := service.GitGateway.GetOrganization(gitSource, user, org.GitPath)
 	log.Println("gitOrgExists:", gitOrganization != nil)
 	if gitOrganization == nil {
 		log.Println("failed to find organization", org.GitPath, "from git")

@@ -23,7 +23,7 @@ type GiteaInterface interface {
 	CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error)
 	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error
 	GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error)
-	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto
+	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error)
 	GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error)
 	GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error)
 	GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error)
@@ -135,7 +135,7 @@ func (giteaApi *GiteaApi) GetRepositories(gitSource *model.GitSource, user *mode
 	return &retVal, err
 }
 
-func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto {
+func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error) {
 	client, _ := giteaApi.getClient(gitSource, user)
 
 	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef)
@@ -143,9 +143,13 @@ func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, user *mode
 	resp, err := client.Do(req)
 
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return nil, nil
+	}
 
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
@@ -153,10 +157,10 @@ func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, user *mode
 		json.Unmarshal(body, &data)
 
 		organization := dto.OrganizationDto{Name: data.Name, Path: data.Name, ID: data.ID, AvatarURL: data.AvatarURL}
-		return &organization
+		return &organization, nil
 	}
 
-	return nil
+	return nil, errors.New("internal error")
 }
 
 func (giteaApi *GiteaApi) GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {

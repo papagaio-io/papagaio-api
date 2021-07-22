@@ -81,11 +81,12 @@ func (mr *MockGiteaInterfaceMockRecorder) GetRepositories(gitSource, user, gitOr
 }
 
 // GetOrganization mocks base method
-func (m *MockGiteaInterface) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) *dto.OrganizationDto {
+func (m *MockGiteaInterface) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrganization", gitSource, user, gitOrgRef)
 	ret0, _ := ret[0].(*dto.OrganizationDto)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetOrganization indicates an expected call of GetOrganization

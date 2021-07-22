@@ -96,7 +96,7 @@ func TestCreateOrganizationOK(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
 	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), organizationReqDto.GitPath, organizationReqDto.AgolaRef).Return(1, nil)
@@ -133,7 +133,7 @@ func TestCreateOrganizationUserNotOwner(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(false, nil)
 
 	ts := httptest.NewServer(setupRouter(user))
@@ -166,7 +166,7 @@ func TestCreateOrganizationUserAgolaNotFound(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	agolaApiInt.EXPECT().GetRemoteSource(gitSource.AgolaRemoteSource).Return(&remotesource, nil)
 	agolaApiInt.EXPECT().GetUsers().Return(nil, nil)
@@ -206,7 +206,7 @@ func TestCreateOrganizationUserAgolaCreateToken(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	agolaApiInt.EXPECT().GetRemoteSource(gitSource.AgolaRemoteSource).Return(&remotesource, nil)
 	agolaApiInt.EXPECT().GetUsers().Return(&users, nil)
@@ -248,7 +248,7 @@ func TestCreateOrganizationJustExistsInPapagaio(t *testing.T) {
 
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(&organizationModel, nil)
 
@@ -277,7 +277,7 @@ func TestCreateOrganizationJustExistsInAgola(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
 	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), organizationReqDto.GitPath, organizationReqDto.AgolaRef).Return(1, nil)
@@ -308,7 +308,7 @@ func TestCreateOrganizationGitOrganizationNotFound(t *testing.T) {
 
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(gomock.Eq(user.GitSourceName)).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(nil)
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(nil, nil)
 
 	ts := httptest.NewServer(setupRouter(user))
 
@@ -335,7 +335,7 @@ func TestCreateOrganizationJustExistsInAgolaForce(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(user.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
 	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), organizationReqDto.GitPath, organizationReqDto.AgolaRef).Return(1, nil)
@@ -464,7 +464,7 @@ func TestCreateOrganizationGitSourceAlreadyExists(t *testing.T) {
 
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(user.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(nil)
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(nil, nil)
 
 	data, _ := json.Marshal(organizationReqDto)
 	requestBody := strings.NewReader(string(data))
@@ -488,7 +488,7 @@ func TestCreateOrganizationWhenCreateWebhookFailed(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(user.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
 	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(1, errors.New(string("someError")))
@@ -511,7 +511,7 @@ func TestCreateOrganizationWhenFailsToCreateInAgola(t *testing.T) {
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
 	db.EXPECT().GetGitSourceByName(user.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
 	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(1, nil)
@@ -541,7 +541,7 @@ func TestCreateOrganizationWhenFailedToSaveOrgInDB(t *testing.T) {
 
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(user.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)
@@ -573,7 +573,7 @@ func TestCreateOrganizationWhenOrgNameAlreadyExistsInPapagaio(t *testing.T) {
 
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
 	db.EXPECT().GetGitSourceByName(user.GitSourceName).Return(&gitSource, nil)
-	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath})
+	giteaApi.EXPECT().GetOrganization(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(&gitDto.OrganizationDto{ID: 1, Name: organizationReqDto.GitPath}, nil)
 	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), organizationReqDto.GitPath).Return(true, nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
 	db.EXPECT().GetOrganizationsByGitSource(user.GitSourceName).Return(&organizationList, nil)

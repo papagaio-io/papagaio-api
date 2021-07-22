@@ -172,9 +172,9 @@ local task_kubernetes_deploy(namespace, changeImageVersion) =
       { type: 'run', name: 'generate kubernetes config', command: 'echo $KUBERNETESCONF | base64 -d > kubernetes/kubernetes.conf' },
             
       if changeImageVersion then
-        { type: 'run', name: 'kubectl replace', command:  'kubectl -n ' + namespace + ' set image deployment/papagaio-api papagaio-api=registry.sorintdev.it/papagaio-api:$AGOLA_GIT_TAG' }
+        { type: 'run', name: 'kubectl replace', command:  'kubectl --kubeconfig=kubernetes/kubernetes.conf -n ' + namespace + ' set image deployment/papagaio-api papagaio-api=registry.sorintdev.it/papagaio-api:$AGOLA_GIT_TAG' }
       else 
-        { type: 'run', name: 'kubectl replace', command:  'kubectl -n ' + namespace + ' delete pods -l app=papagaio-api' },
+        { type: 'run', name: 'kubectl replace', command:  'kubectl --kubeconfig=kubernetes/kubernetes.conf -n ' + namespace + ' delete pods -l app=papagaio-api' },
     ],
   };
 

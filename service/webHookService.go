@@ -7,12 +7,14 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/xanzy/go-gitlab"
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/manager/repositoryManager"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
+	"wecode.sorint.it/opensource/papagaio-api/types"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
@@ -25,12 +27,6 @@ type WebHookService struct {
 
 func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *http.Request) {
 	log.Println("WebHookOrganization start...")
-
-	data, _ := ioutil.ReadAll(r.Body)
-	var webHookMessage dto.WebHookDto
-	json.Unmarshal(data, &webHookMessage)
-
-	log.Println("webHook message: ", webHookMessage)
 
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
@@ -47,12 +43,34 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		return
 	}
 
+	gitSource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
+	if gitSource == nil {
+		log.Println("gitSource", organization.GitSourceName, "not found")
+		InternalServerError(w)
+		return
+	}
+
+	var webHookMessage dto.WebHookDto
+	data, _ := ioutil.ReadAll(r.Body)
+
+	if gitSource.GitType == types.Gitlab {
+		var gitLabHookMessage gitlab.PushEvent
+		json.Unmarshal(data, &gitLabHookMessage)
+
+		webHookMessage.Action = ""
+		webHookMessage.Sha = gitLabHookMessage.CheckoutSHA
+		webHookMessage.RefType = gitLabHookMessage.Ref
+		webHookMessage.Repository.ID = gitLabHookMessage.ProjectID
+	} else {
+		json.Unmarshal(data, &webHookMessage)
+	}
+
+	log.Println("webHook message: ", webHookMessage)
+
 	if !utils.EvaluateBehaviour(organization, webHookMessage.Repository.Name) {
 		log.Println("webhook", webHookMessage.Repository.Name, "excluded by behaviour settings")
 		return
 	}
-
-	gitSource, _ := service.Db.GetGitSourceByName(organization.GitSourceName)
 
 	if organization.Projects == nil {
 		organization.Projects = make(map[string]model.Project)

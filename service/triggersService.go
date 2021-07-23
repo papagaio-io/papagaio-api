@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"wecode.sorint.it/opensource/papagaio-api/dto"
@@ -59,15 +60,30 @@ func (service *TriggersService) SaveTriggersConfig(w http.ResponseWriter, r *htt
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	var req dto.ConfigTriggersDto
-	json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Println("encode error:", err)
+		InternalServerError(w)
+		return
+	}
+
 	if req.OrganizationsTriggerTime != 0 {
-		service.Db.SaveOrganizationsTriggerTime(int(req.OrganizationsTriggerTime))
+		err := service.Db.SaveOrganizationsTriggerTime(int(req.OrganizationsTriggerTime))
+		if err != nil {
+			log.Println("SaveOrganizationsTriggerTime error:", err)
+		}
 	}
 	if req.RunFailedTriggerTime != 0 {
-		service.Db.SaveRunFailedTriggerTime(int(req.RunFailedTriggerTime))
+		err := service.Db.SaveRunFailedTriggerTime(int(req.RunFailedTriggerTime))
+		if err != nil {
+			log.Println("SaveRunFailedTriggerTime error:", err)
+		}
 	}
 	if req.UsersTriggerTime != 0 {
-		service.Db.SaveUsersTriggerTime(int(req.UsersTriggerTime))
+		err := service.Db.SaveUsersTriggerTime(int(req.UsersTriggerTime))
+		if err != nil {
+			log.Println("SaveUsersTriggerTime error:", err)
+		}
 	}
 }
 

@@ -48,7 +48,11 @@ func (db *AppDb) GetUsersIDByGitSourceName(gitSourceName string) ([]uint64, erro
 
 			var localUser model.User
 			dst, _ = item.ValueCopy(dst)
-			json.Unmarshal(dst, &localUser)
+			err := json.Unmarshal(dst, &localUser)
+			if err != nil {
+				return err
+			}
+
 			if strings.Compare(localUser.GitSourceName, gitSourceName) != 0 {
 				continue
 			}
@@ -78,7 +82,11 @@ func (db *AppDb) GetUserByUserId(userId uint64) (*model.User, error) {
 
 			var localUser model.User
 			dst, _ = item.ValueCopy(dst)
-			json.Unmarshal(dst, &localUser)
+			err := json.Unmarshal(dst, &localUser)
+			if err != nil {
+				return err
+			}
+
 			if *localUser.UserID != userId {
 				continue
 			}
@@ -109,7 +117,11 @@ func (db *AppDb) GetUserByGitSourceNameAndID(gitSourceName string, id uint64) (*
 
 			var localUser model.User
 			dst, _ = item.ValueCopy(dst)
-			json.Unmarshal(dst, &localUser)
+			err := json.Unmarshal(dst, &localUser)
+			if err != nil {
+				return err
+			}
+
 			if strings.Compare(localUser.GitSourceName, gitSourceName) != 0 || localUser.ID != id {
 				continue
 			}

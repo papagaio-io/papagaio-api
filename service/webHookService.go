@@ -55,14 +55,24 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 	if gitSource.GitType == types.Gitlab {
 		var gitLabHookMessage gitlab.PushEvent
-		json.Unmarshal(data, &gitLabHookMessage)
+		err := json.Unmarshal(data, &gitLabHookMessage)
+		if err != nil {
+			log.Println("gitlab unmarshal error:", err)
+			InternalServerError(w)
+			return
+		}
 
 		webHookMessage.Action = ""
 		webHookMessage.Sha = gitLabHookMessage.CheckoutSHA
 		webHookMessage.RefType = gitLabHookMessage.Ref
 		webHookMessage.Repository.ID = gitLabHookMessage.ProjectID
 	} else {
-		json.Unmarshal(data, &webHookMessage)
+		err := json.Unmarshal(data, &webHookMessage)
+		if err != nil {
+			log.Println("unmarshal error:", err)
+			InternalServerError(w)
+			return
+		}
 	}
 
 	log.Println("webHook message: ", webHookMessage)
@@ -93,13 +103,21 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			project.AgolaProjectID = projectID
 			if err != nil {
 				log.Println("warning!!! Agola CreateProject API error!")
+				InternalServerError(w)
+				return
 			} else {
 				project.Archivied = false
 			}
 		}
 
 		organization.Projects[webHookMessage.Repository.Name] = project
-		service.Db.SaveOrganization(organization)
+		err := service.Db.SaveOrganization(organization)
+
+		if err != nil {
+			log.Println("SaveOrganization error:", err)
+			InternalServerError(w)
+			return
+		}
 	} else if webHookMessage.IsRepositoryDeleted() {
 		log.Println("repository deleted: ", webHookMessage.Repository.Name)
 
@@ -110,13 +128,25 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 			return
 		}
 
-		service.AgolaApi.DeleteProject(organization, orgProject.AgolaProjectRef, user)
+		err := service.AgolaApi.DeleteProject(organization, orgProject.AgolaProjectRef, user)
+		if err != nil {
+			log.Println("agola DeleteProject error:", err)
+			InternalServerError(w)
+			return
+		}
+
 		delete(organization.Projects, webHookMessage.Repository.Name)
 
 		project := organization.Projects[webHookMessage.Repository.Name]
 		project.Archivied = true
 
-		service.Db.SaveOrganization(organization)
+		err = service.Db.SaveOrganization(organization)
+
+		if err != nil {
+			log.Println("SaveOrganization error:", err)
+			InternalServerError(w)
+			return
+		}
 	} else if webHookMessage.IsPush() {
 		log.Println("repository push: ", webHookMessage.Repository.Name)
 
@@ -129,30 +159,52 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 				projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, agolaProjectRef, organization, gitSource.AgolaRemoteSource, user)
 				if err != nil {
 					log.Println("warning!!! Agola CreateProject API error!")
+					InternalServerError(w)
 					return
 				}
 
 				project := model.Project{GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID, AgolaProjectRef: agolaProjectRef}
 				organization.Projects[webHookMessage.Repository.Name] = project
-				service.Db.SaveOrganization(organization)
+				err = service.Db.SaveOrganization(organization)
+
+				if err != nil {
+					log.Println("SaveOrganization error:", err)
+					InternalServerError(w)
+					return
+				}
 			} else if project.Archivied {
 				err := service.AgolaApi.UnarchiveProject(organization, project.AgolaProjectRef)
 				if err != nil {
+					log.Println("UnarchiveProject error:", err)
 					InternalServerError(w)
+					return
 				}
 				project.Archivied = false
 				organization.Projects[webHookMessage.Repository.Name] = project
-				service.Db.SaveOrganization(organization)
+				err = service.Db.SaveOrganization(organization)
+				if err != nil {
+					log.Println("SaveOrganization error:", err)
+					InternalServerError(w)
+					return
+				}
 			}
 		} else {
 			if projectExist && !project.Archivied {
 				err := service.AgolaApi.ArchiveProject(organization, project.AgolaProjectRef)
 				if err != nil {
+					log.Println("ArchiveProject error:", err)
 					InternalServerError(w)
+					return
 				}
 				project.Archivied = true
 				organization.Projects[webHookMessage.Repository.Name] = project
-				service.Db.SaveOrganization(organization)
+				err = service.Db.SaveOrganization(organization)
+
+				if err != nil {
+					log.Println("SaveOrganization error:", err)
+					InternalServerError(w)
+					return
+				}
 			}
 		}
 

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/dgraph-io/badger"
@@ -13,7 +14,7 @@ const usersTriggerTime string = "usersTriggerTime"
 func (db *AppDb) GetOrganizationsTriggerTime() int {
 	retVal := -1
 
-	db.DB.View(func(txn *badger.Txn) error {
+	err := db.DB.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(organizationTriggerTime))
 		if err != nil {
 			return err
@@ -24,13 +25,15 @@ func (db *AppDb) GetOrganizationsTriggerTime() int {
 		retVal, _ = strconv.Atoi(string(dst))
 		return nil
 	})
+	if err != nil {
+		log.Println("GetOrganizationsTriggerTime error:", err)
+	}
 
 	return retVal
 }
 
-func (db *AppDb) SaveOrganizationsTriggerTime(value int) {
-
-	db.DB.Update(func(txn *badger.Txn) error {
+func (db *AppDb) SaveOrganizationsTriggerTime(value int) error {
+	return db.DB.Update(func(txn *badger.Txn) error {
 		byteVal := []byte(strconv.Itoa(value))
 		e := badger.NewEntry([]byte(organizationTriggerTime), byteVal)
 		err := txn.SetEntry(e)
@@ -42,7 +45,7 @@ func (db *AppDb) SaveOrganizationsTriggerTime(value int) {
 func (db *AppDb) GetRunFailedTriggerTime() int {
 	retVal := -1
 
-	db.DB.View(func(txn *badger.Txn) error {
+	err := db.DB.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(runFailedTriggerTime))
 		if err != nil {
 			return err
@@ -53,11 +56,15 @@ func (db *AppDb) GetRunFailedTriggerTime() int {
 		retVal, _ = strconv.Atoi(string(dst))
 		return nil
 	})
+	if err != nil {
+		log.Println("GetRunFailedTriggerTime error:", err)
+	}
+
 	return retVal
 }
 
-func (db *AppDb) SaveRunFailedTriggerTime(value int) {
-	db.DB.Update(func(txn *badger.Txn) error {
+func (db *AppDb) SaveRunFailedTriggerTime(value int) error {
+	return db.DB.Update(func(txn *badger.Txn) error {
 		byteVal := []byte(strconv.Itoa(value))
 		e := badger.NewEntry([]byte(runFailedTriggerTime), byteVal)
 		err := txn.SetEntry(e)
@@ -69,7 +76,7 @@ func (db *AppDb) SaveRunFailedTriggerTime(value int) {
 func (db *AppDb) GetUsersTriggerTime() int {
 	retVal := -1
 
-	db.DB.View(func(txn *badger.Txn) error {
+	err := db.DB.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(usersTriggerTime))
 		if err != nil {
 			return err
@@ -81,11 +88,15 @@ func (db *AppDb) GetUsersTriggerTime() int {
 		return nil
 	})
 
+	if err != nil {
+		log.Println("GetRunFailedTriggerTime error:", err)
+	}
+
 	return retVal
 }
 
-func (db *AppDb) SaveUsersTriggerTime(value int) {
-	db.DB.Update(func(txn *badger.Txn) error {
+func (db *AppDb) SaveUsersTriggerTime(value int) error {
+	return db.DB.Update(func(txn *badger.Txn) error {
 		byteVal := []byte(strconv.Itoa(value))
 		e := badger.NewEntry([]byte(usersTriggerTime), byteVal)
 		err := txn.SetEntry(e)

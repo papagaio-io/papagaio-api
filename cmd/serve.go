@@ -106,8 +106,7 @@ func serve(cmd *cobra.Command, args []string) {
 
 	log.Println("Papagaio Server Starting on port ", config.Config.Server.Port)
 
-	logRouter := http.Handler(router)
-
+	var logRouter http.Handler
 	if config.Config.LogHTTPRequest {
 		logRouter = handlers.LoggingHandler(os.Stdout, router)
 	} else {

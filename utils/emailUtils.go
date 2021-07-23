@@ -53,12 +53,12 @@ func SendConfirmEmail(addressTo map[string]bool, addressCC map[string]bool, subj
 	email := mail.NewMSG()
 	email = email.SetFrom(getFrom())
 
-	for s, _ := range addressTo {
+	for s := range addressTo {
 		log.Printf("Aggiungo address to " + s)
 		email = email.AddTo(s)
 	}
 
-	for s, _ := range addressCC {
+	for s := range addressCC {
 		log.Printf("Aggiungo address cc " + s)
 		email = email.AddCc(s)
 	}

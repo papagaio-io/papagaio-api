@@ -108,17 +108,17 @@ func (mr *MockDatabaseMockRecorder) GetOrganizationById(organizationID interface
 }
 
 // DeleteOrganization mocks base method
-func (m *MockDatabase) DeleteOrganization(organizationID string) error {
+func (m *MockDatabase) DeleteOrganization(organizationName string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOrganization", organizationID)
+	ret := m.ctrl.Call(m, "DeleteOrganization", organizationName)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteOrganization indicates an expected call of DeleteOrganization
-func (mr *MockDatabaseMockRecorder) DeleteOrganization(organizationID interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteOrganization(organizationName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrganization", reflect.TypeOf((*MockDatabase)(nil).DeleteOrganization), organizationID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrganization", reflect.TypeOf((*MockDatabase)(nil).DeleteOrganization), organizationName)
 }
 
 // GetOrganizationsByGitSource mocks base method
@@ -224,9 +224,11 @@ func (mr *MockDatabaseMockRecorder) GetOrganizationsTriggerTime() *gomock.Call {
 }
 
 // SaveOrganizationsTriggerTime mocks base method
-func (m *MockDatabase) SaveOrganizationsTriggerTime(value int) {
+func (m *MockDatabase) SaveOrganizationsTriggerTime(value int) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SaveOrganizationsTriggerTime", value)
+	ret := m.ctrl.Call(m, "SaveOrganizationsTriggerTime", value)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SaveOrganizationsTriggerTime indicates an expected call of SaveOrganizationsTriggerTime
@@ -250,9 +252,11 @@ func (mr *MockDatabaseMockRecorder) GetRunFailedTriggerTime() *gomock.Call {
 }
 
 // SaveRunFailedTriggerTime mocks base method
-func (m *MockDatabase) SaveRunFailedTriggerTime(val int) {
+func (m *MockDatabase) SaveRunFailedTriggerTime(val int) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SaveRunFailedTriggerTime", val)
+	ret := m.ctrl.Call(m, "SaveRunFailedTriggerTime", val)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SaveRunFailedTriggerTime indicates an expected call of SaveRunFailedTriggerTime
@@ -276,9 +280,11 @@ func (mr *MockDatabaseMockRecorder) GetUsersTriggerTime() *gomock.Call {
 }
 
 // SaveUsersTriggerTime mocks base method
-func (m *MockDatabase) SaveUsersTriggerTime(value int) {
+func (m *MockDatabase) SaveUsersTriggerTime(value int) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SaveUsersTriggerTime", value)
+	ret := m.ctrl.Call(m, "SaveUsersTriggerTime", value)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SaveUsersTriggerTime indicates an expected call of SaveUsersTriggerTime

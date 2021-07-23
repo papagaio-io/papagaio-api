@@ -1,6 +1,7 @@
 package membersManager
 
 import (
+	"log"
 	"strings"
 
 	agolaApi "wecode.sorint.it/opensource/papagaio-api/api/agola"
@@ -29,13 +30,19 @@ func SyncMembersForGitlab(organization *model.Organization, gitSource *model.Git
 		} else {
 			role = "member"
 		}
-		agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, role)
+		err := agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, role)
+		if err != nil {
+			log.Println("AddOrUpdateOrganizationMember error:", err)
+		}
 	}
 
 	//Verifico i membri eliminati su git
 	for _, agolaMember := range agolaMembers.Members {
 		if findGitlabMemberByAgolaUserRef(gitlabUsers, agolaUsersMap, agolaMember.User.Username) == nil {
-			agolaApi.RemoveOrganizationMember(organization, agolaMember.User.Username)
+			err := agolaApi.RemoveOrganizationMember(organization, agolaMember.User.Username)
+			if err != nil {
+				log.Println("RemoveOrganizationMember error:", err)
+			}
 		}
 	}
 }

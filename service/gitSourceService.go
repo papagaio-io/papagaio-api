@@ -70,7 +70,12 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 
 	var gitSourceDto dto.CreateGitSourceRequestDto
 	data, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(data, &gitSourceDto)
+	err := json.Unmarshal(data, &gitSourceDto)
+	if err != nil {
+		log.Println("unmarshal error:", err)
+		InternalServerError(w)
+		return
+	}
 
 	oldGitSource, _ := service.Db.GetGitSourceByName(gitSourceDto.Name)
 	if oldGitSource != nil {
@@ -78,7 +83,7 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err := gitSourceDto.IsValid()
+	err = gitSourceDto.IsValid()
 	if err != nil {
 		log.Println("request is not valid:", err)
 		UnprocessableEntityResponse(w, err.Error())
@@ -142,7 +147,13 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 
 	gitSource.AgolaRemoteSource = *gitSourceDto.AgolaRemoteSourceName
 
-	service.Db.SaveGitSource(&gitSource)
+	err = service.Db.SaveGitSource(&gitSource)
+	if err != nil {
+		log.Println("error in SaveGitSource:", err)
+		InternalServerError(w)
+		return
+	}
+
 	JSONokResponse(w, gitSource.ID)
 }
 
@@ -198,13 +209,19 @@ func (service *GitSourceService) deleteOrganizationsAndMembersByGitsourceRef(git
 
 	if orgs != nil {
 		for _, org := range *orgs {
-			service.Db.DeleteOrganization(org.GitPath)
+			err := service.Db.DeleteOrganization(org.GitPath)
+			if err != nil {
+				log.Println("error on deleting organization", org.GitPath, ":", err)
+			}
 		}
 	}
 
 	users, _ := service.Db.GetUsersIDByGitSourceName(gitsourceRef)
 	for _, userId := range users {
-		service.Db.DeleteUser(userId)
+		err := service.Db.DeleteUser(userId)
+		if err != nil {
+			log.Println("error deleting user", userId, ":", err)
+		}
 	}
 
 }
@@ -227,7 +244,12 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 
 	var req dto.UpdateGitSourceRequestDto
 	data, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(data, &req)
+	err := json.Unmarshal(data, &req)
+	if err != nil {
+		log.Println("unmarshal err:", err)
+		InternalServerError(w)
+		return
+	}
 
 	oldGitSource, _ := service.Db.GetGitSourceByName(gitSourceName)
 	if oldGitSource == nil {
@@ -251,7 +273,11 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 		oldGitSource.GitSecret = *req.GitClientSecret
 	}
 
-	service.Db.SaveGitSource(oldGitSource)
+	err = service.Db.SaveGitSource(oldGitSource)
+	if err != nil {
+		log.Println("error on saving gitSource:", err)
+		InternalServerError(w)
+	}
 }
 
 // @Summary List Git Organizations
@@ -267,7 +293,7 @@ func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *h
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	userId, _ := r.Context().Value(controller.XAuthUserId).(uint64)
+	userId, _ := r.Context().Value(controller.UserIdParameter).(uint64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")

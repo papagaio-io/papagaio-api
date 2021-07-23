@@ -18,7 +18,14 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger" // http-swagger middleware
 )
 
-const XAuthUserId string = "X-Auth-User-Id"
+//const XAuthUserId string = "X-Auth-User-Id"
+
+type ContextParameter string
+
+const (
+	UserIdParameter    ContextParameter = "userId"
+	AdminUserParameter ContextParameter = "admin"
+)
 
 const apiPath string = "/api"
 const WebHookPath string = "/webhook"
@@ -81,7 +88,10 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 
 func setupPingRouter(router *mux.Router) {
 	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Pong"))
+		_, err := w.Write([]byte("Pong"))
+		if err != nil {
+			log.Println("ping error:", err)
+		}
 	})
 }
 
@@ -224,8 +234,8 @@ func handleLoggedUserRoutes(h http.Handler) http.Handler {
 		fmt.Println("http request user", userId)
 
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "admin", false)
-		ctx = context.WithValue(ctx, XAuthUserId, userId)
+		ctx = context.WithValue(ctx, AdminUserParameter, false)
+		ctx = context.WithValue(ctx, UserIdParameter, userId)
 
 		h.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -239,7 +249,7 @@ func handleRestrictedAdminRoutes(h http.Handler) http.Handler {
 		}
 
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "admin", true)
+		ctx = context.WithValue(ctx, AdminUserParameter, true)
 
 		h.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -249,7 +259,7 @@ func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if checkIsAdminUser(r.Header.Get("Authorization")) {
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, "admin", true)
+			ctx = context.WithValue(ctx, AdminUserParameter, true)
 
 			h.ServeHTTP(w, r.WithContext(ctx))
 		} else {
@@ -294,8 +304,8 @@ func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 			fmt.Println("http request user", userId)
 
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, "admin", false)
-			ctx = context.WithValue(ctx, XAuthUserId, userId)
+			ctx = context.WithValue(ctx, AdminUserParameter, false)
+			ctx = context.WithValue(ctx, UserIdParameter, userId)
 
 			h.ServeHTTP(w, r.WithContext(ctx))
 		}

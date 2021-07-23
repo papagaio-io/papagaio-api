@@ -67,7 +67,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	userId := r.Context().Value(controller.XAuthUserId).(uint64)
+	userId := r.Context().Value(controller.UserIdParameter).(uint64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")
@@ -76,7 +76,12 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	var req *dto.CreateOrganizationRequestDto
-	json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Println("parsing error:", err)
+		InternalServerError(w)
+		return
+	}
 
 	if !req.IsAgolaRefValid() {
 		response := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaRefNotValid}
@@ -151,7 +156,12 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 			}
 		}
 
-		service.Db.SaveUser(user)
+		_, err := service.Db.SaveUser(user)
+		if err != nil {
+			log.Println("Error in SaveUser:", err)
+			InternalServerError(w)
+			return
+		}
 	}
 
 	mutex := utils.ReserveOrganizationMutex(org.AgolaOrganizationRef, service.CommonMutex)
@@ -194,7 +204,11 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	if agolaOrganizationExists {
 		log.Println("organization", org.AgolaOrganizationRef, "just exists in Agola")
 		if !forceCreate {
-			service.GitGateway.DeleteWebHook(gitSource, user, org.GitPath, org.WebHookID)
+			err = service.GitGateway.DeleteWebHook(gitSource, user, org.GitPath, org.WebHookID)
+			if err != nil {
+				log.Println("DeleteWebHook error:", err)
+			}
+
 			response := dto.CreateOrganizationResponseDto{ErrorCode: dto.AgolaOrganizationExistsError}
 			JSONokResponse(w, response)
 			return
@@ -204,7 +218,11 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		org.ID, err = service.AgolaApi.CreateOrganization(org, org.Visibility)
 		if err != nil {
 			log.Println("failed to create organization", org.AgolaOrganizationRef, "in agola:", err)
-			service.GitGateway.DeleteWebHook(gitSource, user, org.GitPath, org.WebHookID)
+			err := service.GitGateway.DeleteWebHook(gitSource, user, org.GitPath, org.WebHookID)
+			if err != nil {
+				log.Println("DeleteWebHook error:", err)
+			}
+
 			InternalServerError(w)
 			return
 		}
@@ -264,7 +282,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	userIdRequest, _ := r.Context().Value(controller.XAuthUserId).(uint64)
+	userIdRequest, _ := r.Context().Value(controller.UserIdParameter).(uint64)
 	userRequest, _ := service.Db.GetUserByUserId(userIdRequest)
 	if userRequest == nil {
 		log.Println("User", userRequest, "not found")
@@ -316,17 +334,24 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 		}
 	}
 
-	service.GitGateway.DeleteWebHook(gitSource, userCreator, organization.GitPath, organization.WebHookID)
+	err = service.GitGateway.DeleteWebHook(gitSource, userCreator, organization.GitPath, organization.WebHookID)
+	if err != nil {
+		log.Println("DeleteWebHook error:", err)
+		InternalServerError(w)
+		return
+	}
+
 	err = service.Db.DeleteOrganization(organization.AgolaOrganizationRef)
+	if err != nil {
+		log.Println("db DeleteOrganization error:", err)
+		InternalServerError(w)
+		return
+	}
 
 	mutex.Unlock()
 	utils.ReleaseOrganizationMutex(organizationRef, service.CommonMutex)
 	locked = false
 
-	if err != nil {
-		InternalServerError(w)
-		return
-	}
 	log.Println("Organization deleted:", organization.AgolaOrganizationRef, " by:", userIdRequest)
 
 	response := dto.DeleteOrganizationResponseDto{ErrorCode: dto.NoError}
@@ -350,7 +375,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
-	userId := r.Context().Value(controller.XAuthUserId).(uint64)
+	userId := r.Context().Value(controller.UserIdParameter).(uint64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")
@@ -390,18 +415,26 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	}
 
 	var req *dto.ExternalUserDto
-	json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Println("decode error:", err)
+	}
 
 	if organization.ExternalUsers == nil {
 		organization.ExternalUsers = make(map[string]bool)
 	}
 
 	organization.ExternalUsers[req.Email] = true
-	service.Db.SaveOrganization(organization)
+	err = service.Db.SaveOrganization(organization)
 
 	mutex.Unlock()
 	utils.ReleaseOrganizationMutex(organizationRef, service.CommonMutex)
 	locked = false
+
+	if err != nil {
+		log.Println("SaveOrganization error:", err)
+		InternalServerError(w)
+	}
 }
 
 // @Summary Delete External User
@@ -421,7 +454,7 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
-	userId := r.Context().Value(controller.XAuthUserId).(uint64)
+	userId := r.Context().Value(controller.UserIdParameter).(uint64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")
@@ -461,14 +494,24 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	}
 
 	var req *dto.ExternalUserDto
-	json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Println("parsing error:", err)
+		InternalServerError(w)
+		return
+	}
 
 	delete(organization.ExternalUsers, req.Email)
-	service.Db.SaveOrganization(organization)
+	err = service.Db.SaveOrganization(organization)
 
 	mutex.Unlock()
 	utils.ReleaseOrganizationMutex(organizationRef, service.CommonMutex)
 	locked = false
+
+	if err != nil {
+		log.Println("SaveOrganization error:", err)
+		InternalServerError(w)
+	}
 }
 
 // @Summary Get Report
@@ -482,7 +525,7 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	userId, _ := r.Context().Value(controller.XAuthUserId).(uint64)
+	userId, _ := r.Context().Value(controller.UserIdParameter).(uint64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")
@@ -524,7 +567,7 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 	vars := mux.Vars(r)
 	organizationRef := vars["organizationRef"]
 
-	userId, _ := r.Context().Value(controller.XAuthUserId).(uint64)
+	userId, _ := r.Context().Value(controller.UserIdParameter).(uint64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")
@@ -572,7 +615,7 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	organizationRef := vars["organizationRef"]
 	projectName := vars["projectName"]
 
-	userId, _ := r.Context().Value(controller.XAuthUserId).(uint64)
+	userId, _ := r.Context().Value(controller.UserIdParameter).(uint64)
 	user, _ := service.Db.GetUserByUserId(userId)
 	if user == nil {
 		log.Println("User", userId, "not found")

@@ -39,16 +39,12 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 			mutex := utils.ReserveOrganizationMutex(organizationRef, commonMutex)
 			mutex.Lock()
 
-			locked := true
-			defer utils.ReleaseOrganizationMutexDefer(organizationRef, commonMutex, mutex, &locked)
-
 			org, _ := db.GetOrganizationByAgolaRef(organizationRef)
 			if org == nil {
 				log.Println("syncOrganizationRun organization ", organizationRef, "not found")
 
 				mutex.Unlock()
 				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
 
 				continue
 			}
@@ -59,7 +55,6 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 
 				mutex.Unlock()
 				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
 
 				continue
 			}
@@ -70,7 +65,6 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 
 				mutex.Unlock()
 				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
 
 				continue
 			}
@@ -82,7 +76,6 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 
 				mutex.Unlock()
 				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
 
 				continue
 			}
@@ -92,14 +85,16 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 
 				err = agolaApi.DeleteOrganization(org, user)
 				if err == nil {
-					db.DeleteOrganization(organizationRef)
+					err := db.DeleteOrganization(organizationRef)
+					if err != nil {
+						log.Println("error in DeleteOrganization:", err)
+					}
 				} else {
 					log.Println("error in agola DeleteOrganization:", err)
 				}
 
 				mutex.Unlock()
 				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
 
 				continue
 			} else {
@@ -108,7 +103,11 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 				} else {
 					org.GitName = gitOrganization.Path
 				}
-				db.SaveOrganization(org)
+				err := db.SaveOrganization(org)
+
+				if err != nil {
+					log.Println("error in SaveOrganization:", err)
+				}
 			}
 
 			//If organization deleted in Agola, recreate
@@ -119,23 +118,32 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 
 					mutex.Unlock()
 					utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-					locked = false
 
 					continue
 				}
 
 				org.ID = orgID
-				db.SaveOrganization(org)
+				err = db.SaveOrganization(org)
+
+				if err != nil {
+					log.Println("error in SaveOrganization:", err)
+				}
 			}
 
 			log.Println("start synk organization", org.GitPath)
 
-			membersManager.SynkMembers(org, gitSource, agolaApi, gitGateway, user)
-			repositoryManager.SynkGitRepositorys(db, user, org, gitSource, agolaApi, gitGateway)
+			err = membersManager.SynkMembers(org, gitSource, agolaApi, gitGateway, user)
+			if err != nil {
+				log.Println("SynkMembers error:", err)
+			}
+
+			err = repositoryManager.SynkGitRepositorys(db, user, org, gitSource, agolaApi, gitGateway)
+			if err != nil {
+				log.Println("SynkGitRepositorys error:", err)
+			}
 
 			mutex.Unlock()
 			utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-			locked = false
 		}
 
 		fmt.Println("syncOrganizationRun:", <-c)

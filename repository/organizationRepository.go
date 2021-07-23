@@ -44,12 +44,14 @@ func (db *AppDb) GetOrganizations() (*[]model.Organization, error) {
 			item := it.Item()
 			dst := make([]byte, 0)
 			value, err := item.ValueCopy(dst)
+			if err != nil {
+				return err
+			}
 
 			var organization model.Organization
-			json.Unmarshal(value, &organization)
+			err = json.Unmarshal(value, &organization)
 
 			if err != nil {
-				log.Println("GetOrganizations read value error:", err)
 				return err
 			}
 
@@ -94,7 +96,11 @@ func (db *AppDb) GetOrganizationById(organizationID string) (*model.Organization
 
 			var localOrganization model.Organization
 			dst, _ = item.ValueCopy(dst)
-			json.Unmarshal(dst, &localOrganization)
+			err := json.Unmarshal(dst, &localOrganization)
+			if err != nil {
+				return err
+			}
+
 			if strings.Compare(localOrganization.ID, organizationID) != 0 {
 				continue
 			}
@@ -125,7 +131,11 @@ func (db *AppDb) GetOrganizationByAgolaRef(agolaOrganizationRef string) (*model.
 
 			var localOrganization model.Organization
 			dst, _ = item.ValueCopy(dst)
-			json.Unmarshal(dst, &localOrganization)
+			err := json.Unmarshal(dst, &localOrganization)
+			if err != nil {
+				return err
+			}
+
 			if strings.Compare(localOrganization.AgolaOrganizationRef, agolaOrganizationRef) != 0 {
 				continue
 			}
@@ -160,7 +170,11 @@ func (db *AppDb) GetOrganizationsByGitSource(gitSourceName string) (*[]model.Org
 
 			var localOrganization model.Organization
 			dst, _ = item.ValueCopy(dst)
-			json.Unmarshal(dst, &localOrganization)
+			err := json.Unmarshal(dst, &localOrganization)
+			if err != nil {
+				return err
+			}
+
 			if strings.Compare(localOrganization.GitSourceName, gitSourceName) != 0 {
 				continue
 			}

@@ -22,9 +22,16 @@ func (db *AppDb) GetGitSources() (*[]model.GitSource, error) {
 			item := it.Item()
 			dst := make([]byte, 0)
 			value, err := item.ValueCopy(dst)
+			if err != nil {
+				return err
+			}
 
 			var gitSource model.GitSource
-			json.Unmarshal(value, &gitSource)
+			err = json.Unmarshal(value, &gitSource)
+			if err != nil {
+				log.Println("unmarshal error:", err)
+				return err
+			}
 
 			if err != nil {
 				log.Println("GetGitSources read value error:", err)
@@ -88,7 +95,11 @@ func (db *AppDb) GetGitSourceByName(name string) (*model.GitSource, error) {
 			}
 
 			var gitSource model.GitSource
-			json.Unmarshal(dst, &gitSource)
+			err = json.Unmarshal(dst, &gitSource)
+			if err != nil {
+				log.Println("unmarshal error:", err)
+				return err
+			}
 
 			retVal = &gitSource
 
@@ -118,7 +129,11 @@ func (db *AppDb) GetGitSourceById(id string) (*model.GitSource, error) {
 
 			var localGitSource model.GitSource
 			dst, _ = item.ValueCopy(dst)
-			json.Unmarshal(dst, &localGitSource)
+			err := json.Unmarshal(dst, &localGitSource)
+			if err != nil {
+				log.Println("GetGitSourceById unmarshal error:", err)
+				return err
+			}
 
 			if strings.Compare(localGitSource.ID, id) != 0 {
 				continue

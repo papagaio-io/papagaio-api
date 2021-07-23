@@ -78,9 +78,12 @@ func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, user *model.
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var webHookResponse CreateWebHookResponseDto
-	json.Unmarshal(body, &webHookResponse)
+	err = json.Unmarshal(body, &webHookResponse)
+	if err != nil {
+		return -1, err
+	}
 
-	return webHookResponse.ID, err
+	return webHookResponse.ID, nil
 }
 
 func (giteaApi *GiteaApi) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error {
@@ -125,14 +128,17 @@ func (giteaApi *GiteaApi) GetRepositories(gitSource *model.GitSource, user *mode
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var repositoryesResponse []RepositoryDto
-	json.Unmarshal(body, &repositoryesResponse)
+	err = json.Unmarshal(body, &repositoryesResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	retVal := make([]string, 0)
 	for _, repo := range repositoryesResponse {
 		retVal = append(retVal, repo.Name)
 	}
 
-	return &retVal, err
+	return &retVal, nil
 }
 
 func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error) {
@@ -154,7 +160,10 @@ func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, user *mode
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var data OrganizationResponseDto
-		json.Unmarshal(body, &data)
+		err = json.Unmarshal(body, &data)
+		if err != nil {
+			return nil, err
+		}
 
 		organization := dto.OrganizationDto{Name: data.Name, Path: data.Name, ID: data.ID, AvatarURL: data.AvatarURL}
 		return &organization, nil
@@ -184,7 +193,10 @@ func (giteaApi *GiteaApi) GetRepositoryTeams(gitSource *model.GitSource, user *m
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var teamsResponse []dto.TeamResponseDto
-	json.Unmarshal(body, &teamsResponse)
+	err = json.Unmarshal(body, &teamsResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	return &teamsResponse, err
 }
@@ -236,9 +248,12 @@ func (giteaApi *GiteaApi) GetOrganizationTeams(gitSource *model.GitSource, user 
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var teamsResponse []dto.TeamResponseDto
-	json.Unmarshal(body, &teamsResponse)
+	err = json.Unmarshal(body, &teamsResponse)
+	if err != nil {
+		return nil, err
+	}
 
-	return &teamsResponse, err
+	return &teamsResponse, nil
 }
 
 func (giteaApi *GiteaApi) GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int) (*[]dto.UserTeamResponseDto, error) {
@@ -262,9 +277,12 @@ func (giteaApi *GiteaApi) GetTeamMembers(gitSource *model.GitSource, user *model
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var usersResponse []dto.UserTeamResponseDto
-	json.Unmarshal(body, &usersResponse)
+	err = json.Unmarshal(body, &usersResponse)
+	if err != nil {
+		return nil, err
+	}
 
-	return &usersResponse, err
+	return &usersResponse, nil
 }
 
 func (giteaApi *GiteaApi) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool {
@@ -298,9 +316,12 @@ func (giteaApi *GiteaApi) getBranches(gitSource *model.GitSource, user *model.Us
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var branchesResponse []BranchResponseDto
-	json.Unmarshal(body, &branchesResponse)
+	err = json.Unmarshal(body, &branchesResponse)
+	if err != nil {
+		return nil, err
+	}
 
-	return &branchesResponse, err
+	return &branchesResponse, nil
 }
 
 func (giteaApi *GiteaApi) getRepositoryAgolaMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, branchName string) (*[]MetadataResponseDto, error) {
@@ -323,9 +344,12 @@ func (giteaApi *GiteaApi) getRepositoryAgolaMetadata(gitSource *model.GitSource,
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var metadataResponse []MetadataResponseDto
-	json.Unmarshal(body, &metadataResponse)
+	err = json.Unmarshal(body, &metadataResponse)
+	if err != nil {
+		return nil, err
+	}
 
-	return &metadataResponse, err
+	return &metadataResponse, nil
 }
 
 func (giteaApi *GiteaApi) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error) {
@@ -371,7 +395,10 @@ func (giteaApi *GiteaApi) GetCommitMetadata(gitSource *model.GitSource, user *mo
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var commitMetadataResponse []dto.CommitMetadataDto
-	json.Unmarshal(body, &commitMetadataResponse)
+	err = json.Unmarshal(body, &commitMetadataResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(commitMetadataResponse) == 1 {
 		return &commitMetadataResponse[0], err
@@ -395,7 +422,10 @@ func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource, user *mod
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var organizations []OrganizationResponseDto
-		json.Unmarshal(body, &organizations)
+		err = json.Unmarshal(body, &organizations)
+		if err != nil {
+			return nil, err
+		}
 
 		retVal := make([]dto.OrganizationDto, 0)
 		for _, org := range organizations {
@@ -456,7 +486,10 @@ func (giteaApi *GiteaApi) GetUserInfo(gitSource *model.GitSource, user *model.Us
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var response dto.UserInfoDto
-		json.Unmarshal(body, &response)
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
 
 		response.UserPageURL = gitSource.GitAPIURL + "/" + response.Login
 
@@ -489,7 +522,10 @@ func (giteaApi *GiteaApi) GetUserByLogin(gitSource *model.GitSource, login strin
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var response dto.UserInfoDto
-		json.Unmarshal(body, &response)
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
 
 		log.Println("GetUserByLogin end")
 
@@ -521,7 +557,10 @@ func (giteaApi *GiteaApi) GetOauth2AccessToken(gitSource *model.GitSource, code 
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var response common.Token
-		json.Unmarshal(body, &response)
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
 
 		if response.Expiry > 0 {
 			response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
@@ -555,7 +594,10 @@ func (giteaApi *GiteaApi) RefreshToken(gitSource *model.GitSource, refreshToken 
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var response common.Token
-		json.Unmarshal(body, &response)
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
 
 		response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
 
@@ -598,9 +640,12 @@ func (giteaApi *GiteaApi) CreateAgolaApp(gitSource *model.GitSource, user *model
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var response CreateOauth2AppResponseDto
-	json.Unmarshal(body, &response)
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return nil, err
+	}
 
-	return &response, err
+	return &response, nil
 }
 
 ///////////////
@@ -624,7 +669,11 @@ func (giteaApi *GiteaApi) getClient(gitSource *model.GitSource, user *model.User
 		user.Oauth2RefreshToken = token.RefreshToken
 		user.Oauth2AccessTokenExpiresAt = time.Now().Add(time.Second * time.Duration(token.Expiry))
 
-		giteaApi.Db.SaveUser(user)
+		_, err = giteaApi.Db.SaveUser(user)
+		if err != nil {
+			log.Println("error in SaveUser:", err)
+			return nil, err
+		}
 	}
 
 	client := &httpClient{c: &http.Client{}, accessToken: user.Oauth2AccessToken}

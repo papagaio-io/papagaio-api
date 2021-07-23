@@ -18,8 +18,6 @@ type UserTeamResponseDto struct {
 	Email    string `json:"email"`
 }
 
-type email string
-
 type CommitMetadataDto struct {
 	Sha     string            `json:"sha"`
 	Author  map[string]string `json:"author"`

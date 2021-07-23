@@ -19,7 +19,6 @@ local task_test() =
         { type: 'run', name: 'go test', command: 'go test -coverprofile testCover.out ./service' },
         { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
         { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
-        { type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '.', paths: ['**'] }] },
       ],
   };
 
@@ -42,7 +41,8 @@ local task_build_go() =
     },
     steps: 
       [
-        { type: "restore_workspace", name: "restore workspace", dest_dir: "." },
+        { type: 'clone' },
+        { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
         { type: 'run', name: 'build the program', command: 'go build .' },
         { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
         { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },

@@ -2,12 +2,12 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/pkg/errors"
 	"wecode.sorint.it/opensource/papagaio-api/common"
 )
 
@@ -135,38 +135,38 @@ func InitTokenSigninData(tokenSigning *TokenSigning) (*common.TokenSigningData, 
 	case "hmac":
 		sd.Method = jwt.SigningMethodHS256
 		if tokenSigning.Key == "" {
-			return nil, errors.Errorf("empty token signing key for hmac method")
+			return nil, fmt.Errorf("empty token signing key for hmac method")
 		}
 		sd.Key = []byte(tokenSigning.Key)
 	case "rsa":
 		if tokenSigning.PrivateKeyPath == "" {
-			return nil, errors.Errorf("token signing private key file for rsa method not defined")
+			return nil, fmt.Errorf("token signing private key file for rsa method not defined")
 		}
 		if tokenSigning.PublicKeyPath == "" {
-			return nil, errors.Errorf("token signing public key file for rsa method not defined")
+			return nil, fmt.Errorf("token signing public key file for rsa method not defined")
 		}
 
 		sd.Method = jwt.SigningMethodRS256
 		privateKeyData, err := ioutil.ReadFile(tokenSigning.PrivateKeyPath)
 		if err != nil {
-			return nil, errors.Errorf("error reading token signing private key: %w", err)
+			return nil, fmt.Errorf("error reading token signing private key: %w", err)
 		}
 		sd.PrivateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKeyData)
 		if err != nil {
-			return nil, errors.Errorf("error parsing token signing private key: %w", err)
+			return nil, fmt.Errorf("error parsing token signing private key: %w", err)
 		}
 		publicKeyData, err := ioutil.ReadFile(tokenSigning.PublicKeyPath)
 		if err != nil {
-			return nil, errors.Errorf("error reading token signing public key: %w", err)
+			return nil, fmt.Errorf("error reading token signing public key: %w", err)
 		}
 		sd.PublicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKeyData)
 		if err != nil {
-			return nil, errors.Errorf("error parsing token signing public key: %w", err)
+			return nil, fmt.Errorf("error parsing token signing public key: %w", err)
 		}
 	case "":
-		return nil, errors.Errorf("missing token signing method")
+		return nil, fmt.Errorf("missing token signing method")
 	default:
-		return nil, errors.Errorf("unknown token signing method: %q", tokenSigning.Method)
+		return nil, fmt.Errorf("unknown token signing method: %q", tokenSigning.Method)
 	}
 
 	return sd, nil

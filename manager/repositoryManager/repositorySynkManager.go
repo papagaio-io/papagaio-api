@@ -42,7 +42,11 @@ func CheckoutAllGitRepository(db repository.Database, user *model.User, organiza
 		}
 
 		organization.Projects[repo] = project
-		db.SaveOrganization(organization)
+		err := db.SaveOrganization(organization)
+		if err != nil {
+			log.Println("error in SaveOrganization:", err)
+			return
+		}
 
 		BranchSynck(db, user, gitSource, organization, repo, gitGateway)
 
@@ -75,8 +79,12 @@ func SynkGitRepositorys(db repository.Database, user *model.User, organization *
 				}
 			}
 			if !gitRepoExists {
-				agolaApi.DeleteProject(organization, project.AgolaProjectRef, user)
-				delete(organization.Projects, projectName)
+				err := agolaApi.DeleteProject(organization, project.AgolaProjectRef, user)
+				if err == nil {
+					delete(organization.Projects, projectName)
+				} else {
+					log.Println("Agola DeleteProject error:", err)
+				}
 			} else {
 				agolaExists, agolaProjectID := agolaApi.CheckProjectExists(organization, project.AgolaProjectRef)
 				if !agolaExists && !project.Archivied {
@@ -94,7 +102,10 @@ func SynkGitRepositorys(db repository.Database, user *model.User, organization *
 
 				agolaProjectRef := utils.ConvertToAgolaProjectRef(repo)
 				if exists, _ := agolaApi.CheckProjectExists(organization, agolaProjectRef); exists {
-					agolaApi.DeleteProject(organization, agolaProjectRef, user)
+					err := agolaApi.DeleteProject(organization, agolaProjectRef, user)
+					if err != nil {
+						log.Println("Agola DeleteProject error:", err)
+					}
 				}
 
 				continue
@@ -151,7 +162,10 @@ func SynkGitRepositorys(db repository.Database, user *model.User, organization *
 		}
 	}
 
-	db.SaveOrganization(organization)
+	err = db.SaveOrganization(organization)
+	if err != nil {
+		return err
+	}
 
 	log.Println("End SynkGitRepositorys for", organization.GitPath)
 
@@ -171,17 +185,20 @@ func BranchSynck(db repository.Database, user *model.User, gitSource *model.GitS
 
 	branchList := gitGateway.GetBranches(gitSource, user, organization.GitPath, repositoryName)
 
-	for branch, _ := range branchList {
+	for branch := range branchList {
 		if _, ok := organization.Projects[repositoryName].Branchs[branch]; !ok {
 			organization.Projects[repositoryName].Branchs[branch] = model.Branch{Name: branch}
 		}
 	}
 
-	for branch, _ := range organization.Projects[repositoryName].Branchs {
+	for branch := range organization.Projects[repositoryName].Branchs {
 		if _, ok := branchList[branch]; !ok {
 			delete(organization.Projects[repositoryName].Branchs, branch)
 		}
 	}
 
-	db.SaveOrganization(organization)
+	err := db.SaveOrganization(organization)
+	if err != nil {
+		log.Println("error in SaveOrganization:", err)
+	}
 }

@@ -291,7 +291,12 @@ func (gitlabApi *GitlabApi) getClient(gitSource *model.GitSource, user *model.Us
 		user.Oauth2RefreshToken = token.RefreshToken
 		user.Oauth2AccessTokenExpiresAt = token.ExpiryAt
 
-		gitlabApi.Db.SaveUser(user)
+		_, err = gitlabApi.Db.SaveUser(user)
+
+		if err != nil {
+			log.Println("error in SaveUser:", err)
+			return nil, err
+		}
 	}
 
 	return gitlab.NewOAuthClient(user.Oauth2AccessToken)
@@ -322,7 +327,10 @@ func (gitlabApi *GitlabApi) GetOauth2AccessToken(gitSource *model.GitSource, cod
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var response common.Token
-		json.Unmarshal(body, &response)
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
 
 		if response.Expiry > 0 {
 			response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
@@ -349,7 +357,10 @@ func (gitlabApi *GitlabApi) RefreshToken(gitSource *model.GitSource, refreshToke
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var response common.Token
-		json.Unmarshal(body, &response)
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
 
 		response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
 

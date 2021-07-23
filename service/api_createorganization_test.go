@@ -75,10 +75,10 @@ func setupRouter(user *model.User) *mux.Router {
 			ctx := r.Context()
 
 			if user == nil {
-				ctx = context.WithValue(ctx, "admin", true)
+				ctx = context.WithValue(ctx, controller.AdminUserParameter, true)
 			} else {
-				ctx = context.WithValue(ctx, "admin", false)
-				ctx = context.WithValue(ctx, controller.XAuthUserId, *user.UserID)
+				ctx = context.WithValue(ctx, controller.AdminUserParameter, false)
+				ctx = context.WithValue(ctx, controller.UserIdParameter, *user.UserID)
 			}
 
 			h.ServeHTTP(w, r.WithContext(ctx))

@@ -355,7 +355,12 @@ func (githubApi *GithubApi) getClient(gitSource *model.GitSource, user *model.Us
 		user.Oauth2RefreshToken = token.RefreshToken
 		user.Oauth2AccessTokenExpiresAt = token.ExpiryAt
 
-		githubApi.Db.SaveUser(user)
+		_, err = githubApi.Db.SaveUser(user)
+
+		if err != nil {
+			log.Println("error in SaveUser:", err)
+			return nil, err
+		}
 	}
 
 	ctx := context.Background()
@@ -395,7 +400,10 @@ func (githubApi *GithubApi) GetOauth2AccessToken(gitSource *model.GitSource, cod
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var response common.Token
-		json.Unmarshal(body, &response)
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
 
 		if response.Expiry > 0 {
 			response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
@@ -422,7 +430,10 @@ func (githubApi *GithubApi) RefreshToken(gitSource *model.GitSource, refreshToke
 	if api.IsResponseOK(resp.StatusCode) {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var response common.Token
-		json.Unmarshal(body, &response)
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
 
 		response.ExpiryAt = time.Now().Add(time.Second * time.Duration(response.Expiry))
 

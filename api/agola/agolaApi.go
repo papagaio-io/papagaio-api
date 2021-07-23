@@ -69,7 +69,10 @@ func (agolaApi *AgolaApi) GetOrganizations() (*[]OrganizationDto, error) {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var jsonResponse []OrganizationDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	return &jsonResponse, err
 }
@@ -91,7 +94,11 @@ func (agolaApi *AgolaApi) CheckOrganizationExists(organization *model.Organizati
 	if organizationExists {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var jsonResponse AgolaCreateORGDto
-		json.Unmarshal(body, &jsonResponse)
+		err := json.Unmarshal(body, &jsonResponse)
+		if err != nil {
+			return false, ""
+		}
+
 		organizationID = jsonResponse.ID
 	}
 
@@ -116,7 +123,11 @@ func (agolaApi *AgolaApi) CheckProjectExists(organization *model.Organization, a
 	if projectExists {
 		body, _ := ioutil.ReadAll(resp.Body)
 		var jsonResponse CreateProjectResponseDto
-		json.Unmarshal(body, &jsonResponse)
+		err = json.Unmarshal(body, &jsonResponse)
+		if err != nil {
+			return false, ""
+		}
+
 		projectID = jsonResponse.ID
 	}
 
@@ -143,7 +154,10 @@ func (agolaApi *AgolaApi) CreateOrganization(organization *model.Organization, v
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var jsonResponse AgolaCreateORGDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return "", err
+	}
 
 	return jsonResponse.ID, err
 }
@@ -208,7 +222,10 @@ func (agolaApi *AgolaApi) CreateProject(projectName string, agolaProjectRef stri
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var jsonResponse CreateProjectResponseDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return "", err
+	}
 
 	return jsonResponse.ID, err
 }
@@ -287,7 +304,7 @@ func (agolaApi *AgolaApi) RemoveOrganizationMember(organization *model.Organizat
 		return errors.New(string(respMessage))
 	}
 
-	return err
+	return errors.New("response status: " + resp.Status)
 }
 
 func (agolaApi *AgolaApi) GetOrganizationMembers(organization *model.Organization) (*OrganizationMembersResponseDto, error) {
@@ -311,7 +328,10 @@ func (agolaApi *AgolaApi) GetOrganizationMembers(organization *model.Organizatio
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var jsonResponse OrganizationMembersResponseDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	return &jsonResponse, err
 }
@@ -352,7 +372,10 @@ func (agolaApi *AgolaApi) GetRuns(projectRef string, lastRun bool, phase string,
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var jsonResponse []RunDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	return &jsonResponse, err
 }
@@ -378,7 +401,10 @@ func (agolaApi *AgolaApi) GetRun(runID string) (*RunDto, error) {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var jsonResponse RunDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	return &jsonResponse, err
 }
@@ -404,7 +430,10 @@ func (agolaApi *AgolaApi) GetTask(runID string, taskID string) (*TaskDto, error)
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var jsonResponse TaskDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	return &jsonResponse, err
 }
@@ -453,7 +482,10 @@ func (agolaApi *AgolaApi) GetRemoteSource(agolaRemoteSource string) (*RemoteSour
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	var jsonResponse RemoteSourceDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	return &jsonResponse, nil
 }
@@ -479,7 +511,10 @@ func (agolaApi *AgolaApi) GetUsers() (*[]UserDto, error) {
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	var jsonResponse []UserDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	return &jsonResponse, nil
 }
@@ -529,12 +564,15 @@ func (agolaApi *AgolaApi) CreateUserToken(user *model.User) error {
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	var jsonResponse TokenResponseDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return err
+	}
 
 	user.AgolaToken = &jsonResponse.Token
-	agolaApi.Db.SaveUser(user)
+	_, err = agolaApi.Db.SaveUser(user)
 
-	return nil
+	return err
 }
 
 func (agolaApi *AgolaApi) GetRemoteSources() (*[]RemoteSourceDto, error) {
@@ -558,7 +596,10 @@ func (agolaApi *AgolaApi) GetRemoteSources() (*[]RemoteSourceDto, error) {
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	var jsonResponse []RemoteSourceDto
-	json.Unmarshal(body, &jsonResponse)
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	return &jsonResponse, nil
 }

@@ -59,9 +59,17 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 
 			if userGitNotFound {
 				log.Println("delete user:", user.UserID)
-				db.DeleteUser(*user.UserID)
+				err := db.DeleteUser(*user.UserID)
+
+				if err != nil {
+					log.Println("error in DeleteUser:", err)
+				}
 			} else if user != nil {
-				db.SaveUser(user)
+				_, err = db.SaveUser(user)
+
+				if err != nil {
+					log.Println("error in SaveUser:", err)
+				}
 			}
 
 			if err == nil {
@@ -74,16 +82,12 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 			mutex := utils.ReserveOrganizationMutex(organizationRef, commonMutex)
 			mutex.Lock()
 
-			locked := true
-			defer utils.ReleaseOrganizationMutexDefer(organizationRef, commonMutex, mutex, &locked)
-
 			org, _ := db.GetOrganizationByAgolaRef(organizationRef)
 			if org == nil {
 				log.Println("synkUsersRun organization ", organizationRef, "not found")
 
 				mutex.Unlock()
 				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
 
 				continue
 			}
@@ -96,7 +100,6 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 
 				mutex.Unlock()
 				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
 
 				continue
 			}
@@ -106,7 +109,6 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 				if isOwner {
 					mutex.Unlock()
 					utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-					locked = false
 
 					continue
 				}
@@ -117,12 +119,15 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 			if user != nil {
 				log.Println("findUserToConnect result UserID", user.UserID)
 				org.UserIDConnected = *user.UserID
-				db.SaveOrganization(org)
+				err = db.SaveOrganization(org)
+
+				if err != nil {
+					log.Println("error in SaveOrganization:", err)
+				}
 			}
 
 			mutex.Unlock()
 			utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-			locked = false
 		}
 
 		fmt.Println("synkUsersRun:", <-c)

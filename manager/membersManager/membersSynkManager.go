@@ -23,7 +23,7 @@ func SynkMembers(org *model.Organization, gitSource *model.GitSource, agolaApi a
 		}
 	} else {
 		log.Println("Warning!!! Found gitSource null: ", org.AgolaOrganizationRef)
-		return errors.New("gitsource empty")
+		return errors.New("gitsource not found")
 	}
 
 	log.Println("SynkMembers", org.AgolaOrganizationRef, "end")

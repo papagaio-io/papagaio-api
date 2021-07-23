@@ -50,7 +50,10 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		}
 
 		if agolaMember, ok := (*agolaOrganizationMembersMap)[agolaUserRef]; !ok || agolaMember.Role == agola.Owner {
-			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "member")
+			err := agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "member")
+			if err != nil {
+				log.Println("AddOrUpdateOrganizationMember error:", err)
+			}
 		}
 	}
 
@@ -61,7 +64,10 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		}
 
 		if agolaMember, ok := (*agolaOrganizationMembersMap)[agolaUserRef]; !ok || agolaMember.Role == agola.Member {
-			agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "owner")
+			err := agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "owner")
+			if err != nil {
+				log.Println("AddOrUpdateOrganizationMember error:", err)
+			}
 		}
 	}
 
@@ -71,7 +77,10 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		log.Println("Check user in git:", agolaMember.User.Username)
 
 		if findGiteaMemberByAgolaUserRef(gitTeamOwners, agolaUsersMap, agolaMember.User.Username) == nil && findGiteaMemberByAgolaUserRef(gitTeamMembers, agolaUsersMap, agolaMember.User.Username) == nil {
-			agolaApi.RemoveOrganizationMember(organization, agolaMember.User.Username)
+			err := agolaApi.RemoveOrganizationMember(organization, agolaMember.User.Username)
+			if err != nil {
+				log.Println("RemoveOrganizationMember error:", err)
+			}
 		}
 	}
 

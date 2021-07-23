@@ -43,16 +43,12 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 			mutex := utils.ReserveOrganizationMutex(organizationRef, commonMutex)
 			mutex.Lock()
 
-			locked := true
-			defer utils.ReleaseOrganizationMutexDefer(organizationRef, commonMutex, mutex, &locked)
-
 			org, _ := db.GetOrganizationByAgolaRef(organizationRef)
 			if org == nil {
 				log.Println("discoveryRunFails organization ", organizationRef, "not found")
 
 				mutex.Unlock()
 				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
 
 				continue
 			}
@@ -63,7 +59,6 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 
 				mutex.Unlock()
 				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-				locked = false
 
 				continue
 			}
@@ -118,11 +113,14 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 
 				org.Projects[projectName] = project
 			}
-			db.SaveOrganization(org)
+			err = db.SaveOrganization(org)
+
+			if err != nil {
+				log.Println("error in SaveOrganization:", err)
+			}
 
 			mutex.Unlock()
 			utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
-			locked = false
 		}
 
 		fmt.Println("discoveryRunFails:", <-c)
@@ -151,7 +149,7 @@ func getUsersEmailMap(gitSource *model.GitSource, user *model.User, organization
 	}
 
 	if organization.ExternalUsers != nil {
-		for email, _ := range organization.ExternalUsers {
+		for email := range organization.ExternalUsers {
 			emails[email] = true
 		}
 	}

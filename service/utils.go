@@ -24,7 +24,11 @@ func ConvertToJson(model interface{}) []byte {
 func JSONokResponse(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(data)
+	err := json.NewEncoder(w).Encode(data)
+
+	if err != nil {
+		log.Println("encode error:", err)
+	}
 }
 
 // MakeResponse prepare a response
@@ -46,14 +50,21 @@ func MakeResponse(w http.ResponseWriter, response interface{}, statusCode int) {
 func NotFoundResponse(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte("No results"))
+	_, err := w.Write([]byte("No results"))
+
+	if err != nil {
+		log.Println("NotFoundResponse parsing error:", err)
+	}
 }
 
 // UnprocessableEntityResponse make an unprocessable entity response with a specific message
 func UnprocessableEntityResponse(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusUnprocessableEntity)
-	w.Write([]byte(message))
+	_, err := w.Write([]byte(message))
+	if err != nil {
+		log.Println("UnprocessableEntityResponse parsing error:", err)
+	}
 }
 
 // InternalServerError log the caller code position and write to w 500 Internal Server Error

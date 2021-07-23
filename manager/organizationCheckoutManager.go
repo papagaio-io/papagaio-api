@@ -18,7 +18,10 @@ func StartOrganizationCheckout(db repository.Database, user *model.User, organiz
 func organizationCheckout(db repository.Database, user *model.User, organization *model.Organization, gitSource *model.GitSource, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway) {
 	log.Println("Start organization synk")
 
-	membersManager.SynkMembers(organization, gitSource, agolaApi, gitGateway, user)
+	err := membersManager.SynkMembers(organization, gitSource, agolaApi, gitGateway, user)
+	if err != nil {
+		log.Println("SynkMembers error:", err)
+	}
 
 	repositoryManager.CheckoutAllGitRepository(db, user, organization, gitSource, agolaApi, gitGateway)
 }

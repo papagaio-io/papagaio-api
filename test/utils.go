@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"sort"
 
@@ -15,7 +16,10 @@ import (
 
 func ParseBody(resp *http.Response, dto interface{}) {
 	data, _ := ioutil.ReadAll(resp.Body)
-	json.Unmarshal([]byte(string(data)), dto)
+	err := json.Unmarshal([]byte(string(data)), dto)
+	if err != nil {
+		log.Println("ParseBody error:", err)
+	}
 }
 
 func SortProjectsDto(projects []dto.ProjectDto) []dto.ProjectDto {
@@ -39,10 +43,10 @@ func SetupBaseRouter(user *model.User) *mux.Router {
 			ctx := r.Context()
 
 			if user == nil {
-				ctx = context.WithValue(ctx, "admin", true)
+				ctx = context.WithValue(ctx, controller.AdminUserParameter, true)
 			} else {
-				ctx = context.WithValue(ctx, "admin", false)
-				ctx = context.WithValue(ctx, controller.XAuthUserId, user.ID)
+				ctx = context.WithValue(ctx, controller.AdminUserParameter, false)
+				ctx = context.WithValue(ctx, controller.UserIdParameter, user.ID)
 			}
 
 			h.ServeHTTP(w, r.WithContext(ctx))

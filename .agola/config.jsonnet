@@ -8,10 +8,26 @@ local go_runtime() = {
   ],
 };
 
+local task_test() = 
+  {
+    name: "test",
+    runtime: go_runtime(),
+    steps: 
+      [
+        { type: 'clone' },
+        { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
+        { type: 'run', name: 'go test', command: 'go test -coverprofile testCover.out ./service' },
+        { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
+        { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
+        { type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '.', paths: ['**'] }] },
+      ],
+  };
+
 local task_build_go() = 
   {
     name: "build go",
     runtime: go_runtime(),
+    depends: ["test"],
     environment:
     {
       "USERNAME": {
@@ -26,12 +42,10 @@ local task_build_go() =
     },
     steps: 
       [
-        { type: 'clone' },
-        { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
+        { type: "restore_workspace", name: "restore workspace", dest_dir: "." },
         { type: 'run', name: 'build the program', command: 'go build .' },
         { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
         { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
-        { type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '.', paths: ['**'] }] },
         { type: 'run',
           name: 'Create and deploy Nexus', 
           command: |||
@@ -197,6 +211,7 @@ local task_kubernetes_deploy(namespace, changeImageVersion) =
         }
       },
       tasks: [
+        task_test(),
         task_build_go(),
         task_docker_build_push_private(),
         task_docker_build_push_public(),

@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"gotest.tools/assert"
+	"wecode.sorint.it/opensource/papagaio-api/api/agola"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -247,4 +249,36 @@ func TestRemoveExternalUserWhenAgolaRefNotFound(t *testing.T) {
 	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not OK")
+}
+
+func TestGetAgolaOrganizationsOK(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+	agolaOrganizations := []agola.OrganizationDto{
+		{
+			ID: "1", Name: "test", Visibility: "public",
+		},
+	}
+
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	agolaApi.EXPECT().GetOrganizations().Return(&agolaOrganizations, nil)
+	serviceOrganization := OrganizationService{
+		AgolaApi: agolaApi,
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(serviceOrganization.GetAgolaOrganizations))
+	defer ts.Close()
+
+	client := ts.Client()
+	resp, err := client.Get(ts.URL)
+
+	assert.Equal(t, err, nil)
+
+	var organizations []string
+	test.ParseBody(resp, &organizations)
+
+	fmt.Println("result:", organizations)
+
+	assert.Check(t, len(organizations) == 1, "organizations is empty")
+	assert.Equal(t, organizations[0], "test")
 }

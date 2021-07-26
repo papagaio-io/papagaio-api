@@ -166,7 +166,7 @@ func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
 }
 
 func setupGetTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
-	router.Use(handleLoggedUserWithAdminRoleRoutes)
+	router.Use(handleRestrictedAllRoutes)
 	router.HandleFunc("", ctrl.GetTriggersConfig).Methods("GET")
 }
 

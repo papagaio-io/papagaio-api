@@ -120,7 +120,7 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 			GitSourceName: gitSourceName,
 			ID:            uint64(userInfo.ID),
 			Email:         userInfo.Email,
-			IsAdmin:       userInfo.IsAdmin,
+			IsGitAdmin:    userInfo.IsAdmin,
 			Login:         userInfo.Login,
 		}
 	}
@@ -128,7 +128,7 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 	user.Oauth2AccessTokenExpiresAt = accessToken.ExpiryAt
 	user.Oauth2RefreshToken = accessToken.RefreshToken
 
-	user.IsAdmin = userInfo.IsAdmin
+	user.IsGitAdmin = userInfo.IsAdmin
 	user.Login = userInfo.Login
 	user.Email = userInfo.Email
 
@@ -146,7 +146,7 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 		InternalServerError(w)
 	}
 
-	response := dto.OauthCallbackResponseDto{Token: userToken, UserID: *user.UserID, UserInfo: *userInfo}
+	response := dto.OauthCallbackResponseDto{Token: userToken, UserID: *user.UserID, GitUserInfo: *userInfo, IsAdmin: user.IsAdmin}
 	JSONokResponse(w, response)
 
 	log.Println("Callback end for user:", *user.UserID)

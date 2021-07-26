@@ -64,7 +64,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 		webHookMessage.Action = ""
 		webHookMessage.Sha = gitLabHookMessage.CheckoutSHA
-		webHookMessage.RefType = gitLabHookMessage.Ref
+		webHookMessage.Repository.Name = gitLabHookMessage.Repository.Name
 		webHookMessage.Repository.ID = gitLabHookMessage.ProjectID
 	} else {
 		err := json.Unmarshal(data, &webHookMessage)

@@ -49,7 +49,7 @@ func SetupHTTPClient() {
 	}
 }
 
-func SetupRouter(signingData *common.TokenSigningData, database repository.Database, router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlWebHook WebHookController, ctrlTrigger TriggersController, ctrlOauth2 Oauth2Controller) {
+func SetupRouter(signingData *common.TokenSigningData, database repository.Database, router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlWebHook WebHookController, ctrlTrigger TriggersController, ctrlOauth2 Oauth2Controller, ctrlUser UserController) {
 	db = database
 	sd = signingData
 
@@ -84,6 +84,8 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 
 	setupOauth2Login(apirouter.PathPrefix("/auth/login").Subrouter(), ctrlOauth2)
 	setupOauth2Callback(apirouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)
+
+	setupChangeUserRole(apirouter.PathPrefix("/changeuserrole").Subrouter(), ctrlUser)
 }
 
 func setupPingRouter(router *mux.Router) {
@@ -189,6 +191,11 @@ func setupOauth2Login(router *mux.Router, ctrl Oauth2Controller) {
 
 func setupOauth2Callback(router *mux.Router, ctrl Oauth2Controller) {
 	router.HandleFunc("", ctrl.Callback).Methods("GET")
+}
+
+func setupChangeUserRole(router *mux.Router, ctrl UserController) {
+	router.Use(handleRestrictedAdminRoutes)
+	router.HandleFunc("", ctrl.ChangeUserRole).Methods("PUT")
 }
 
 func handleLoggedUserRoutes(h http.Handler) http.Handler {

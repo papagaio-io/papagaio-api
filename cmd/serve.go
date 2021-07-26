@@ -99,10 +99,14 @@ func serve(cmd *cobra.Command, args []string) {
 		GitGateway: &gitGateway,
 	}
 
+	ctrlUser := service.UserService{
+		Db: &db,
+	}
+
 	router := mux.NewRouter()
 
 	controller.SetupHTTPClient()
-	controller.SetupRouter(sd, &db, router, &ctrlOrganization, &ctrlGitSource, &ctrlWebHook, &ctrlTrigger, &ctrlOauth2)
+	controller.SetupRouter(sd, &db, router, &ctrlOrganization, &ctrlGitSource, &ctrlWebHook, &ctrlTrigger, &ctrlOauth2, &ctrlUser)
 
 	log.Println("Papagaio Server Starting on port ", config.Config.Server.Port)
 

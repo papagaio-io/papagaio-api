@@ -168,7 +168,7 @@ func verifyUserGiteaAccount(user *model.User, gitGateway *git.GitGateway, gitSou
 	}
 
 	user.Email = userInfo.Email
-	user.IsAdmin = userInfo.IsAdmin
+	user.IsGitAdmin = userInfo.IsAdmin
 	user.Login = userInfo.Login
 	user.ID = uint64(userInfo.ID)
 

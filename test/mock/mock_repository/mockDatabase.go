@@ -354,12 +354,11 @@ func (mr *MockDatabaseMockRecorder) GetUserByGitSourceNameAndID(gitSourceName, i
 }
 
 // SaveUser mocks base method
-func (m *MockDatabase) SaveUser(user *model.User) (*model.User, error) {
+func (m *MockDatabase) SaveUser(user *model.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveUser", user)
-	ret0, _ := ret[0].(*model.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SaveUser indicates an expected call of SaveUser

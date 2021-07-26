@@ -156,7 +156,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 			}
 		}
 
-		_, err := service.Db.SaveUser(user)
+		err := service.Db.SaveUser(user)
 		if err != nil {
 			log.Println("Error in SaveUser:", err)
 			InternalServerError(w)

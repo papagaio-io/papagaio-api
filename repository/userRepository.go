@@ -137,11 +137,11 @@ func (db *AppDb) GetUserByGitSourceNameAndID(gitSourceName string, id uint64) (*
 	return user, err
 }
 
-func (db *AppDb) SaveUser(user *model.User) (*model.User, error) {
+func (db *AppDb) SaveUser(user *model.User) error {
 	if user.UserID == nil {
 		seq, err := db.DB.GetSequence([]byte("sequence/user"), 100000)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		id, _ := seq.Next()
@@ -150,7 +150,7 @@ func (db *AppDb) SaveUser(user *model.User) (*model.User, error) {
 		}
 		err = seq.Release()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		user.UserID = &id
 	}
@@ -159,7 +159,7 @@ func (db *AppDb) SaveUser(user *model.User) (*model.User, error) {
 	value, err := json.Marshal(user)
 	if err != nil {
 		log.Println("SaveUser error in json marshal", err)
-		return nil, err
+		return err
 	}
 
 	err = db.DB.Update(func(txn *badger.Txn) error {
@@ -169,7 +169,7 @@ func (db *AppDb) SaveUser(user *model.User) (*model.User, error) {
 		return err
 	})
 
-	return user, err
+	return err
 }
 
 func (db *AppDb) DeleteUser(userId uint64) error {

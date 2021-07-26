@@ -36,7 +36,7 @@ type Database interface {
 	GetUsersIDByGitSourceName(gitSourceName string) ([]uint64, error)
 	GetUserByUserId(userId uint64) (*model.User, error)
 	GetUserByGitSourceNameAndID(gitSourceName string, id uint64) (*model.User, error)
-	SaveUser(user *model.User) (*model.User, error)
+	SaveUser(user *model.User) error
 	DeleteUser(userId uint64) error
 }
 

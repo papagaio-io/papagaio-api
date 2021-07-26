@@ -291,7 +291,7 @@ func (gitlabApi *GitlabApi) getClient(gitSource *model.GitSource, user *model.Us
 		user.Oauth2RefreshToken = token.RefreshToken
 		user.Oauth2AccessTokenExpiresAt = token.ExpiryAt
 
-		_, err = gitlabApi.Db.SaveUser(user)
+		err = gitlabApi.Db.SaveUser(user)
 
 		if err != nil {
 			log.Println("error in SaveUser:", err)

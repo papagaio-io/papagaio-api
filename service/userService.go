@@ -43,7 +43,7 @@ func (service *UserService) ChangeUserRole(w http.ResponseWriter, r *http.Reques
 
 	user.IsAdmin = requestDto.UserRole == dto.Administrator
 
-	_, err = service.Db.SaveUser(user)
+	err = service.Db.SaveUser(user)
 	if err != nil {
 		log.Println("error in SaveUser:", err)
 		InternalServerError(w)

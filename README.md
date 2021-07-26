@@ -28,13 +28,14 @@ papagaio gitsource add
 
 example: papagaio gitsource add --name {gitSourceName} --type gitea --git-token {gitUserToken} --git-api-url  {gitUrl --agola-remotesource {agolaRemoteSource} --agola-token {agolaUserToken} --token {papagaioAdminToken}
 
-* Add administration users
-papagaio user add
-      --email string         user email
+* Change user role
+papagaio user change-role
       --gateway-url string   papagaio gateway URL(optional)
-  -h, --help                 help for user
+      --id uint              user id
+      --role string          user role(ADMINISTRATOR, DEVELOPER)
+      -h, --help   help for change-role
       --token string         token
-example: papagaio user add --email {userEmail} --token {papagaioAdminToken}
+example: papagaio user change-role --id {userId} --role ADMINISTRATOR --token {papagaioAdminToken}
 
 # Swagger
 

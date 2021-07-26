@@ -166,17 +166,17 @@ func setupWebHookEndpoint(router *mux.Router, ctrl WebHookController) {
 }
 
 func setupGetTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
-	router.Use(handleLoggedUserRoutes)
+	router.Use(handleLoggedUserWithAdminRoleRoutes)
 	router.HandleFunc("", ctrl.GetTriggersConfig).Methods("GET")
 }
 
 func setupSaveTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
-	router.Use(handleLoggedUserRoutes)
+	router.Use(handleLoggedUserWithAdminRoleRoutes)
 	router.HandleFunc("", ctrl.SaveTriggersConfig).Methods("POST")
 }
 
 func setupRestartTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
-	router.Use(handleLoggedUserRoutes)
+	router.Use(handleLoggedUserWithAdminRoleRoutes)
 	router.HandleFunc("", ctrl.RestartTriggers).Methods("POST")
 }
 
@@ -196,6 +196,56 @@ func setupOauth2Callback(router *mux.Router, ctrl Oauth2Controller) {
 func setupChangeUserRole(router *mux.Router, ctrl UserController) {
 	router.Use(handleRestrictedAdminRoutes)
 	router.HandleFunc("", ctrl.ChangeUserRole).Methods("PUT")
+}
+
+func handleLoggedUserWithAdminRoleRoutes(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+		if tokenString == "" {
+			log.Println("Undefined Authorization")
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		token, err := common.ParseToken(sd, tokenString)
+		if err != nil {
+			log.Println("failed to parse jwt:", err)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+		if !token.Valid {
+			log.Println("invalid token")
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		claims := token.Claims.(jwt.MapClaims)
+		userId := uint64(claims["sub"].(float64))
+
+		exp := int64(claims["exp"].(float64))
+		expTime := time.Unix(exp, 0)
+		if common.IsAccessTokenExpired(expTime) {
+			log.Println("Your token was expired at: ", expTime)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		user, _ := db.GetUserByUserId(userId)
+
+		if user == nil || !user.IsAdmin {
+			log.Println("user", userId, "not found")
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		fmt.Println("http request user", userId)
+
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, AdminUserParameter, false)
+		ctx = context.WithValue(ctx, UserIdParameter, userId)
+
+		h.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func handleLoggedUserRoutes(h http.Handler) http.Handler {

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -8,9 +9,12 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
+	"golang.org/x/oauth2"
 	"gotest.tools/assert"
 	"wecode.sorint.it/opensource/papagaio-api/api/git"
+	gitDto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/common"
+	"wecode.sorint.it/opensource/papagaio-api/model"
 	"wecode.sorint.it/opensource/papagaio-api/test"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_gitea"
 	"wecode.sorint.it/opensource/papagaio-api/test/mock/mock_repository"
@@ -50,6 +54,84 @@ func TestLoginOK(t *testing.T) {
 
 	client := ts.Client()
 	resp, err := client.Get(ts.URL + "/login/" + gitSource.Name)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+}
+
+func TestCallbackNewUserOK(t *testing.T) {
+	setupOauth2Mock(t)
+
+	gitSource := (*test.MakeGitSourceMap())["gitea"]
+	token, _ := common.GenerateOauth2JWTToken(oauth2Service.Sd, gitSource.Name)
+	code := "test"
+	userInfo := gitDto.UserInfoDto{
+		ID:       1,
+		Login:    "test_login",
+		Email:    "test_email",
+		FullName: "test_fullname",
+		IsAdmin:  false,
+	}
+	accessToken := common.Token{Token: oauth2.Token{AccessToken: "test", RefreshToken: "test", TokenType: "bearer", Expiry: time.Now()}}
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	giteaApi.EXPECT().GetOauth2AccessToken(gomock.Any(), code).Return(&accessToken, nil)
+	giteaApi.EXPECT().GetUserInfo(gomock.Any(), gomock.Any()).Return(&userInfo, nil)
+	db.EXPECT().GetUserByGitSourceNameAndID(gitSource.Name, uint64(userInfo.ID)).Return(nil, nil)
+	db.EXPECT().SaveUser(gomock.Any()).Do(func(user *model.User) error {
+		id := uint64(1)
+		user.UserID = &id
+		return nil
+	})
+
+	router := test.SetupBaseRouter(nil)
+	router.HandleFunc("/callback", oauth2Service.Callback)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+	resp, err := client.Get(ts.URL + "/callback?code=" + code + "&state=" + token)
+
+	fmt.Println("status:", resp.Status)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+}
+
+func TestCallbackUserJustExist(t *testing.T) {
+	setupOauth2Mock(t)
+
+	gitSource := (*test.MakeGitSourceMap())["gitea"]
+	token, _ := common.GenerateOauth2JWTToken(oauth2Service.Sd, gitSource.Name)
+	code := "test"
+	userInfo := gitDto.UserInfoDto{
+		ID:       1,
+		Login:    "test_login",
+		Email:    "test_email",
+		FullName: "test_fullname",
+		IsAdmin:  false,
+	}
+	accessToken := common.Token{Token: oauth2.Token{AccessToken: "test", RefreshToken: "test", TokenType: "bearer", Expiry: time.Now()}}
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	giteaApi.EXPECT().GetOauth2AccessToken(gomock.Any(), code).Return(&accessToken, nil)
+	giteaApi.EXPECT().GetUserInfo(gomock.Any(), gomock.Any()).Return(&userInfo, nil)
+	db.EXPECT().GetUserByGitSourceNameAndID(gitSource.Name, uint64(userInfo.ID)).Return(nil, nil)
+	db.EXPECT().SaveUser(gomock.Any()).Do(func(user *model.User) error {
+		id := uint64(1)
+		user.UserID = &id
+		return nil
+	})
+
+	router := test.SetupBaseRouter(nil)
+	router.HandleFunc("/callback", oauth2Service.Callback)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+	resp, err := client.Get(ts.URL + "/callback?code=" + code + "&state=" + token)
+
+	fmt.Println("status:", resp.Status)
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")

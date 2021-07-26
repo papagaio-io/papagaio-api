@@ -65,7 +65,7 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 					log.Println("error in DeleteUser:", err)
 				}
 			} else if user != nil {
-				_, err = db.SaveUser(user)
+				err = db.SaveUser(user)
 
 				if err != nil {
 					log.Println("error in SaveUser:", err)

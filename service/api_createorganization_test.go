@@ -211,7 +211,7 @@ func TestCreateOrganizationUserAgolaCreateToken(t *testing.T) {
 	agolaApiInt.EXPECT().GetRemoteSource(gitSource.AgolaRemoteSource).Return(&remotesource, nil)
 	agolaApiInt.EXPECT().GetUsers().Return(&users, nil)
 	agolaApiInt.EXPECT().CreateUserToken(user).Return(nil)
-	db.EXPECT().SaveUser(user).Return(user, nil)
+	db.EXPECT().SaveUser(user).Return(nil)
 	db.EXPECT().GetOrganizationByAgolaRef(organizationReqDto.AgolaRef).Return(nil, nil)
 	giteaApi.EXPECT().CreateWebHook(gomock.Any(), gomock.Any(), organizationReqDto.GitPath, organizationReqDto.AgolaRef).Return(1, nil)
 	agolaApiInt.EXPECT().CheckOrganizationExists(gomock.Any()).Return(false, "")

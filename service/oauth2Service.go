@@ -132,9 +132,9 @@ func (service *Oauth2Service) Callback(w http.ResponseWriter, r *http.Request) {
 	user.Login = userInfo.Login
 	user.Email = userInfo.Email
 
-	user, err = service.Db.SaveUser(user)
+	err = service.Db.SaveUser(user)
 
-	if err != nil || user == nil {
+	if err != nil {
 		log.Println("Error on creating user:", err, user)
 		InternalServerError(w)
 		return

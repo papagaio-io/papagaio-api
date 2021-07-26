@@ -570,7 +570,7 @@ func (agolaApi *AgolaApi) CreateUserToken(user *model.User) error {
 	}
 
 	user.AgolaToken = &jsonResponse.Token
-	_, err = agolaApi.Db.SaveUser(user)
+	err = agolaApi.Db.SaveUser(user)
 
 	return err
 }

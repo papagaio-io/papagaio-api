@@ -669,7 +669,7 @@ func (giteaApi *GiteaApi) getClient(gitSource *model.GitSource, user *model.User
 		user.Oauth2RefreshToken = token.RefreshToken
 		user.Oauth2AccessTokenExpiresAt = time.Now().Add(time.Second * time.Duration(token.Expiry))
 
-		_, err = giteaApi.Db.SaveUser(user)
+		err = giteaApi.Db.SaveUser(user)
 		if err != nil {
 			log.Println("error in SaveUser:", err)
 			return nil, err

@@ -44,7 +44,7 @@ func init() {
 }
 
 func changeUserRole(cmd *cobra.Command, args []string) {
-	if err := cfgGitSource.IsAdminUser(); err != nil {
+	if err := cfgUser.IsAdminUser(); err != nil {
 		cmd.PrintErrln(err.Error())
 		os.Exit(1)
 	}
@@ -62,10 +62,10 @@ func changeUserRole(cmd *cobra.Command, args []string) {
 
 	data, _ := json.Marshal(request)
 	client := &http.Client{}
-	URLApi := cfgGitSource.gatewayURL + "/api/changeuserrole"
+	URLApi := cfgUser.gatewayURL + "/api/changeuserrole"
 	reqBody := strings.NewReader(string(data))
 	req, _ := http.NewRequest("PUT", URLApi, reqBody)
-	req.Header.Add("Authorization", "token "+cfgGitSource.token)
+	req.Header.Add("Authorization", "token "+cfgUser.token)
 
 	resp, err := client.Do(req)
 	if err != nil {

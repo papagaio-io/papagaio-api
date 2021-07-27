@@ -230,7 +230,12 @@ func (githubApi *GithubApi) GetOrganization(gitSource *model.GitSource, user *mo
 	}
 
 	if org != nil {
-		response := &dto.OrganizationDto{Name: *org.Name, Path: *org.Login, ID: *org.ID}
+		response := &dto.OrganizationDto{Path: *org.Login, ID: *org.ID}
+		if org.Name != nil {
+			response.Name = *org.Name
+		} else {
+			response.Name = *org.Login
+		}
 		if org.AvatarURL != nil {
 			response.AvatarURL = *org.AvatarURL
 		}

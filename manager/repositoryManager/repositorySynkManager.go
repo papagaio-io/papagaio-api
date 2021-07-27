@@ -183,21 +183,26 @@ func BranchSynck(db repository.Database, user *model.User, gitSource *model.GitS
 		organization.Projects[repositoryName] = project
 	}
 
-	branchList := gitGateway.GetBranches(gitSource, user, organization.GitPath, repositoryName)
+	branchList, err := gitGateway.GetBranches(gitSource, user, organization.GitPath, repositoryName)
+	if err != nil {
+		log.Println("GetBranches error:", err)
+	}
 
-	for branch := range branchList {
-		if _, ok := organization.Projects[repositoryName].Branchs[branch]; !ok {
-			organization.Projects[repositoryName].Branchs[branch] = model.Branch{Name: branch}
+	if branchList != nil {
+		for branch := range branchList {
+			if _, ok := organization.Projects[repositoryName].Branchs[branch]; !ok {
+				organization.Projects[repositoryName].Branchs[branch] = model.Branch{Name: branch}
+			}
+		}
+
+		for branch := range organization.Projects[repositoryName].Branchs {
+			if _, ok := branchList[branch]; !ok {
+				delete(organization.Projects[repositoryName].Branchs, branch)
+			}
 		}
 	}
 
-	for branch := range organization.Projects[repositoryName].Branchs {
-		if _, ok := branchList[branch]; !ok {
-			delete(organization.Projects[repositoryName].Branchs, branch)
-		}
-	}
-
-	err := db.SaveOrganization(organization)
+	err = db.SaveOrganization(organization)
 	if err != nil {
 		log.Println("error in SaveOrganization:", err)
 	}

@@ -533,7 +533,7 @@ func setupBranchSynckMock(db *mock_repository.MockDatabase, giteaApi *mock_gitea
 	branches := make(map[string]bool)
 	branches["master"] = true
 
-	giteaApi.EXPECT().GetBranches(gomock.Any(), gomock.Any(), organizationName, repositoryName).Return(branches)
+	giteaApi.EXPECT().GetBranches(gomock.Any(), gomock.Any(), organizationName, repositoryName).Return(branches, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 }
 
@@ -541,6 +541,6 @@ func setupBranchSynckGitlabMock(db *mock_repository.MockDatabase, gitlabApi *moc
 	branches := make(map[string]bool)
 	branches["master"] = true
 
-	gitlabApi.EXPECT().GetBranches(gomock.Any(), gomock.Any(), organizationName, repositoryName).Return(branches)
+	gitlabApi.EXPECT().GetBranches(gomock.Any(), gomock.Any(), organizationName, repositoryName).Return(branches, nil)
 	db.EXPECT().SaveOrganization(gomock.Any()).Return(nil)
 }

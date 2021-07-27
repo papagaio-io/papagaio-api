@@ -38,7 +38,7 @@ func MakeOrganizationMap() *map[string]model.Organization {
 			UserIDConnected:      1,
 			BehaviourInclude:     "*",
 			BehaviourType:        types.Wildcard,
-			WebHookID:            i,
+			WebHookID:            int64(i),
 		}
 	}
 

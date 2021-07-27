@@ -20,13 +20,13 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		log.Println("error in GetOrganizationTeams:", err)
 		return
 	}
-	gitTeamOwners := make(map[int]dto.UserTeamResponseDto)
-	gitTeamMembers := make(map[int]dto.UserTeamResponseDto)
+	gitTeamOwners := make(map[int64]dto.UserTeamResponseDto)
+	gitTeamMembers := make(map[int64]dto.UserTeamResponseDto)
 
 	for _, team := range *gitTeams {
 		teamMembers, _ := gitGateway.GiteaApi.GetTeamMembers(gitSource, user, team.ID)
 
-		var teamToCheck *map[int]dto.UserTeamResponseDto
+		var teamToCheck *map[int64]dto.UserTeamResponseDto
 		if strings.Compare(team.Permission, "owner") == 0 {
 			teamToCheck = &gitTeamOwners
 		} else {
@@ -87,7 +87,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	log.Println("SyncMembersForGitea end")
 }
 
-func findGiteaMemberByAgolaUserRef(gitMembers map[int]dto.UserTeamResponseDto, agolaUsersMap *map[string]string, agolaUserRef string) *dto.UserTeamResponseDto {
+func findGiteaMemberByAgolaUserRef(gitMembers map[int64]dto.UserTeamResponseDto, agolaUsersMap *map[string]string, agolaUserRef string) *dto.UserTeamResponseDto {
 	for _, gitMember := range gitMembers {
 		if strings.Compare(agolaUserRef, (*agolaUsersMap)[gitMember.Username]) == 0 {
 			return &gitMember

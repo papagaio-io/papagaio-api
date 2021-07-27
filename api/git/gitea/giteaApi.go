@@ -7,9 +7,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
+	"code.gitea.io/sdk/gitea"
 	"wecode.sorint.it/opensource/papagaio-api/api"
 	"wecode.sorint.it/opensource/papagaio-api/api/git/dto"
 	"wecode.sorint.it/opensource/papagaio-api/common"
@@ -20,15 +22,15 @@ import (
 )
 
 type GiteaInterface interface {
-	CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error)
-	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error
+	CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int64, error)
+	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int64) error
 	GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error)
 	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error)
 	GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error)
 	GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error)
 	GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error)
-	GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int) (*[]dto.UserTeamResponseDto, error)
-	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool
+	GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int64) (*[]dto.UserTeamResponseDto, error)
+	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (map[string]bool, error)
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
 	GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error)
@@ -36,7 +38,6 @@ type GiteaInterface interface {
 
 	GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error)
 	GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error)
-	CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*CreateOauth2AppResponseDto, error)
 
 	GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error)
 	RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error)
@@ -46,95 +47,60 @@ type GiteaApi struct {
 	Db repository.Database
 }
 
-func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-	URLApi := getCreateWebHookUrl(gitSource.GitAPIURL, gitOrgRef)
-	webHookConfigPath := controller.GetWebHookPath() + "/" + organizationRef
+const oauth2AuthorizePath string = "%s/login/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=&state=%s"
+const oauth2AccessTokenPath string = "%s/login/oauth/access_token"
 
-	webHookRequest := CreateWebHookRequestDto{
+func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int64, error) {
+	client, err := giteaApi.getClient(gitSource, user)
+	if err != nil {
+		return -1, err
+	}
+
+	optConf := map[string]string{
+		"content_type": "json",
+		"url":          config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + organizationRef,
+		"http_method":  "post",
+	}
+
+	opt := gitea.CreateHookOption{
+		Type:         "gitea",
+		Config:       optConf,
+		Events:       []string{"repository", "push", "create", "delete"},
 		Active:       true,
 		BranchFilter: "*",
-		Config:       WebHookConfigRequestDto{ContentType: "json", URL: config.Config.Server.LocalHostAddress + webHookConfigPath, HTTPMethod: "post"},
-		Events:       []string{"repository", "push", "create", "delete"},
-		Type:         "gitea",
-	}
-	data, _ := json.Marshal(webHookRequest)
-
-	reqBody := strings.NewReader(string(data))
-	req, _ := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Set("content-type", "application/json")
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return -1, err
-	}
-	defer resp.Body.Close()
-
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return -1, errors.New(string(respMessage))
 	}
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var webHookResponse CreateWebHookResponseDto
-	err = json.Unmarshal(body, &webHookResponse)
+	hook, _, err := client.CreateOrgHook(gitOrgRef, opt)
 	if err != nil {
 		return -1, err
 	}
 
-	return webHookResponse.ID, nil
+	return hook.ID, nil
 }
 
-func (giteaApi *GiteaApi) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error {
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getWehHookUrl(gitSource.GitAPIURL, gitOrgRef, fmt.Sprint(webHookID))
-
-	req, _ := http.NewRequest("DELETE", URLApi, nil)
-	resp, err := client.Do(req)
-
+func (giteaApi *GiteaApi) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int64) error {
+	client, err := giteaApi.getClient(gitSource, user)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return errors.New(string(respMessage))
-	}
-
+	_, err = client.DeleteOrgHook(gitOrgRef, webHookID)
 	return err
 }
 
 func (giteaApi *GiteaApi) GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getGetListRepositoryUrl(gitSource.GitAPIURL, gitOrgRef)
-
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
+	client, err := giteaApi.getClient(gitSource, user)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return nil, errors.New(string(respMessage))
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var repositoryesResponse []RepositoryDto
-	err = json.Unmarshal(body, &repositoryesResponse)
+	repoList, _, err := client.ListOrgRepos(gitOrgRef, gitea.ListOrgReposOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	retVal := make([]string, 0)
-	for _, repo := range repositoryesResponse {
+	for _, repo := range repoList {
 		retVal = append(retVal, repo.Name)
 	}
 
@@ -142,63 +108,46 @@ func (giteaApi *GiteaApi) GetRepositories(gitSource *model.GitSource, user *mode
 }
 
 func (giteaApi *GiteaApi) GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getOrganizationUrl(gitSource.GitAPIURL, gitOrgRef)
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
+	client, err := giteaApi.getClient(gitSource, user)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode == 404 {
-		return nil, nil
+	org, _, err := client.GetOrg(gitOrgRef)
+	if err != nil {
+		return nil, err
 	}
 
-	if api.IsResponseOK(resp.StatusCode) {
-		body, _ := ioutil.ReadAll(resp.Body)
-		var data OrganizationResponseDto
-		err = json.Unmarshal(body, &data)
-		if err != nil {
-			return nil, err
+	if org != nil {
+		retVal := dto.OrganizationDto{
+			Path:      org.UserName,
+			Name:      org.FullName,
+			AvatarURL: org.AvatarURL,
+			ID:        org.ID,
 		}
-
-		organization := dto.OrganizationDto{Name: data.Name, Path: data.Name, ID: data.ID, AvatarURL: data.AvatarURL}
-		return &organization, nil
+		return &retVal, nil
 	}
 
-	return nil, errors.New("internal error")
+	return nil, nil
 }
 
 func (giteaApi *GiteaApi) GetRepositoryTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]dto.TeamResponseDto, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getRepositoryTeamsListUrl(gitSource.GitAPIURL, gitOrgRef, repositoryRef)
-
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return nil, errors.New(string(respMessage))
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var teamsResponse []dto.TeamResponseDto
-	err = json.Unmarshal(body, &teamsResponse)
+	client, err := giteaApi.getClient(gitSource, user)
 	if err != nil {
 		return nil, err
 	}
 
-	return &teamsResponse, err
+	teams, _, err := client.ListOrgTeams(gitOrgRef+"/"+repositoryRef, gitea.ListTeamsOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	teamsResponse := make([]dto.TeamResponseDto, 0)
+	for _, team := range teams {
+		teamsResponse = append(teamsResponse, dto.TeamResponseDto{ID: team.ID, Name: team.Name, Permission: string(team.Permission)})
+	}
+
+	return &teamsResponse, nil
 }
 
 func (giteaApi *GiteaApi) GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error) {
@@ -228,138 +177,100 @@ func (giteaApi *GiteaApi) GetEmailsRepositoryUsersOwner(gitSource *model.GitSour
 }
 
 func (giteaApi *GiteaApi) GetOrganizationTeams(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]dto.TeamResponseDto, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getOrganizationTeamsListUrl(gitSource.GitAPIURL, gitOrgRef)
-
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
+	client, err := giteaApi.getClient(gitSource, user)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return nil, errors.New(string(respMessage))
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var teamsResponse []dto.TeamResponseDto
-	err = json.Unmarshal(body, &teamsResponse)
+	teams, _, err := client.ListOrgTeams(gitOrgRef, gitea.ListTeamsOptions{})
 	if err != nil {
 		return nil, err
+	}
+
+	teamsResponse := make([]dto.TeamResponseDto, 0)
+	for _, team := range teams {
+		teamsResponse = append(teamsResponse, dto.TeamResponseDto{ID: team.ID, Name: team.Name, Permission: string(team.Permission)})
 	}
 
 	return &teamsResponse, nil
 }
 
-func (giteaApi *GiteaApi) GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int) (*[]dto.UserTeamResponseDto, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getTeamUsersListUrl(gitSource.GitAPIURL, fmt.Sprint(teamId))
-
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return nil, errors.New(string(respMessage))
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var usersResponse []dto.UserTeamResponseDto
-	err = json.Unmarshal(body, &usersResponse)
+func (giteaApi *GiteaApi) GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int64) (*[]dto.UserTeamResponseDto, error) {
+	client, err := giteaApi.getClient(gitSource, user)
 	if err != nil {
 		return nil, err
 	}
 
-	return &usersResponse, nil
+	members, _, err := client.ListTeamMembers(teamId, gitea.ListTeamMembersOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	retVal := make([]dto.UserTeamResponseDto, 0)
+	for _, member := range members {
+		memberDto := dto.UserTeamResponseDto{
+			ID:       member.ID,
+			Username: member.UserName,
+			Email:    member.Email,
+		}
+		retVal = append(retVal, memberDto)
+	}
+
+	return &retVal, nil
 }
 
-func (giteaApi *GiteaApi) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool {
-	branchList, _ := giteaApi.getBranches(gitSource, user, gitOrgRef, repositoryRef)
+func (giteaApi *GiteaApi) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (map[string]bool, error) {
+	client, err := giteaApi.getClient(gitSource, user)
+	if err != nil {
+		return nil, err
+	}
+
+	branchList, _, err := client.ListRepoBranches(gitOrgRef, repositoryRef, gitea.ListRepoBranchesOptions{})
+	if err != nil {
+		return nil, err
+	}
+
 	retVal := make(map[string]bool)
 
-	for _, branche := range *branchList {
+	for _, branche := range branchList {
 		retVal[branche.Name] = true
 	}
 
-	return retVal
-}
-
-func (giteaApi *GiteaApi) getBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]BranchResponseDto, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-	URLApi := getListBranchUrl(gitSource.GitAPIURL, gitOrgRef, repositoryRef)
-
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return nil, errors.New(string(respMessage))
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var branchesResponse []BranchResponseDto
-	err = json.Unmarshal(body, &branchesResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return &branchesResponse, nil
+	return retVal, nil
 }
 
 func (giteaApi *GiteaApi) getRepositoryAgolaMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, branchName string) (*[]MetadataResponseDto, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-	URLApi := getListMetadataUrl(gitSource.GitAPIURL, gitOrgRef, repositoryRef, ".agola", branchName)
-
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return nil, errors.New(string(respMessage))
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var metadataResponse []MetadataResponseDto
-	err = json.Unmarshal(body, &metadataResponse)
+	client, err := giteaApi.getClient(gitSource, user)
 	if err != nil {
 		return nil, err
 	}
 
-	return &metadataResponse, nil
+	contents, _, err := client.ListContents(gitOrgRef, repositoryRef, branchName, ".agola")
+	if err != nil {
+		return nil, err
+	}
+
+	retVal := make([]MetadataResponseDto, 0)
+	for _, content := range contents {
+		metadataDto := MetadataResponseDto{
+			Name: content.Name,
+			Type: content.Type,
+			Size: content.Size,
+		}
+		retVal = append(retVal, metadataDto)
+	}
+
+	return &retVal, nil
 }
 
 func (giteaApi *GiteaApi) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error) {
-	branchList, err := giteaApi.getBranches(gitSource, user, gitOrgRef, repositoryRef)
+	branchList, err := giteaApi.GetBranches(gitSource, user, gitOrgRef, repositoryRef)
 	if err != nil {
 		return false, err
 	}
 
-	for _, branch := range *branchList {
-		metadata, err := giteaApi.getRepositoryAgolaMetadata(gitSource, user, gitOrgRef, repositoryRef, branch.Name)
+	for branch := range branchList {
+		metadata, err := giteaApi.getRepositoryAgolaMetadata(gitSource, user, gitOrgRef, repositoryRef, branch)
 		if err != nil {
 			return false, err
 		}
@@ -375,76 +286,60 @@ func (giteaApi *GiteaApi) CheckRepositoryAgolaConfExists(gitSource *model.GitSou
 }
 
 func (giteaApi *GiteaApi) GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getCommitMetadataPath(gitSource.GitAPIURL, gitOrgRef, repositoryRef, commitSha)
-
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return nil, errors.New(string(respMessage))
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var commitMetadataResponse []dto.CommitMetadataDto
-	err = json.Unmarshal(body, &commitMetadataResponse)
+	client, err := giteaApi.getClient(gitSource, user)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(commitMetadataResponse) == 1 {
-		return &commitMetadataResponse[0], err
-	} else {
-		return nil, err
-	}
-}
-
-func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getOrganizationsUrl(gitSource.GitAPIURL)
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
+	commitMetadata, _, err := client.GetSingleCommit(gitOrgRef, repositoryRef, commitSha)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if api.IsResponseOK(resp.StatusCode) {
-		body, _ := ioutil.ReadAll(resp.Body)
-		var organizations []OrganizationResponseDto
-		err = json.Unmarshal(body, &organizations)
-		if err != nil {
-			return nil, err
+	if commitMetadata != nil && commitMetadata.CommitMeta != nil {
+		author := make(map[string]string)
+		author["email"] = commitMetadata.Author.Email
+
+		retVal := dto.CommitMetadataDto{
+			Sha:    commitMetadata.CommitMeta.SHA,
+			Author: author,
 		}
-
-		retVal := make([]dto.OrganizationDto, 0)
-		for _, org := range organizations {
-			isUserOwner, _ := giteaApi.IsUserOwner(gitSource, user, org.Username)
-			if isUserOwner {
-				orgDto := dto.OrganizationDto{Path: org.Username, ID: org.ID, AvatarURL: org.AvatarURL}
-				if len(org.Name) > 0 {
-					orgDto.Name = org.Name
-				} else {
-					orgDto.Name = org.Username
-				}
-				retVal = append(retVal, orgDto)
+		if commitMetadata.Parents != nil {
+			retVal.Parents = make([]dto.CommitParentDto, 0)
+			for _, parent := range commitMetadata.Parents {
+				retVal.Parents = append(retVal.Parents, dto.CommitParentDto{Sha: parent.SHA})
 			}
 		}
 
 		return &retVal, nil
 	}
 
-	return nil, err
+	return nil, nil
+}
+
+func (giteaApi *GiteaApi) GetOrganizations(gitSource *model.GitSource, user *model.User) (*[]dto.OrganizationDto, error) {
+	client, err := giteaApi.getClient(gitSource, user)
+	if err != nil {
+		return nil, err
+	}
+
+	organizations, _, err := client.ListMyOrgs(gitea.ListOrgsOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	retVal := make([]dto.OrganizationDto, 0)
+	for _, org := range organizations {
+		orgDto := dto.OrganizationDto{
+			Path:      org.UserName,
+			Name:      org.FullName,
+			AvatarURL: org.AvatarURL,
+			ID:        org.ID,
+		}
+		retVal = append(retVal, orgDto)
+	}
+
+	return &retVal, nil
 }
 
 func (giteaApi *GiteaApi) IsUserOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string) (bool, error) {
@@ -459,7 +354,7 @@ func (giteaApi *GiteaApi) IsUserOwner(gitSource *model.GitSource, user *model.Us
 		if team.HasOwnerPermission() {
 			members, _ := giteaApi.GetTeamMembers(gitSource, user, team.ID)
 			for _, member := range *members {
-				if member.ID == int(user.ID) {
+				if uint64(member.ID) == user.ID {
 					return true, nil
 				}
 			}
@@ -472,67 +367,53 @@ func (giteaApi *GiteaApi) IsUserOwner(gitSource *model.GitSource, user *model.Us
 func (giteaApi *GiteaApi) GetUserInfo(gitSource *model.GitSource, user *model.User) (*dto.UserInfoDto, error) {
 	log.Println("GetUserInfo start")
 
-	client, _ := giteaApi.getClient(gitSource, user)
-
-	URLApi := getLoggedUserInfoUrl(gitSource.GitAPIURL)
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
+	client, err := giteaApi.getClient(gitSource, user)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if api.IsResponseOK(resp.StatusCode) {
-		body, _ := ioutil.ReadAll(resp.Body)
-		var response dto.UserInfoDto
-		err = json.Unmarshal(body, &response)
-		if err != nil {
-			return nil, err
-		}
-
-		response.UserPageURL = gitSource.GitAPIURL + "/" + response.Login
-
-		log.Println("GetUserInfo end")
-
-		return &response, nil
+	userInfo, _, err := client.GetMyUserInfo()
+	if err != nil || userInfo == nil {
+		return nil, err
 	}
 
-	return nil, err
+	retVal := dto.UserInfoDto{
+		ID:          userInfo.ID,
+		Login:       userInfo.UserName,
+		Email:       userInfo.Email,
+		FullName:    userInfo.FullName,
+		AvatarURL:   userInfo.AvatarURL,
+		IsAdmin:     userInfo.IsAdmin,
+		UserPageURL: gitSource.GitAPIURL + "/" + userInfo.UserName,
+	}
+
+	return &retVal, nil
 }
 
 func (giteaApi *GiteaApi) GetUserByLogin(gitSource *model.GitSource, login string) (*dto.UserInfoDto, error) {
 	log.Println("GetUserByLogin start")
 
-	client := &http.Client{}
-
-	URLApi := getUserInfoUrl(gitSource.GitAPIURL, login)
-	req, _ := http.NewRequest("GET", URLApi, nil)
-	resp, err := client.Do(req)
-
+	client, err := giteaApi.getClient(gitSource, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode == 404 {
-		return nil, nil
+	userInfo, _, err := client.GetUserInfo(login)
+	if err != nil || userInfo == nil {
+		return nil, err
 	}
 
-	if api.IsResponseOK(resp.StatusCode) {
-		body, _ := ioutil.ReadAll(resp.Body)
-		var response dto.UserInfoDto
-		err = json.Unmarshal(body, &response)
-		if err != nil {
-			return nil, err
-		}
-
-		log.Println("GetUserByLogin end")
-
-		return &response, nil
+	retVal := dto.UserInfoDto{
+		ID:          userInfo.ID,
+		Login:       userInfo.UserName,
+		Email:       userInfo.Email,
+		FullName:    userInfo.FullName,
+		AvatarURL:   userInfo.AvatarURL,
+		IsAdmin:     userInfo.IsAdmin,
+		UserPageURL: gitSource.GitAPIURL + "/" + userInfo.UserName,
 	}
 
-	return nil, err
+	return &retVal, nil
 }
 
 func (giteaApi *GiteaApi) GetOauth2AccessToken(gitSource *model.GitSource, code string) (*common.Token, error) {
@@ -540,7 +421,7 @@ func (giteaApi *GiteaApi) GetOauth2AccessToken(gitSource *model.GitSource, code 
 
 	client := &http.Client{}
 
-	URLApi := getOauth2AccessTokenUrl(gitSource.GitAPIURL)
+	URLApi := fmt.Sprintf(oauth2AccessTokenPath, gitSource.GitAPIURL)
 	accessTokenRequest := dto.AccessTokenRequestDto{ClientID: gitSource.GitClientID, ClientSecret: gitSource.GitSecret, GrantType: "authorization_code", Code: code, RedirectURL: controller.GetRedirectUrl()}
 	data, _ := json.Marshal(accessTokenRequest)
 	reqBody := strings.NewReader(string(data))
@@ -578,7 +459,7 @@ func (giteaApi *GiteaApi) GetOauth2AccessToken(gitSource *model.GitSource, code 
 func (giteaApi *GiteaApi) RefreshToken(gitSource *model.GitSource, refreshToken string) (*common.Token, error) {
 	client := &http.Client{}
 
-	URLApi := getOauth2AccessTokenUrl(gitSource.GitAPIURL)
+	URLApi := fmt.Sprintf(oauth2AccessTokenPath, gitSource.GitAPIURL)
 	accessTokenRequest := dto.AccessTokenRequestDto{ClientID: gitSource.GitClientID, ClientSecret: gitSource.GitSecret, GrantType: "refresh_token", RedirectURL: controller.GetRedirectUrl(), RefreshToken: refreshToken}
 	data, _ := json.Marshal(accessTokenRequest)
 	reqBody := strings.NewReader(string(data))
@@ -608,57 +489,24 @@ func (giteaApi *GiteaApi) RefreshToken(gitSource *model.GitSource, refreshToken 
 	}
 }
 
+func GetOauth2AuthorizeUrl(gitApiUrl string, gitClientId string, redirectUrl string, state string) string {
+	return fmt.Sprintf(oauth2AuthorizePath, gitApiUrl, gitClientId, url.QueryEscape(redirectUrl), state)
+}
+
 type Extra struct {
 	Expiry int `json:"expires_in,omitempty"`
 }
 
-func (giteaApi *GiteaApi) CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*CreateOauth2AppResponseDto, error) {
-	client, _ := giteaApi.getClient(gitSource, user)
-	URLApi := getCreateOauth2AppUrl(gitSource.GitAPIURL)
-
-	createOauth2AppRequest := CreateOauth2AppRequestDto{
-		Name:         "Agola",
-		RedirectUris: []string{config.Config.Agola.AgolaAddr + "/oauth2/callback"},
-	}
-	data, _ := json.Marshal(createOauth2AppRequest)
-
-	reqBody := strings.NewReader(string(data))
-	req, _ := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Set("content-type", "application/json")
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if !api.IsResponseOK(resp.StatusCode) {
-		respMessage, _ := ioutil.ReadAll(resp.Body)
-		return nil, errors.New(string(respMessage))
-	}
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var response CreateOauth2AppResponseDto
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
 ///////////////
 
-func (giteaApi *GiteaApi) getClient(gitSource *model.GitSource, user *model.User) (*httpClient, error) {
-	if common.IsAccessTokenExpired(user.Oauth2AccessTokenExpiresAt) {
-		if user.UserID == nil {
-			log.Println("Can not refresh token for user nil")
-			return nil, errors.New("can not refresh token for user nil")
-		}
+func (giteabApi *GiteaApi) getClient(gitSource *model.GitSource, user *model.User) (*gitea.Client, error) {
+	if user == nil {
+		return gitea.NewClient(gitSource.GitAPIURL)
+	}
 
-		log.Println("token is to refresh")
-		token, err := giteaApi.RefreshToken(gitSource, user.Oauth2RefreshToken)
+	if common.IsAccessTokenExpired(user.Oauth2AccessTokenExpiresAt) {
+		log.Println("Token expired is to refresh")
+		token, err := giteabApi.RefreshToken(gitSource, user.Oauth2RefreshToken)
 
 		if err != nil {
 			log.Println("error during refresh token")
@@ -667,27 +515,15 @@ func (giteaApi *GiteaApi) getClient(gitSource *model.GitSource, user *model.User
 
 		user.Oauth2AccessToken = token.AccessToken
 		user.Oauth2RefreshToken = token.RefreshToken
-		user.Oauth2AccessTokenExpiresAt = time.Now().Add(time.Second * time.Duration(token.Expiry))
+		user.Oauth2AccessTokenExpiresAt = token.ExpiryAt
 
-		err = giteaApi.Db.SaveUser(user)
+		err = giteabApi.Db.SaveUser(user)
+
 		if err != nil {
 			log.Println("error in SaveUser:", err)
 			return nil, err
 		}
 	}
 
-	client := &httpClient{c: &http.Client{}, accessToken: user.Oauth2AccessToken}
-
-	return client, nil
-}
-
-type httpClient struct {
-	c           *http.Client
-	accessToken string
-}
-
-func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
-	req.Header.Set("Authorization", "bearer "+c.accessToken)
-	return c.c.Do(req)
-
+	return gitea.NewClient(gitSource.GitAPIURL, gitea.SetToken(user.Oauth2AccessToken))
 }

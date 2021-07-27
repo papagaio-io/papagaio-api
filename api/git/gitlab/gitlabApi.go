@@ -21,12 +21,12 @@ import (
 )
 
 type GitlabInterface interface {
-	CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error)
-	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error
+	CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int64, error)
+	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int64) error
 	GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error)
 	GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error)
 	GetOrganizationMembers(gitSource *model.GitSource, user *model.User, organizationName string) (*[]GitlabUser, error)
-	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool
+	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (map[string]bool, error)
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
 	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error)
@@ -44,24 +44,24 @@ type GitlabApi struct {
 	Db repository.Database
 }
 
-func (gitlabApi *GitlabApi) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error) {
+func (gitlabApi *GitlabApi) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int64, error) {
 	client, _ := gitlabApi.getClient(gitSource, user)
 
 	groupHook, _, err := client.Groups.AddGroupHook(gitOrgRef, &gitlab.AddGroupHookOptions{
 		URL:        gitlab.String(config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + organizationRef),
 		PushEvents: gitlab.Bool(true),
 	})
-	hookID := -1
+	hookID := int64(-1)
 	if err == nil {
-		hookID = groupHook.ID
+		hookID = int64(groupHook.ID)
 	}
 
 	return hookID, err
 }
 
-func (gitlabApi *GitlabApi) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error {
+func (gitlabApi *GitlabApi) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int64) error {
 	client, _ := gitlabApi.getClient(gitSource, user)
-	_, err := client.Groups.DeleteGroupHook(gitOrgRef, webHookID)
+	_, err := client.Groups.DeleteGroupHook(gitOrgRef, int(webHookID))
 	return err
 }
 
@@ -119,9 +119,16 @@ func (gitlabApi *GitlabApi) GetOrganizationMembers(gitSource *model.GitSource, u
 	return &retVal, nil
 }
 
-func (gitlabApi *GitlabApi) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool {
-	client, _ := gitlabApi.getClient(gitSource, user)
-	branches, _, _ := client.Branches.ListBranches(gitOrgRef+"/"+repositoryRef, nil)
+func (gitlabApi *GitlabApi) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (map[string]bool, error) {
+	client, err := gitlabApi.getClient(gitSource, user)
+	if err != nil {
+		return nil, err
+	}
+
+	branches, _, err := client.Branches.ListBranches(gitOrgRef+"/"+repositoryRef, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	retVal := make(map[string]bool)
 
@@ -129,7 +136,7 @@ func (gitlabApi *GitlabApi) GetBranches(gitSource *model.GitSource, user *model.
 		retVal[branche.Name] = true
 	}
 
-	return retVal
+	return retVal, nil
 }
 
 func (gitlabApi *GitlabApi) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error) {

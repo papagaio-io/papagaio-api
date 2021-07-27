@@ -16,7 +16,7 @@ type GitGateway struct {
 	GitlabApi gitlab.GitlabInterface
 }
 
-func (gitGateway *GitGateway) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error) {
+func (gitGateway *GitGateway) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int64, error) {
 	if gitSource.GitType == types.Gitea {
 		return gitGateway.GiteaApi.CreateWebHook(gitSource, user, gitOrgRef, organizationRef)
 	} else if gitSource.GitType == types.Github {
@@ -26,7 +26,7 @@ func (gitGateway *GitGateway) CreateWebHook(gitSource *model.GitSource, user *mo
 	}
 }
 
-func (gitGateway *GitGateway) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error {
+func (gitGateway *GitGateway) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int64) error {
 	if gitSource.GitType == types.Gitea {
 		return gitGateway.GiteaApi.DeleteWebHook(gitSource, user, gitOrgRef, webHookID)
 	} else if gitSource.GitType == types.Github {
@@ -76,7 +76,7 @@ func (gitGateway *GitGateway) GetCommitMetadata(gitSource *model.GitSource, user
 	}
 }
 
-func (gitGateway *GitGateway) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool {
+func (gitGateway *GitGateway) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (map[string]bool, error) {
 	if gitSource.GitType == types.Gitea {
 		return gitGateway.GiteaApi.GetBranches(gitSource, user, gitOrgRef, repositoryRef)
 	} else if gitSource.GitType == types.Github {

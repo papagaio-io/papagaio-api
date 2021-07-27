@@ -36,7 +36,7 @@ type RepositoryDto struct {
 type MetadataResponseDto struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
-	Size int    `json:"size"`
+	Size int64  `json:"size"`
 }
 
 type BranchResponseDto struct {

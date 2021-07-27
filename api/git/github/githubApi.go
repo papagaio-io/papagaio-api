@@ -23,12 +23,12 @@ import (
 )
 
 type GithubInterface interface {
-	CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error)
-	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error
+	CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int64, error)
+	DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int64) error
 	GetRepositories(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*[]string, error)
 	GetEmailsRepositoryUsersOwner(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (*[]string, error)
 	GetOrganizationMembers(gitSource *model.GitSource, user *model.User, organizationName string) (*[]GitHubUser, error)
-	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool
+	GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (map[string]bool, error)
 	CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error)
 	GetCommitMetadata(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string, commitSha string) (*dto.CommitMetadataDto, error)
 	GetOrganization(gitSource *model.GitSource, user *model.User, gitOrgRef string) (*dto.OrganizationDto, error)
@@ -46,7 +46,7 @@ type GithubApi struct {
 	Db repository.Database
 }
 
-func (githubApi *GithubApi) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int, error) {
+func (githubApi *GithubApi) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, organizationRef string) (int64, error) {
 	client, _ := githubApi.getClient(gitSource, user)
 
 	webHookName := "web"
@@ -56,17 +56,17 @@ func (githubApi *GithubApi) CreateWebHook(gitSource *model.GitSource, user *mode
 	conf["content_type"] = "json"
 	hook := &github.Hook{Name: &webHookName, Events: []string{"repository", "push", "create", "delete"}, Active: &active, Config: conf}
 	hook, _, err := client.Organizations.CreateHook(context.Background(), gitOrgRef, hook)
-	hookID := -1
+	hookID := int64(-1)
 	if err == nil {
-		hookID = int(*hook.ID)
+		hookID = *hook.ID
 	}
 
 	return hookID, err
 }
 
-func (githubApi *GithubApi) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error {
+func (githubApi *GithubApi) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int64) error {
 	client, _ := githubApi.getClient(gitSource, user)
-	_, err := client.Organizations.DeleteHook(context.Background(), gitOrgRef, int64(webHookID))
+	_, err := client.Organizations.DeleteHook(context.Background(), gitOrgRef, webHookID)
 	return err
 }
 
@@ -153,19 +153,20 @@ func (githubApi *GithubApi) getRepositoryMembers(gitSource *model.GitSource, use
 	return &retVal, err
 }
 
-func (githubApi *GithubApi) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) map[string]bool {
+func (githubApi *GithubApi) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (map[string]bool, error) {
 	client, _ := githubApi.getClient(gitSource, user)
 	branchList, _, err := client.Repositories.ListBranches(context.Background(), gitOrgRef, repositoryRef, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	retVal := make(map[string]bool)
 
-	if err != nil {
-		for _, branche := range branchList {
-			retVal[*branche.Name] = true
-		}
+	for _, branche := range branchList {
+		retVal[*branche.Name] = true
 	}
 
-	return retVal
+	return retVal, nil
 }
 
 func (githubApi *GithubApi) CheckRepositoryAgolaConfExists(gitSource *model.GitSource, user *model.User, gitOrgRef string, repositoryRef string) (bool, error) {

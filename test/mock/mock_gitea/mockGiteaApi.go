@@ -8,7 +8,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 	dto "wecode.sorint.it/opensource/papagaio-api/api/git/dto"
-	gitea "wecode.sorint.it/opensource/papagaio-api/api/git/gitea"
 	common "wecode.sorint.it/opensource/papagaio-api/common"
 	model "wecode.sorint.it/opensource/papagaio-api/model"
 )
@@ -37,10 +36,10 @@ func (m *MockGiteaInterface) EXPECT() *MockGiteaInterfaceMockRecorder {
 }
 
 // CreateWebHook mocks base method
-func (m *MockGiteaInterface) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef, organizationRef string) (int, error) {
+func (m *MockGiteaInterface) CreateWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef, organizationRef string) (int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateWebHook", gitSource, user, gitOrgRef, organizationRef)
-	ret0, _ := ret[0].(int)
+	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -52,7 +51,7 @@ func (mr *MockGiteaInterfaceMockRecorder) CreateWebHook(gitSource, user, gitOrgR
 }
 
 // DeleteWebHook mocks base method
-func (m *MockGiteaInterface) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int) error {
+func (m *MockGiteaInterface) DeleteWebHook(gitSource *model.GitSource, user *model.User, gitOrgRef string, webHookID int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteWebHook", gitSource, user, gitOrgRef, webHookID)
 	ret0, _ := ret[0].(error)
@@ -141,7 +140,7 @@ func (mr *MockGiteaInterfaceMockRecorder) GetOrganizationTeams(gitSource, user, 
 }
 
 // GetTeamMembers mocks base method
-func (m *MockGiteaInterface) GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int) (*[]dto.UserTeamResponseDto, error) {
+func (m *MockGiteaInterface) GetTeamMembers(gitSource *model.GitSource, user *model.User, teamId int64) (*[]dto.UserTeamResponseDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTeamMembers", gitSource, user, teamId)
 	ret0, _ := ret[0].(*[]dto.UserTeamResponseDto)
@@ -156,11 +155,12 @@ func (mr *MockGiteaInterfaceMockRecorder) GetTeamMembers(gitSource, user, teamId
 }
 
 // GetBranches mocks base method
-func (m *MockGiteaInterface) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef, repositoryRef string) map[string]bool {
+func (m *MockGiteaInterface) GetBranches(gitSource *model.GitSource, user *model.User, gitOrgRef, repositoryRef string) (map[string]bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBranches", gitSource, user, gitOrgRef, repositoryRef)
 	ret0, _ := ret[0].(map[string]bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetBranches indicates an expected call of GetBranches
@@ -257,21 +257,6 @@ func (m *MockGiteaInterface) GetUserByLogin(gitSource *model.GitSource, login st
 func (mr *MockGiteaInterfaceMockRecorder) GetUserByLogin(gitSource, login interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByLogin", reflect.TypeOf((*MockGiteaInterface)(nil).GetUserByLogin), gitSource, login)
-}
-
-// CreateAgolaApp mocks base method
-func (m *MockGiteaInterface) CreateAgolaApp(gitSource *model.GitSource, user *model.User) (*gitea.CreateOauth2AppResponseDto, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAgolaApp", gitSource, user)
-	ret0, _ := ret[0].(*gitea.CreateOauth2AppResponseDto)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateAgolaApp indicates an expected call of CreateAgolaApp
-func (mr *MockGiteaInterfaceMockRecorder) CreateAgolaApp(gitSource, user interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAgolaApp", reflect.TypeOf((*MockGiteaInterface)(nil).CreateAgolaApp), gitSource, user)
 }
 
 // GetOauth2AccessToken mocks base method

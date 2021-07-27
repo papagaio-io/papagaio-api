@@ -111,7 +111,17 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 			}
 
 			//If organization deleted in Agola, recreate
-			if agolaOrganizationExists, _ := agolaApi.CheckOrganizationExists(org); !agolaOrganizationExists {
+			agolaOrganizationExists, _, err := agolaApi.CheckOrganizationExists(org)
+			if err != nil {
+				log.Println("Agola CheckOrganizationExists error:", err)
+
+				mutex.Unlock()
+				utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
+
+				continue
+			}
+
+			if !agolaOrganizationExists {
 				orgID, err := agolaApi.CreateOrganization(org, org.Visibility)
 				if err != nil {
 					log.Println("failed to recreate organization", org.AgolaOrganizationRef, "in agola:", err)

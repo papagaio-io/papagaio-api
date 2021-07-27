@@ -199,7 +199,13 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 		return
 	}
 
-	agolaOrganizationExists, agolaOrganizationID := service.AgolaApi.CheckOrganizationExists(org)
+	agolaOrganizationExists, agolaOrganizationID, err := service.AgolaApi.CheckOrganizationExists(org)
+	if err != nil {
+		log.Println("Agola CheckOrganizationExists error:", err)
+		InternalServerError(w)
+		return
+	}
+
 	log.Println("agolaOrganizationExists:", agolaOrganizationExists)
 	if agolaOrganizationExists {
 		log.Println("organization", org.AgolaOrganizationRef, "just exists in Agola")

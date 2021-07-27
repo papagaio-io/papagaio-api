@@ -117,21 +117,23 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 		}
 
 		findRemoteSourceName := gitSourceDto.Name
-		search := true
-		i := 0
-		for search {
-			found := false
-			for _, gs := range *gsList {
-				if strings.Compare(gs.Name, findRemoteSourceName) == 0 {
-					found = true
-					break
+		if gsList != nil {
+			search := true
+			i := 0
+			for search {
+				found := false
+				for _, gs := range *gsList {
+					if strings.Compare(gs.Name, findRemoteSourceName) == 0 {
+						found = true
+						break
+					}
 				}
-			}
-			if !found {
-				search = false
-			} else {
-				findRemoteSourceName = gitSourceDto.Name + fmt.Sprint(i)
-				i++
+				if !found {
+					search = false
+				} else {
+					findRemoteSourceName = gitSourceDto.Name + fmt.Sprint(i)
+					i++
+				}
 			}
 		}
 
@@ -199,7 +201,7 @@ func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.
 	error := service.Db.DeleteGitSource(gitSourceName)
 
 	if error != nil {
-		UnprocessableEntityResponse(w, error.Error())
+		InternalServerError(w)
 		return
 	}
 }

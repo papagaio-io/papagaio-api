@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -32,7 +33,7 @@ func setupGitsourceMock(t *testing.T) {
 	db = mock_repository.NewMockDatabase(ctl)
 	agolaApiInt = mock_agola.NewMockAgolaApiInterface(ctl)
 	giteaApi = mock_gitea.NewMockGiteaInterface(ctl)
-	commonMutex = utils.NewEventMutex()
+	//commonMutex = utils.NewEventMutex()
 
 	serviceGitsource = GitSourceService{
 		Db:         db,
@@ -266,4 +267,143 @@ func TestGetGitOrganizationsOK(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
 	assert.Check(t, len(responseDto) == 2)
+}
+
+func TestRemoveGitsourceWithErrors(t *testing.T) {
+	setupGitsourceMock(t)
+
+	gitSource := (*test.MakeGitSourceMap())["gitea"]
+
+	router := test.SetupBaseRouter(nil)
+	router.HandleFunc("/gitsource/{gitSourceName}", serviceGitsource.RemoveGitSource)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+
+	//gitSource not found
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(nil, nil)
+
+	resp, err := client.Get(ts.URL + "/gitsource/" + gitSource.Name)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not correct")
+
+	//parameter deleteremotesource not correct
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+
+	resp, err = client.Get(ts.URL + "/gitsource/" + gitSource.Name + "?deleteremotesource=badvalue")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not correct")
+
+	//DeleteRemotesource error
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	db.EXPECT().GetOrganizationsByGitSource(gitSource.Name).Return(nil, nil)
+	db.EXPECT().GetUsersIDByGitSourceName(gitSource.Name).Return(make([]uint64, 0), nil)
+	agolaApiInt.EXPECT().DeleteRemotesource(gitSource.Name).Return(errors.New("test"))
+
+	resp, err = client.Get(ts.URL + "/gitsource/" + gitSource.Name + "?deleteremotesource")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	//DeleteGitSource error
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	db.EXPECT().GetOrganizationsByGitSource(gitSource.Name).Return(nil, nil)
+	db.EXPECT().GetUsersIDByGitSourceName(gitSource.Name).Return(make([]uint64, 0), nil)
+	db.EXPECT().DeleteGitSource(gitSource.Name).Return(errors.New("test"))
+
+	resp, err = client.Get(ts.URL + "/gitsource/" + gitSource.Name)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+}
+
+func TestAddGitsourceWithErrors(t *testing.T) {
+	setupGitsourceMock(t)
+
+	router := test.SetupBaseRouter(nil)
+	router.HandleFunc("/gitsource", serviceGitsource.AddGitSource)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+
+	//Unmarshal error
+
+	resp, err := client.Post(ts.URL+"/gitsource", "application/json", nil)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
+
+	//gitSource already exists
+
+	reqDto := dto.CreateGitSourceRequestDto{
+		Name:                  "test",
+		GitType:               "github",
+		GitClientID:           "test",
+		GitClientSecret:       "test",
+		AgolaRemoteSourceName: utils.NewString("test"),
+	}
+
+	data, _ := json.Marshal(reqDto)
+	requestBody := strings.NewReader(string(data))
+
+	db.EXPECT().GetGitSourceByName(reqDto.Name).Return(&gitSource, nil)
+
+	resp, err = client.Post(ts.URL+"/gitsource", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusUnprocessableEntity, "http StatusCode is not OK")
+
+	//GetRemoteSources error
+
+	db.EXPECT().GetGitSourceByName(reqDto.Name).Return(nil, nil)
+	agolaApiInt.EXPECT().GetRemoteSources().Return(nil, errors.New("test"))
+
+	resp, err = client.Post(ts.URL+"/gitsource", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
+
+	//CreateRemoteSource error
+
+	reqDto = dto.CreateGitSourceRequestDto{
+		Name:              "test",
+		GitType:           types.Github,
+		GitClientID:       "test",
+		GitClientSecret:   "test",
+		GitAPIURL:         utils.NewString("http://test"),
+		AgolaClientID:     utils.NewString("test"),
+		AgolaClientSecret: utils.NewString("test"),
+	}
+
+	data, _ = json.Marshal(reqDto)
+	requestBody = strings.NewReader(string(data))
+
+	db.EXPECT().GetGitSourceByName(reqDto.Name).Return(nil, nil)
+	agolaApiInt.EXPECT().GetRemoteSources().Return(nil, nil)
+	agolaApiInt.EXPECT().CreateRemoteSource(reqDto.Name, reqDto.GitType, *reqDto.GitAPIURL, *reqDto.AgolaClientID, reqDto.AgolaClientSecret).Return(errors.New("test"))
+
+	resp, err = client.Post(ts.URL+"/gitsource", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
+
+	//SaveGitSource error
+
+	db.EXPECT().GetGitSourceByName(reqDto.Name).Return(nil, nil)
+	agolaApiInt.EXPECT().GetRemoteSources().Return(nil, nil)
+	agolaApiInt.EXPECT().CreateRemoteSource(reqDto.Name, reqDto.GitType, *reqDto.GitAPIURL, *reqDto.AgolaClientID, reqDto.AgolaClientSecret).Return(nil)
+	db.EXPECT().SaveGitSource(gomock.Any()).Return(errors.New("test"))
+
+	resp, err = client.Post(ts.URL+"/gitsource", "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
 }

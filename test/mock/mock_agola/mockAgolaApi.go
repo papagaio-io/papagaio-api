@@ -36,12 +36,13 @@ func (m *MockAgolaApiInterface) EXPECT() *MockAgolaApiInterfaceMockRecorder {
 }
 
 // CheckOrganizationExists mocks base method
-func (m *MockAgolaApiInterface) CheckOrganizationExists(organization *model.Organization) (bool, string) {
+func (m *MockAgolaApiInterface) CheckOrganizationExists(organization *model.Organization) (bool, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckOrganizationExists", organization)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(string)
-	return ret0, ret1
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // CheckOrganizationExists indicates an expected call of CheckOrganizationExists

@@ -18,7 +18,7 @@ import (
 )
 
 type AgolaApiInterface interface {
-	CheckOrganizationExists(organization *model.Organization) (bool, string)
+	CheckOrganizationExists(organization *model.Organization) (bool, string, error)
 	CheckProjectExists(organization *model.Organization, projectName string) (bool, string)
 	CreateOrganization(organization *model.Organization, visibility types.VisibilityType) (string, error)
 	DeleteOrganization(organization *model.Organization, user *model.User) error
@@ -77,14 +77,14 @@ func (agolaApi *AgolaApi) GetOrganizations() (*[]OrganizationDto, error) {
 	return &jsonResponse, err
 }
 
-func (agolaApi *AgolaApi) CheckOrganizationExists(organization *model.Organization) (bool, string) {
+func (agolaApi *AgolaApi) CheckOrganizationExists(organization *model.Organization) (bool, string, error) {
 	client := agolaApi.getClient(nil, true)
 	URLApi := getOrganizationUrl(organization.AgolaOrganizationRef)
 
 	req, _ := http.NewRequest("GET", URLApi, nil)
 	resp, err := client.Do(req)
 	if err != nil {
-		return false, ""
+		return false, "", err
 	}
 
 	defer resp.Body.Close()
@@ -96,13 +96,13 @@ func (agolaApi *AgolaApi) CheckOrganizationExists(organization *model.Organizati
 		var jsonResponse AgolaCreateORGDto
 		err := json.Unmarshal(body, &jsonResponse)
 		if err != nil {
-			return false, ""
+			return false, "", nil
 		}
 
 		organizationID = jsonResponse.ID
 	}
 
-	return organizationExists, organizationID
+	return organizationExists, organizationID, nil
 }
 
 func (agolaApi *AgolaApi) CheckProjectExists(organization *model.Organization, agolaProjectRef string) (bool, string) {

@@ -597,8 +597,7 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 	if strings.Compare(organization.GitSourceName, user.GitSourceName) != 0 {
 		log.Println("user not authorized to get report of organizarion", organizationRef)
 
-		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError} //TODO change message error to "different gitsource error"
-		JSONokResponse(w, response)
+		InternalServerError(w)
 		return
 	}
 
@@ -645,8 +644,7 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 	if strings.Compare(organization.GitSourceName, user.GitSourceName) != 0 {
 		log.Println("user not authorized to get report of organizarion", organizationRef)
 
-		response := dto.OrganizationResponseDto{ErrorCode: dto.UserNotOwnerError} //TODO change message
-		JSONokResponse(w, response)
+		InternalServerError(w)
 		return
 	}
 

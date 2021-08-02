@@ -132,6 +132,89 @@ func TestGetProjectReportNotFound(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not correct")
 }
+
+func TestGetProjectReportWithErrors(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
+	insertRunsData(&organization)
+
+	serviceOrganization := OrganizationService{
+		Db:         db,
+		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+	}
+
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/{organizationRef}/{projectName}", serviceOrganization.GetProjectReport)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+
+	// user not found error
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(nil, nil)
+
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "/test1")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// gitSOurce not found
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(nil, nil)
+
+	resp, err = client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "/test1")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// organization not found
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(nil, nil)
+
+	resp, err = client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "/test1")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not correct")
+
+	// gitSource error
+
+	organization.GitSourceName = "test"
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+
+	resp, err = client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "/test1")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// Projects nil
+
+	organization.GitSourceName = user.GitSourceName
+	organization.Projects = nil
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+
+	resp, err = client.Get(ts.URL + "/" + organization.AgolaOrganizationRef + "/test1")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not correct")
+}
+
 func TestGetOrganizationReportOk(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()

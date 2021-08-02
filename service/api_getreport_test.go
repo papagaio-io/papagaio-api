@@ -283,6 +283,62 @@ func TestGetOrganizationReportOrganizationNotFound(t *testing.T) {
 	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "Organization not found")
 }
 
+func TestGetOrganizationReportWithErrors(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
+	insertRunsData(&organization)
+
+	serviceOrganization := OrganizationService{
+		Db:         db,
+		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+	}
+
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/{organizationRef}", serviceOrganization.GetOrganizationReport)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	// user not found
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(nil, nil)
+
+	resp, err := client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// gitSource not found
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(nil, nil)
+
+	resp, err = client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// gitSource error
+
+	organization.GitSourceName = "test"
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&organization, nil)
+
+	resp, err = client.Get(ts.URL + "/" + organization.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+}
+
 func assertOrganizationDto(t *testing.T, organization *model.Organization, organizationDto *dto.OrganizationDto) {
 	organizationDto.Projects = test.SortProjectsDto(organizationDto.Projects)
 

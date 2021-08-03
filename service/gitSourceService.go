@@ -309,7 +309,7 @@ func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *h
 
 	if gitSource == nil {
 		log.Println("gitSource", user.GitSourceName, "non trovato")
-		NotFoundResponse(w)
+		InternalServerError(w)
 		return
 	}
 

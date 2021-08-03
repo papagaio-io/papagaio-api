@@ -40,6 +40,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 	organization, _ := service.Db.GetOrganizationByAgolaRef(organizationRef)
 	if organization == nil {
 		log.Println("warning!!! Organization", organizationRef, "not found in db")
+		InternalServerError(w)
 		return
 	}
 
@@ -79,6 +80,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 	if !utils.EvaluateBehaviour(organization, webHookMessage.Repository.Name) {
 		log.Println("webhook", webHookMessage.Repository.Name, "excluded by behaviour settings")
+		UnprocessableEntityResponse(w, "behaviour exclude")
 		return
 	}
 
@@ -125,6 +127,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 
 		if !ok {
 			log.Println("warning!!! project", orgProject, "not found in db")
+			UnprocessableEntityResponse(w, "repository not found")
 			return
 		}
 

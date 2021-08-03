@@ -269,6 +269,50 @@ func TestGetGitOrganizationsOK(t *testing.T) {
 	assert.Check(t, len(responseDto) == 2)
 }
 
+func TestGetGitOrganizationsWithErrors(t *testing.T) {
+	setupGitsourceMock(t)
+
+	user := test.MakeUser()
+	gitSource := (*test.MakeGitSourceMap())[user.GitSourceName]
+
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/gitorganizations", serviceGitsource.GetGitOrganizations)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+
+	// user not found
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(nil, nil)
+
+	resp, err := client.Get(ts.URL + "/gitorganizations")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// gitSource not found
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(user.GitSourceName).Return(nil, nil)
+
+	resp, err = client.Get(ts.URL + "/gitorganizations")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// git GetOrganizations error
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetGitSourceByName(user.GitSourceName).Return(&gitSource, nil)
+	giteaApi.EXPECT().GetOrganizations(gomock.Any(), gomock.Any()).Return(nil, errors.New("test error"))
+
+	resp, err = client.Get(ts.URL + "/gitorganizations")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+}
+
 func TestRemoveGitsourceWithErrors(t *testing.T) {
 	setupGitsourceMock(t)
 

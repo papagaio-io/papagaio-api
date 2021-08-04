@@ -239,6 +239,71 @@ func TestRepositoryPushWithAgolaConfAndProjectNotExists(t *testing.T) {
 	assert.Equal(t, project.Branchs["master"].Name, "master")
 }
 
+func TestRepositoryPushWithAgolaConfAndProjectNotExistsWithErrors(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
+
+	repositoryRef := "repositoryTest"
+
+	webHookMessage := dto.WebHookDto{
+		Repository: dto.RepositoryDto{ID: 1, Name: repositoryRef},
+		Action:     "",
+	}
+
+	db := mock_repository.NewMockDatabase(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	commonMutex := utils.NewEventMutex()
+
+	serviceWebHook := WebHookService{
+		Db:          db,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		AgolaApi:    agolaApi,
+		CommonMutex: &commonMutex,
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}", serviceWebHook.WebHookOrganization)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+	data, _ := json.Marshal(webHookMessage)
+
+	// agola CreateProject error
+
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.GitPath, webHookMessage.Repository.Name).Return(true, nil)
+	agolaApi.EXPECT().CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), gomock.Any(), gitSource.AgolaRemoteSource, gomock.Any()).Return("", errors.New("test error"))
+
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+organization.AgolaOrganizationRef, "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError)
+
+	// SaveOrganization errpr
+
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.GitPath, webHookMessage.Repository.Name).Return(true, nil)
+	agolaApi.EXPECT().CreateProject(webHookMessage.Repository.Name, utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name), gomock.Any(), gitSource.AgolaRemoteSource, gomock.Any()).Return("projectTestID", nil)
+	db.EXPECT().SaveOrganization(gomock.Any()).Return(errors.New("test error"))
+
+	requestBody = strings.NewReader(string(data))
+	resp, err = client.Post(ts.URL+"/"+organization.AgolaOrganizationRef, "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError)
+}
+
 func TestRepositoryPushWithAgolaConfAndProjectArchivied(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
@@ -296,6 +361,73 @@ func TestRepositoryPushWithAgolaConfAndProjectArchivied(t *testing.T) {
 	assert.Equal(t, project.AgolaProjectRef, repositoryRef)
 	assert.Check(t, !project.Archivied)
 	assert.Equal(t, project.Branchs["master"].Name, "master")
+}
+
+func TestRepositoryPushWithAgolaConfAndProjectArchiviedWithErrors(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
+
+	repositoryRef := "repositoryTest"
+	organization.Projects = make(map[string]model.Project)
+	organization.Projects[repositoryRef] = model.Project{AgolaProjectRef: repositoryRef, Archivied: true}
+
+	webHookMessage := dto.WebHookDto{
+		Repository: dto.RepositoryDto{ID: 1, Name: repositoryRef},
+		Action:     "",
+	}
+
+	db := mock_repository.NewMockDatabase(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	commonMutex := utils.NewEventMutex()
+
+	serviceWebHook := WebHookService{
+		Db:          db,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		AgolaApi:    agolaApi,
+		CommonMutex: &commonMutex,
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}", serviceWebHook.WebHookOrganization)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+	data, _ := json.Marshal(webHookMessage)
+
+	// agola UnarchiveProject error
+
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.GitPath, webHookMessage.Repository.Name).Return(true, nil)
+	agolaApi.EXPECT().UnarchiveProject(gomock.Any(), utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)).Return(errors.New("test error"))
+
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+organization.AgolaOrganizationRef, "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError)
+
+	// SaveOrganization error
+
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.GitPath, webHookMessage.Repository.Name).Return(true, nil)
+	agolaApi.EXPECT().UnarchiveProject(gomock.Any(), utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)).Return(nil)
+	db.EXPECT().SaveOrganization(gomock.Any()).Return(errors.New("test error"))
+
+	requestBody = strings.NewReader(string(data))
+	resp, err = client.Post(ts.URL+"/"+organization.AgolaOrganizationRef, "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError)
 }
 
 func TestRepositoryPushWithAgolaConfAndProjectNotArchivied(t *testing.T) {
@@ -412,7 +544,7 @@ func TestRepositoryPushWithoutAgolaConfAndProjectArchivied(t *testing.T) {
 	assert.Equal(t, project.Branchs["master"].Name, "master")
 }
 
-func TestRepositoryPushWithoutAgolaConfAndProjectNotExists(t *testing.T) {
+func TestRepositoryPushWithoutAgolaConfAndProjectNotArchivied(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
 
@@ -469,6 +601,73 @@ func TestRepositoryPushWithoutAgolaConfAndProjectNotExists(t *testing.T) {
 	assert.Equal(t, project.AgolaProjectRef, repositoryRef)
 	assert.Check(t, project.Archivied)
 	assert.Equal(t, project.Branchs["master"].Name, "master")
+}
+
+func TestRepositoryPushWithoutAgolaConfAndProjectNotArchiviedWithErrors(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	organization := (*test.MakeOrganizationList())[0]
+	gitSource := (*test.MakeGitSourceMap())[organization.GitSourceName]
+	user := test.MakeUser()
+
+	repositoryRef := "repositoryTest"
+	organization.Projects = make(map[string]model.Project)
+	organization.Projects[repositoryRef] = model.Project{AgolaProjectRef: repositoryRef, Archivied: false}
+
+	webHookMessage := dto.WebHookDto{
+		Repository: dto.RepositoryDto{ID: 1, Name: repositoryRef},
+		Action:     "",
+	}
+
+	db := mock_repository.NewMockDatabase(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	commonMutex := utils.NewEventMutex()
+
+	serviceWebHook := WebHookService{
+		Db:          db,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		AgolaApi:    agolaApi,
+		CommonMutex: &commonMutex,
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/{organizationRef}", serviceWebHook.WebHookOrganization)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+	data, _ := json.Marshal(webHookMessage)
+
+	// agola ArchiveProject error
+
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.GitPath, webHookMessage.Repository.Name).Return(false, nil)
+	agolaApi.EXPECT().ArchiveProject(gomock.Any(), utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)).Return(errors.New("test error"))
+
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+organization.AgolaOrganizationRef, "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError)
+
+	// SaveOrganization error
+
+	db.EXPECT().GetOrganizationByAgolaRef(organization.AgolaOrganizationRef).Return(&organization, nil)
+	db.EXPECT().GetGitSourceByName(organization.GitSourceName).Return(&gitSource, nil)
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	giteaApi.EXPECT().CheckRepositoryAgolaConfExists(gomock.Any(), gomock.Any(), organization.GitPath, webHookMessage.Repository.Name).Return(false, nil)
+	agolaApi.EXPECT().ArchiveProject(gomock.Any(), utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)).Return(nil)
+	db.EXPECT().SaveOrganization(gomock.Any()).Return(errors.New("test error"))
+
+	requestBody = strings.NewReader(string(data))
+	resp, err = client.Post(ts.URL+"/"+organization.AgolaOrganizationRef, "application/json", requestBody)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError)
 }
 
 func TestRepositoryGitlabPushWithAgolaConfAndProjectNotExists(t *testing.T) {

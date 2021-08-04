@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -135,4 +136,105 @@ func TestCallbackUserJustExist(t *testing.T) {
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+}
+
+func TestCallbackWithErrors(t *testing.T) {
+	setupOauth2Mock(t)
+
+	gitSource := (*test.MakeGitSourceMap())["gitea"]
+	token, _ := common.GenerateOauth2JWTToken(oauth2Service.Sd, gitSource.Name)
+	code := "test"
+	userInfo := gitDto.UserInfoDto{
+		ID:       1,
+		Login:    "test_login",
+		Email:    "test_email",
+		FullName: "test_fullname",
+		IsAdmin:  false,
+	}
+	accessToken := common.Token{Token: oauth2.Token{AccessToken: "test", RefreshToken: "test", TokenType: "bearer", Expiry: time.Now()}}
+
+	router := test.SetupBaseRouter(nil)
+	router.HandleFunc("/callback", oauth2Service.Callback)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	client := ts.Client()
+
+	// code empty
+
+	resp, err := client.Get(ts.URL + "/callback")
+
+	fmt.Println("status:", resp.Status)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// state empty
+
+	resp, err = client.Get(ts.URL + "/callback?code=" + code)
+
+	fmt.Println("status:", resp.Status)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// ParseToken error
+
+	resp, err = client.Get(ts.URL + "/callback?code=" + code + "&state=" + "123456")
+
+	fmt.Println("status:", resp.Status)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// gitSource not found
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(nil, nil)
+
+	resp, err = client.Get(ts.URL + "/callback?code=" + code + "&state=" + token)
+
+	fmt.Println("status:", resp.Status)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// GetOauth2AccessToken error
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	giteaApi.EXPECT().GetOauth2AccessToken(gomock.Any(), code).Return(nil, errors.New("test error"))
+
+	resp, err = client.Get(ts.URL + "/callback?code=" + code + "&state=" + token)
+
+	fmt.Println("status:", resp.Status)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// GetUserInfo error
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	giteaApi.EXPECT().GetOauth2AccessToken(gomock.Any(), code).Return(&accessToken, nil)
+	giteaApi.EXPECT().GetUserInfo(gomock.Any(), gomock.Any()).Return(nil, errors.New("test error"))
+
+	resp, err = client.Get(ts.URL + "/callback?code=" + code + "&state=" + token)
+
+	fmt.Println("status:", resp.Status)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
+
+	// SaveUser error
+
+	db.EXPECT().GetGitSourceByName(gitSource.Name).Return(&gitSource, nil)
+	giteaApi.EXPECT().GetOauth2AccessToken(gomock.Any(), code).Return(&accessToken, nil)
+	giteaApi.EXPECT().GetUserInfo(gomock.Any(), gomock.Any()).Return(&userInfo, nil)
+	db.EXPECT().GetUserByGitSourceNameAndID(gitSource.Name, uint64(userInfo.ID)).Return(nil, nil)
+	db.EXPECT().SaveUser(gomock.Any()).Return(errors.New("test error"))
+
+	resp, err = client.Get(ts.URL + "/callback?code=" + code + "&state=" + token)
+
+	fmt.Println("status:", resp.Status)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not correct")
 }

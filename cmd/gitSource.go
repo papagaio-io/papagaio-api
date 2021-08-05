@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"wecode.sorint.it/opensource/papagaio-api/api"
-	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/types"
 )
@@ -51,8 +50,6 @@ type configGitSourceCmd struct {
 }
 
 func init() {
-	config.SetupConfig()
-
 	rootCmd.AddCommand(gitSourceCmd)
 	gitSourceCmd.AddCommand(addUGitSourceCmd)
 	gitSourceCmd.AddCommand(removeGitSourceCmd)

@@ -42,6 +42,9 @@ type TriggersConfig struct {
 	OrganizationsDefaultTriggerTime uint
 	RunFailedDefaultTriggerTime     uint
 	UsersDefaultTriggerTime         uint
+	StartOrganizationsTrigger       bool
+	StartRunFailedTrigger           bool
+	StartUsersTrigger               bool
 }
 
 type AgolaConfig struct {

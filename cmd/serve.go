@@ -35,8 +35,6 @@ func init() {
 }
 
 func serve(cmd *cobra.Command, args []string) {
-	config.SetupConfig()
-
 	if _, err := os.Stat(config.Config.Database.DbPath); os.IsNotExist(err) {
 		err := os.Mkdir(config.Config.Database.DbPath, os.ModeDir)
 		if err != nil {
@@ -117,9 +115,15 @@ func serve(cmd *cobra.Command, args []string) {
 		logRouter = router
 	}
 
-	trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanOrganizationSynk, &rtDto)
-	trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanDiscoveryRunFails, &rtDto)
-	trigger.StartSynkUsers(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanUserSynk, &rtDto)
+	if config.Config.TriggersConfig.StartOrganizationsTrigger {
+		trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanOrganizationSynk, &rtDto)
+	}
+	if config.Config.TriggersConfig.StartRunFailedTrigger {
+		trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanDiscoveryRunFails, &rtDto)
+	}
+	if config.Config.TriggersConfig.StartUsersTrigger {
+		trigger.StartSynkUsers(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanUserSynk, &rtDto)
+	}
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {
 		log.Println("http server error:", e)

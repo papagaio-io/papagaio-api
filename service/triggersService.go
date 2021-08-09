@@ -30,9 +30,9 @@ const RESTART_USERS_SYNK_TRIGGER = "restartUsersSynkTrigger"
 // @Description Get trigger timers
 // @Tags Triggers
 // @Produce  json
-// @Success 200 {array} dto.ConfigTriggersDto "ok"
+// @Success 200 {object} dto.ConfigTriggersDto "ok"
 // @Router /gettriggersconfig [get]
-// @Security OAuth2Password
+// @Security ApiKeyToken
 func (service *TriggersService) GetTriggersConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -52,9 +52,10 @@ func (service *TriggersService) GetTriggersConfig(w http.ResponseWriter, r *http
 // @Description Save trigger timers
 // @Tags Triggers
 // @Produce  json
-// @Success 200 {array} dto.ConfigTriggersDto "ok"
+// @Param configTriggersDto body dto.ConfigTriggersDto true "Config triggers"
+// @Success 200 "ok"
 // @Router /savetriggersconfig [post]
-// @Security OAuth2Password
+// @Security ApiKeyToken
 func (service *TriggersService) SaveTriggersConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -91,9 +92,13 @@ func (service *TriggersService) SaveTriggersConfig(w http.ResponseWriter, r *htt
 // @Description Restartr timers
 // @Tags Triggers
 // @Produce  json
-// @Success 200
+// @Param restartAll query bool false "?restartAll"
+// @Param restartorganizationsynktrigger query bool false "?restartorganizationsynktrigger"
+// @Param restartRunsFailedDiscoveryTrigger query bool false "?restartRunsFailedDiscoveryTrigger"
+// @Param restartUsersSynkTrigger query bool false "?restartUsersSynkTrigger"
+// @Success 200 "ok"
 // @Router /restarttriggers [post]
-// @Security OAuth2Password
+// @Security ApiKeyToken
 func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

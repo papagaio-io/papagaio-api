@@ -35,7 +35,7 @@ type GitSourceService struct {
 // @Success 200 {array} dto.GitSourcesDto "ok"
 // @Failure 400 "bad request"
 // @Router /gitsources [get]
-// @Security OAuth2Password
+// @Security ApiKeyToken
 func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -59,11 +59,11 @@ func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Re
 // @Description Add a GitSource with the data provided in the body
 // @Tags GitSources
 // @Produce  json
-// @Param gitSource body model.GitSource true "Git Source information"
-// @Success 200 {object} model.GitSource "ok"
+// @Param gitSource body dto.CreateGitSourceRequestDto true "Git Source information"
+// @Success 200 "ok"
 // @Failure 422 "Already exists"
 // @Router /gitsource [post]
-// @Security OAuth2Password
+// @Security ApiKeyToken
 func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -164,10 +164,10 @@ func (service *GitSourceService) AddGitSource(w http.ResponseWriter, r *http.Req
 // @Tags GitSources
 // @Produce  json
 // @Param gitSourceName path string true "Git Source Name"
-// @Success 200 {object} model.GitSource "ok"
+// @Success 200 "ok"
 // @Failure 422 "Not found"
 // @Router /gitsource/{gitSourceName} [delete]
-// @Security OAuth2Password
+// @Security ApiKeyToken
 func (service *GitSourceService) RemoveGitSource(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -233,10 +233,11 @@ func (service *GitSourceService) deleteOrganizationsAndMembersByGitsourceRef(git
 // @Tags GitSources
 // @Produce  json
 // @Param gitSourceName path string true "Git Source Name"
-// @Success 200 {object} model.GitSource "ok"
+// @Param gitSource body dto.UpdateGitSourceRequestDto true "Git Source information"
+// @Success 200 "ok"
 // @Failure 404 "not found"
 // @Router /gitsource/{gitSourceName} [put]
-// @Security OAuth2Password
+// @Security ApiKeyToken
 func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -283,14 +284,13 @@ func (service *GitSourceService) UpdateGitSource(w http.ResponseWriter, r *http.
 }
 
 // @Summary List Git Organizations
-// @Description Return a list of all Organizations by GitSource
+// @Description Return a list of all Organizations
 // @Tags GitSources
 // @Produce  json
-// @Param gitSourceName path string true "Git Source Name"
-// @Success 200 {object} model.GitSource "ok"
+// @Success 200 "ok"
 // @Failure 404 "not found"
-// @Router /gitorganizations/{gitSourceName} [get]
-// @Security OAuth2Password
+// @Router /gitorganizations [get]
+// @Security ApiKeyToken
 func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

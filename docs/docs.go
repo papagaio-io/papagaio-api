@@ -28,7 +28,7 @@ var doc = `{
             "post": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Add an external user",
@@ -59,10 +59,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "ok",
-                        "schema": {
-                            "$ref": "#/definitions/model.Organization"
-                        }
+                        "description": "ok"
                     },
                     "404": {
                         "description": "not found"
@@ -74,7 +71,7 @@ var doc = `{
             "get": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Return the organization ref list existing in Agola but not in Papagaio",
@@ -105,7 +102,7 @@ var doc = `{
             "post": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Create an organization in Papagaio and in Agola. If already exists on Agola and you want to use the same organization then use the query parameter force",
@@ -118,7 +115,7 @@ var doc = `{
                 "summary": "Create a new Organization in Papagaio/Agola",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "boolean",
                         "description": "?force",
                         "name": "force",
                         "in": "query"
@@ -150,7 +147,7 @@ var doc = `{
             "delete": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Delete an external user",
@@ -181,10 +178,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "ok",
-                        "schema": {
-                            "$ref": "#/definitions/model.Organization"
-                        }
+                        "description": "ok"
                     },
                     "404": {
                         "description": "not found"
@@ -196,7 +190,7 @@ var doc = `{
             "delete": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Delete an organization in Papagaio and in Agola. Its possible to delete only in Papagaio using the parameter internalonly.",
@@ -226,7 +220,7 @@ var doc = `{
                     "200": {
                         "description": "ok",
                         "schema": {
-                            "$ref": "#/definitions/model.Organization"
+                            "$ref": "#/definitions/dto.DeleteOrganizationResponseDto"
                         }
                     },
                     "500": {
@@ -239,7 +233,7 @@ var doc = `{
             "get": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Get trigger timers",
@@ -254,23 +248,20 @@ var doc = `{
                     "200": {
                         "description": "ok",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.ConfigTriggersDto"
-                            }
+                            "$ref": "#/definitions/dto.ConfigTriggersDto"
                         }
                     }
                 }
             }
         },
-        "/gitorganizations/{gitSourceName}": {
+        "/gitorganizations": {
             "get": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
-                "description": "Return a list of all Organizations by GitSource",
+                "description": "Return a list of all Organizations",
                 "produces": [
                     "application/json"
                 ],
@@ -278,21 +269,9 @@ var doc = `{
                     "GitSources"
                 ],
                 "summary": "List Git Organizations",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Git Source Name",
-                        "name": "gitSourceName",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
-                        "description": "ok",
-                        "schema": {
-                            "$ref": "#/definitions/model.GitSource"
-                        }
+                        "description": "ok"
                     },
                     "404": {
                         "description": "not found"
@@ -304,7 +283,7 @@ var doc = `{
             "post": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Add a GitSource with the data provided in the body",
@@ -322,16 +301,13 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GitSource"
+                            "$ref": "#/definitions/dto.CreateGitSourceRequestDto"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "ok",
-                        "schema": {
-                            "$ref": "#/definitions/model.GitSource"
-                        }
+                        "description": "ok"
                     },
                     "422": {
                         "description": "Already exists"
@@ -343,7 +319,7 @@ var doc = `{
             "put": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Update GitSource information",
@@ -361,14 +337,20 @@ var doc = `{
                         "name": "gitSourceName",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Git Source information",
+                        "name": "gitSource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateGitSourceRequestDto"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "ok",
-                        "schema": {
-                            "$ref": "#/definitions/model.GitSource"
-                        }
+                        "description": "ok"
                     },
                     "404": {
                         "description": "not found"
@@ -378,7 +360,7 @@ var doc = `{
             "delete": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Remove a GitSource",
@@ -400,10 +382,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "ok",
-                        "schema": {
-                            "$ref": "#/definitions/model.GitSource"
-                        }
+                        "description": "ok"
                     },
                     "422": {
                         "description": "Not found"
@@ -415,7 +394,7 @@ var doc = `{
             "get": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Return a list of gitsources",
@@ -446,7 +425,7 @@ var doc = `{
             "get": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Obtain a full report of all organizations",
@@ -474,7 +453,7 @@ var doc = `{
             "get": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Obtain a report of a specific organization",
@@ -485,14 +464,20 @@ var doc = `{
                     "Organization"
                 ],
                 "summary": "Get Report from a specific organization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization Name",
+                        "name": "organizationRef",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "ok",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.OrganizationDto"
-                            }
+                            "$ref": "#/definitions/dto.OrganizationDto"
                         }
                     },
                     "404": {
@@ -505,7 +490,7 @@ var doc = `{
             "get": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Obtain a report of a specific organization/project",
@@ -516,14 +501,27 @@ var doc = `{
                     "Organization"
                 ],
                 "summary": "Get Report from a specific organization/project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization Name",
+                        "name": "organizationRef",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project Name",
+                        "name": "projectName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "ok",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.OrganizationDto"
-                            }
+                            "$ref": "#/definitions/dto.ProjectDto"
                         }
                     },
                     "404": {
@@ -536,7 +534,7 @@ var doc = `{
             "post": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Restartr timers",
@@ -547,9 +545,35 @@ var doc = `{
                     "Triggers"
                 ],
                 "summary": "restart triggers",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "?restartAll",
+                        "name": "restartAll",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "?restartorganizationsynktrigger",
+                        "name": "restartorganizationsynktrigger",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "?restartRunsFailedDiscoveryTrigger",
+                        "name": "restartRunsFailedDiscoveryTrigger",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "?restartUsersSynkTrigger",
+                        "name": "restartUsersSynkTrigger",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "ok"
                     }
                 }
             }
@@ -558,7 +582,7 @@ var doc = `{
             "post": {
                 "security": [
                     {
-                        "OAuth2Password": []
+                        "ApiKeyToken": []
                     }
                 ],
                 "description": "Save trigger timers",
@@ -569,15 +593,20 @@ var doc = `{
                     "Triggers"
                 ],
                 "summary": "Save time triggers",
+                "parameters": [
+                    {
+                        "description": "Config triggers",
+                        "name": "configTriggersDto",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ConfigTriggersDto"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.ConfigTriggersDto"
-                            }
-                        }
+                        "description": "ok"
                     }
                 }
             }
@@ -637,6 +666,35 @@ var doc = `{
                 }
             }
         },
+        "dto.CreateGitSourceRequestDto": {
+            "type": "object",
+            "properties": {
+                "agolaClientId": {
+                    "type": "string"
+                },
+                "agolaClientSecret": {
+                    "type": "string"
+                },
+                "agolaRemoteSourceName": {
+                    "type": "string"
+                },
+                "gitApiUrl": {
+                    "type": "string"
+                },
+                "gitClientId": {
+                    "type": "string"
+                },
+                "gitClientSecret": {
+                    "type": "string"
+                },
+                "gitType": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.CreateOrganizationRequestDto": {
             "type": "object",
             "properties": {
@@ -652,7 +710,7 @@ var doc = `{
                 "behaviourType": {
                     "type": "string"
                 },
-                "name": {
+                "gitPath": {
                     "type": "string"
                 },
                 "visibility": {
@@ -667,6 +725,14 @@ var doc = `{
                     "type": "string"
                 },
                 "organizationURL": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DeleteOrganizationResponseDto": {
+            "type": "object",
+            "properties": {
+                "errorCode": {
                     "type": "string"
                 }
             }
@@ -778,27 +844,7 @@ var doc = `{
                 }
             }
         },
-        "model.Branch": {
-            "type": "object",
-            "properties": {
-                "lastFailedRun": {
-                    "$ref": "#/definitions/model.RunInfo"
-                },
-                "lastRuns": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.RunInfo"
-                    }
-                },
-                "lastSuccessRun": {
-                    "$ref": "#/definitions/model.RunInfo"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.GitSource": {
+        "dto.UpdateGitSourceRequestDto": {
             "type": "object",
             "properties": {
                 "agolaRemoteSource": {
@@ -810,137 +856,20 @@ var doc = `{
                 "gitClientId": {
                     "type": "string"
                 },
-                "gitSecret": {
+                "gitClientSecret": {
                     "type": "string"
                 },
                 "gitType": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.Organization": {
-            "type": "object",
-            "properties": {
-                "agolaOrganizationRef": {
-                    "type": "string",
-                    "example": "TestDemo"
-                },
-                "behaviourExclude": {
-                    "type": "string"
-                },
-                "behaviourInclude": {
-                    "type": "string"
-                },
-                "behaviourType": {
-                    "type": "string",
-                    "example": "none"
-                },
-                "externalUsers": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
-                },
-                "gitName": {
-                    "type": "string",
-                    "example": "TestDemo"
-                },
-                "gitOrganizationId": {
-                    "type": "integer"
-                },
-                "gitPath": {
-                    "type": "string",
-                    "example": "TestDemo"
-                },
-                "gitSourceName": {
-                    "type": "string",
-                    "example": "wecodedev"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "projects": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/model.Project"
-                    }
-                },
-                "userIdConnected": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "userIdCreator": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "visibility": {
-                    "type": "string",
-                    "example": "public"
-                },
-                "webHookId": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.Project": {
-            "type": "object",
-            "properties": {
-                "agolaProjectID": {
-                    "type": "string"
-                },
-                "agolaProjectRef": {
-                    "type": "string"
-                },
-                "archivied": {
-                    "type": "boolean"
-                },
-                "branchs": {
-                    "description": "use branch name as key",
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/model.Branch"
-                    }
-                },
-                "gitRepoPath": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.RunInfo": {
-            "type": "object",
-            "properties": {
-                "branch": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "phase": {
-                    "type": "string"
-                },
-                "result": {
-                    "type": "string"
-                },
-                "runEndDate": {
-                    "type": "string"
-                },
-                "runStartDate": {
                     "type": "string"
                 }
             }
         }
     },
     "securityDefinitions": {
-        "OAuth2Password": {
-            "type": "oauth2",
-            "flow": "password",
-            "tokenUrl": "https://login.sorintdev.it/auth/realms/sorinttest/protocol/openid-connect/token"
+        "ApiKeyToken": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
@@ -956,11 +885,11 @@ type swaggerInfo struct {
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
-	Version:     "",
-	Host:        "papagaio-api.sorintdev.it",
+	Version:     "0.1.0",
+	Host:        "",
 	BasePath:    "/api",
 	Schemes:     []string{},
-	Title:       "",
+	Title:       "papagaio-api",
 	Description: "",
 }
 

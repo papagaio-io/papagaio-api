@@ -35,6 +35,25 @@ definitions:
       usersTriggerTime:
         type: integer
     type: object
+  dto.CreateGitSourceRequestDto:
+    properties:
+      agolaClientId:
+        type: string
+      agolaClientSecret:
+        type: string
+      agolaRemoteSourceName:
+        type: string
+      gitApiUrl:
+        type: string
+      gitClientId:
+        type: string
+      gitClientSecret:
+        type: string
+      gitType:
+        type: string
+      name:
+        type: string
+    type: object
   dto.CreateOrganizationRequestDto:
     properties:
       agolaRef:
@@ -45,7 +64,7 @@ definitions:
         type: string
       behaviourType:
         type: string
-      name:
+      gitPath:
         type: string
       visibility:
         type: string
@@ -55,6 +74,11 @@ definitions:
       errorCode:
         type: string
       organizationURL:
+        type: string
+    type: object
+  dto.DeleteOrganizationResponseDto:
+    properties:
+      errorCode:
         type: string
     type: object
   dto.GitSourcesDto:
@@ -127,20 +151,7 @@ definitions:
       totalRuns:
         type: integer
     type: object
-  model.Branch:
-    properties:
-      lastFailedRun:
-        $ref: '#/definitions/model.RunInfo'
-      lastRuns:
-        items:
-          $ref: '#/definitions/model.RunInfo'
-        type: array
-      lastSuccessRun:
-        $ref: '#/definitions/model.RunInfo'
-      name:
-        type: string
-    type: object
-  model.GitSource:
+  dto.UpdateGitSourceRequestDto:
     properties:
       agolaRemoteSource:
         type: string
@@ -148,94 +159,15 @@ definitions:
         type: string
       gitClientId:
         type: string
-      gitSecret:
+      gitClientSecret:
         type: string
       gitType:
         type: string
-      id:
-        type: string
-      name:
-        type: string
     type: object
-  model.Organization:
-    properties:
-      agolaOrganizationRef:
-        example: TestDemo
-        type: string
-      behaviourExclude:
-        type: string
-      behaviourInclude:
-        type: string
-      behaviourType:
-        example: none
-        type: string
-      externalUsers:
-        additionalProperties:
-          type: boolean
-        type: object
-      gitName:
-        example: TestDemo
-        type: string
-      gitOrganizationId:
-        type: integer
-      gitPath:
-        example: TestDemo
-        type: string
-      gitSourceName:
-        example: wecodedev
-        type: string
-      id:
-        type: string
-      projects:
-        additionalProperties:
-          $ref: '#/definitions/model.Project'
-        type: object
-      userIdConnected:
-        example: 1
-        type: integer
-      userIdCreator:
-        example: 1
-        type: integer
-      visibility:
-        example: public
-        type: string
-      webHookId:
-        type: integer
-    type: object
-  model.Project:
-    properties:
-      agolaProjectID:
-        type: string
-      agolaProjectRef:
-        type: string
-      archivied:
-        type: boolean
-      branchs:
-        additionalProperties:
-          $ref: '#/definitions/model.Branch'
-        description: use branch name as key
-        type: object
-      gitRepoPath:
-        type: string
-    type: object
-  model.RunInfo:
-    properties:
-      branch:
-        type: string
-      id:
-        type: string
-      phase:
-        type: string
-      result:
-        type: string
-      runEndDate:
-        type: string
-      runStartDate:
-        type: string
-    type: object
-host: papagaio-api.sorintdev.it
 info:
   contact: {}
+  title: papagaio-api
+  version: 0.1.0
 paths:
   /addexternaluser/{organizationRef}:
     post:
@@ -257,12 +189,10 @@ paths:
       responses:
         "200":
           description: ok
-          schema:
-            $ref: '#/definitions/model.Organization'
         "404":
           description: not found
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Add External User
       tags:
       - Organization
@@ -281,7 +211,7 @@ paths:
         "400":
           description: bad request
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Return the organization ref list
       tags:
       - Organization
@@ -294,7 +224,7 @@ paths:
       - description: ?force
         in: query
         name: force
-        type: string
+        type: boolean
       - description: Organization information
         in: body
         name: organization
@@ -311,7 +241,7 @@ paths:
         "400":
           description: bad request
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Create a new Organization in Papagaio/Agola
       tags:
       - Organization
@@ -335,12 +265,10 @@ paths:
       responses:
         "200":
           description: ok
-          schema:
-            $ref: '#/definitions/model.Organization'
         "404":
           description: not found
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Delete External User
       tags:
       - Organization
@@ -364,11 +292,11 @@ paths:
         "200":
           description: ok
           schema:
-            $ref: '#/definitions/model.Organization'
+            $ref: '#/definitions/dto.DeleteOrganizationResponseDto'
         "500":
           description: Not found
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Delete Organization
       tags:
       - Organization
@@ -381,34 +309,24 @@ paths:
         "200":
           description: ok
           schema:
-            items:
-              $ref: '#/definitions/dto.ConfigTriggersDto'
-            type: array
+            $ref: '#/definitions/dto.ConfigTriggersDto'
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Return time triggers
       tags:
       - Triggers
-  /gitorganizations/{gitSourceName}:
+  /gitorganizations:
     get:
-      description: Return a list of all Organizations by GitSource
-      parameters:
-      - description: Git Source Name
-        in: path
-        name: gitSourceName
-        required: true
-        type: string
+      description: Return a list of all Organizations
       produces:
       - application/json
       responses:
         "200":
           description: ok
-          schema:
-            $ref: '#/definitions/model.GitSource'
         "404":
           description: not found
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: List Git Organizations
       tags:
       - GitSources
@@ -421,18 +339,16 @@ paths:
         name: gitSource
         required: true
         schema:
-          $ref: '#/definitions/model.GitSource'
+          $ref: '#/definitions/dto.CreateGitSourceRequestDto'
       produces:
       - application/json
       responses:
         "200":
           description: ok
-          schema:
-            $ref: '#/definitions/model.GitSource'
         "422":
           description: Already exists
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Add a GitSource
       tags:
       - GitSources
@@ -450,12 +366,10 @@ paths:
       responses:
         "200":
           description: ok
-          schema:
-            $ref: '#/definitions/model.GitSource'
         "422":
           description: Not found
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Remove a GitSource
       tags:
       - GitSources
@@ -467,17 +381,21 @@ paths:
         name: gitSourceName
         required: true
         type: string
+      - description: Git Source information
+        in: body
+        name: gitSource
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateGitSourceRequestDto'
       produces:
       - application/json
       responses:
         "200":
           description: ok
-          schema:
-            $ref: '#/definitions/model.GitSource'
         "404":
           description: not found
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Update a GitSource
       tags:
       - GitSources
@@ -496,7 +414,7 @@ paths:
         "400":
           description: bad request
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Return a list of gitsources
       tags:
       - GitSources
@@ -513,81 +431,114 @@ paths:
               $ref: '#/definitions/dto.OrganizationDto'
             type: array
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Get Report
       tags:
       - Organization
   /report/{organizationRef}:
     get:
       description: Obtain a report of a specific organization
+      parameters:
+      - description: Organization Name
+        in: path
+        name: organizationRef
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: ok
           schema:
-            items:
-              $ref: '#/definitions/dto.OrganizationDto'
-            type: array
+            $ref: '#/definitions/dto.OrganizationDto'
         "404":
           description: not found
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Get Report from a specific organization
       tags:
       - Organization
   /report/{organizationRef}/{projectName}:
     get:
       description: Obtain a report of a specific organization/project
+      parameters:
+      - description: Organization Name
+        in: path
+        name: organizationRef
+        required: true
+        type: string
+      - description: Project Name
+        in: path
+        name: projectName
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: ok
           schema:
-            items:
-              $ref: '#/definitions/dto.OrganizationDto'
-            type: array
+            $ref: '#/definitions/dto.ProjectDto'
         "404":
           description: not found
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Get Report from a specific organization/project
       tags:
       - Organization
   /restarttriggers:
     post:
       description: Restartr timers
+      parameters:
+      - description: ?restartAll
+        in: query
+        name: restartAll
+        type: boolean
+      - description: ?restartorganizationsynktrigger
+        in: query
+        name: restartorganizationsynktrigger
+        type: boolean
+      - description: ?restartRunsFailedDiscoveryTrigger
+        in: query
+        name: restartRunsFailedDiscoveryTrigger
+        type: boolean
+      - description: ?restartUsersSynkTrigger
+        in: query
+        name: restartUsersSynkTrigger
+        type: boolean
       produces:
       - application/json
       responses:
         "200":
-          description: ""
+          description: ok
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: restart triggers
       tags:
       - Triggers
   /savetriggersconfig:
     post:
       description: Save trigger timers
+      parameters:
+      - description: Config triggers
+        in: body
+        name: configTriggersDto
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ConfigTriggersDto'
       produces:
       - application/json
       responses:
         "200":
           description: ok
-          schema:
-            items:
-              $ref: '#/definitions/dto.ConfigTriggersDto'
-            type: array
       security:
-      - OAuth2Password: []
+      - ApiKeyToken: []
       summary: Save time triggers
       tags:
       - Triggers
 securityDefinitions:
-  OAuth2Password:
-    flow: password
-    tokenUrl: https://login.sorintdev.it/auth/realms/sorinttest/protocol/openid-connect/token
-    type: oauth2
+  ApiKeyToken:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

@@ -16,7 +16,7 @@ local task_test() =
       [
         { type: 'clone' },
         { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
-        { type: 'run', name: 'go unit tests', command: 'go test -coverprofile testCover.out ./service' },
+        { type: 'run', name: 'go test', command: 'go test -coverprofile testCover.out ./service' },
         { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
         { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
       ],

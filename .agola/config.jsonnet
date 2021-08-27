@@ -109,9 +109,9 @@ local task_docker_build_push_private() = {
       command: |||
         echo "branch" $AGOLA_GIT_BRANCH
         if [ $AGOLA_GIT_TAG ]; then
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.0 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.2 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
         else
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.0 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.2 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
       |||,
     },
    ],

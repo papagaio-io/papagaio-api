@@ -1,2 +1,5 @@
 testCover.out
 service/debug.test
+bin/
+tools/
+webbundle/bindata.go

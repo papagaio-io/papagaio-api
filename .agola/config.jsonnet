@@ -44,9 +44,11 @@ local task_build_go() =
         { type: 'clone' },
         { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
         { type: 'run', name: 'build the program', command: 'go build .' },
+        { type: 'run', name: 'mkdir bin', command: 'mkdir bin' },
         { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
         { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
         { type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '.', paths: ['**'] }] },
+        { type: 'save_to_workspace', contents: [{ source_dir: './bin', dest_dir: '/bin/', paths: ['*'] }] },
         { type: 'run',
           name: 'Create and deploy Nexus', 
           command: |||
@@ -71,8 +73,9 @@ local task_docker_build_push_private() = {
   },
   runtime:
   {
+    arch: 'amd64',
     containers: [
-      { image: "gcr.io/kaniko-project/executor:debug"},
+      { image: "gcr.io/kaniko-project/executor:debug-v0.11.0"},
     ],
   },
   environment:
@@ -106,9 +109,9 @@ local task_docker_build_push_private() = {
       command: |||
         echo "branch" $AGOLA_GIT_BRANCH
         if [ $AGOLA_GIT_TAG ]; then
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.0 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
         else
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
+          /kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.0 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
       |||,
     },
    ],
@@ -151,7 +154,7 @@ local task_docker_build_push_public() = {
         EOF
       |||,
     },
-    { type: "run", name: "kanico executor", command: "/kaniko/executor --context=dir:///kaniko/papagaio-api --dockerfile Dockerfile --destination tulliobotti/$APPNAME:$AGOLA_GIT_TAG" },
+    { type: "run", name: "kanico executor", command: "/kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.0 --dockerfile Dockerfile --destination tulliobotti/$APPNAME:$AGOLA_GIT_TAG" },
    ],
   depends: ["build go"]
 };

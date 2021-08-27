@@ -67,6 +67,7 @@ type Server struct {
 	// Port on which our config must listen and serve
 	Port             string
 	LocalHostAddress string
+	ApiExposedURL    string
 }
 
 type KeycloakConfig struct {
@@ -114,7 +115,7 @@ func readConfig() {
 	var raw []byte
 	var err error
 
-	if raw, err = ioutil.ReadFile("/app/config.json"); err != nil {
+	if raw, err = ioutil.ReadFile("/bin/config.json"); err != nil {
 		if raw, err = ioutil.ReadFile("config.json"); err != nil {
 			log.Fatal("Unable to read configuration file: ", err)
 		}

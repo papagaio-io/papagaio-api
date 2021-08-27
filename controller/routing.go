@@ -18,8 +18,6 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger" // http-swagger middleware
 )
 
-//const XAuthUserId string = "X-Auth-User-Id"
-
 type ContextParameter string
 
 const (
@@ -86,6 +84,8 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 	setupOauth2Callback(apirouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)
 
 	setupChangeUserRole(apirouter.PathPrefix("/changeuserrole").Subrouter(), ctrlUser)
+
+	router.PathPrefix("/").HandlerFunc(NewWebBundleHandlerFunc(config.Config.Server.ApiExposedURL))
 }
 
 func setupPingRouter(router *mux.Router) {

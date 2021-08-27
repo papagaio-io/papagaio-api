@@ -19,7 +19,5 @@ import (
 func main() {
 	docs.SwaggerInfo.Host = config.Config.Server.LocalHostAddress
 
-	config.SetupConfig()
-
 	cmd.Execute()
 }

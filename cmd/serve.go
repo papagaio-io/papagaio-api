@@ -31,6 +31,8 @@ var serveCmd = &cobra.Command{
 }
 
 func init() {
+	config.SetupConfig()
+
 	rootCmd.AddCommand(serveCmd)
 }
 

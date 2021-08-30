@@ -7,7 +7,7 @@ FROM $PAPAGAIOWEB_IMAGE AS papagaio-web
 #######
 
 # base build image
-FROM golang:1.16-buster AS build_base
+FROM registry.sorintdev.it/golang:1.16-buster AS build_base
 
 WORKDIR /papagaio-api
 

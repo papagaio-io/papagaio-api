@@ -32,7 +32,7 @@ build: papagaio
 # don't use existing file names and track go sources, let's do this to the go tool
 .PHONY: papagaio
 papagaio: $(PAPAGAIO_DEPS)
-	GO111MODULE=on go build $(if $(PAPAGAIO_TAGS),-tags "$(PAPAGAIO_TAGS)") -o $(PROJDIR)/bin/papagaio-api $(REPO_PATH)
+	GO111MODULE=on go build $(if $(PAPAGAIO_TAGS),-tags "$(PAPAGAIO_TAGS)") -o $(PROJDIR)/bin/papagaio $(REPO_PATH)
 
 .PHONY: go-bindata
 go-bindata:

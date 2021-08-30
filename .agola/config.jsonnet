@@ -1,4 +1,4 @@
-local appName = "papagaio-api";
+local appName = "papagaio";
 
 local go_runtime() = {
   type: 'pod',
@@ -42,23 +42,23 @@ local task_build_go() =
     steps: 
       [
         { type: 'clone' },
+        { type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '.', paths: ['**'] }] },
         { type: 'restore_cache', keys: ['cache-sum-{{ md5sum "go.sum" }}', 'cache-date-'], dest_dir: '/go/pkg/mod/cache' },
-        { type: 'run', name: 'build the program', command: 'go build .' },
-        { type: 'run', name: 'mkdir bin', command: 'mkdir bin' },
+        { type: 'run', command: 'make' },
         { type: 'save_cache', key: 'cache-sum-{{ md5sum "go.sum" }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
         { type: 'save_cache', key: 'cache-date-{{ year }}-{{ month }}-{{ day }}', contents: [{ source_dir: '/go/pkg/mod/cache' }] },
-        { type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '.', paths: ['**'] }] },
+        //{ type: 'save_to_workspace', contents: [{ source_dir: '.', dest_dir: '.', paths: ['**'] }] },
         { type: 'save_to_workspace', contents: [{ source_dir: './bin', dest_dir: '/bin/', paths: ['*'] }] },
         { type: 'run',
           name: 'Create and deploy Nexus', 
           command: |||
             export
             if [ ${AGOLA_GIT_TAG} ]; then
-              export TARBALL=papagaio-api-${AGOLA_GIT_TAG}.tar.gz ;
+              export TARBALL=papagaio-${AGOLA_GIT_TAG}.tar.gz ;
             else
-              export TARBALL=papagaio-api-latest.tar.gz ; fi
+              export TARBALL=papagaio-latest.tar.gz ; fi
 
-            mkdir dist && cp papagaio-api dist/ && tar -zcvf ${TARBALL} dist
+            mkdir dist && cp bin/papagaio dist/ && tar -zcvf ${TARBALL} dist
             curl -v -k -u $USERNAME:$PASSWORD --upload-file ${TARBALL} ${urlrepoupload}${TARBALL}
           |||,
         },
@@ -89,7 +89,7 @@ local task_docker_build_push_private() = {
   working_dir: '/kaniko',
   steps: 
    [
-    { type: "restore_workspace", name: "restore workspace", dest_dir: "/kaniko/papagaio-api" },
+    { type: "restore_workspace", name: "restore workspace", dest_dir: "/kaniko/papagaio" },
     {
       type: "run",
       name: "generate docker config", 
@@ -109,9 +109,9 @@ local task_docker_build_push_private() = {
       command: |||
         echo "branch" $AGOLA_GIT_BRANCH
         if [ $AGOLA_GIT_TAG ]; then
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.2 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
+          /kaniko/executor --context=dir:///kaniko/papagaio --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.2 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:$AGOLA_GIT_TAG;
         else
-          /kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.2 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
+          /kaniko/executor --context=dir:///kaniko/papagaio --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.2 --target papagaio --dockerfile Dockerfile --destination registry.sorintdev.it/$APPNAME:latest ; fi
       |||,
     },
    ],
@@ -140,7 +140,7 @@ local task_docker_build_push_public() = {
   working_dir: '/kaniko',
   steps: 
    [
-    { type: "restore_workspace", name: "restore workspace", dest_dir: "/kaniko/papagaio-api" },
+    { type: "restore_workspace", name: "restore workspace", dest_dir: "/kaniko/papagaio" },
     {
       type: "run",
       name: "generate docker config", 
@@ -154,7 +154,7 @@ local task_docker_build_push_public() = {
         EOF
       |||,
     },
-    { type: "run", name: "kanico executor", command: "/kaniko/executor --context=dir:///kaniko/papagaio-api --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.0 --dockerfile Dockerfile --destination tulliobotti/$APPNAME:$AGOLA_GIT_TAG" },
+    { type: "run", name: "kanico executor", command: "/kaniko/executor --context=dir:///kaniko/papagaio --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.0 --dockerfile Dockerfile --destination tulliobotti/$APPNAME:$AGOLA_GIT_TAG" },
    ],
   depends: ["build go"]
 };
@@ -190,9 +190,9 @@ local task_kubernetes_deploy(namespace, changeImageVersion) =
       { type: 'run', name: 'generate kubernetes config', command: 'echo $KUBERNETESCONF | base64 -d > kubernetes/kubernetes.conf' },
             
       if changeImageVersion then
-        { type: 'run', name: 'kubectl replace', command:  'kubectl --kubeconfig=kubernetes/kubernetes.conf -n ' + namespace + ' set image deployment/papagaio-api papagaio-api=registry.sorintdev.it/papagaio-api:$AGOLA_GIT_TAG' }
+        { type: 'run', name: 'kubectl replace', command:  'kubectl --kubeconfig=kubernetes/kubernetes.conf -n ' + namespace + ' set image deployment/papagaio papagaio=registry.sorintdev.it/papagaio:$AGOLA_GIT_TAG' }
       else 
-        { type: 'run', name: 'kubectl replace', command:  'kubectl --kubeconfig=kubernetes/kubernetes.conf -n ' + namespace + ' delete pods -l app=papagaio-api' },
+        { type: 'run', name: 'kubectl replace', command:  'kubectl --kubeconfig=kubernetes/kubernetes.conf -n ' + namespace + ' delete pods -l app=papagaio' },
     ],
   };
 

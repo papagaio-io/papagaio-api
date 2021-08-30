@@ -355,6 +355,7 @@ func (giteaApi *GiteaApi) IsUserOwner(gitSource *model.GitSource, user *model.Us
 			members, err := giteaApi.GetTeamMembers(gitSource, user, team.ID)
 			if err != nil || members == nil {
 				log.Println("IsUserOwner error in GetTeamMembers:", err)
+				return false, err
 			}
 
 			for _, member := range *members {

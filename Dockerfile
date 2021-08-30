@@ -9,7 +9,7 @@ FROM $PAPAGAIOWEB_IMAGE AS papagaio-web
 # base build image
 FROM registry.sorintdev.it/golang:1.16-buster AS build_base
 
-WORKDIR /papagaio-api
+WORKDIR /papagaio
 
 # use go modules
 ENV GO111MODULE=on
@@ -38,6 +38,6 @@ FROM registry.sorintdev.it/fedora-minimal AS papagaio
 
 WORKDIR /
 
-COPY --from=server_builder /papagaio-api/bin/papagaio-api /bin/
+COPY --from=server_builder /papagaio/bin/papagaio /bin/
 
-ENTRYPOINT ["papagaio-api", "serve"]
+ENTRYPOINT ["papagaio", "serve"]

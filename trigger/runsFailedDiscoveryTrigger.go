@@ -227,13 +227,19 @@ func getEmailByRun(run *agola.RunDto, gitSource *model.GitSource, user *model.Us
 
 	commitMetadata, err := gitGateway.GetCommitMetadata(gitSource, user, organizationName, gitRepoPath, run.GetCommitSha())
 	if err == nil && commitMetadata != nil {
-		retVal = append(retVal, commitMetadata.GetAuthorEmail())
+		email := commitMetadata.GetAuthorEmail()
+		if email != nil {
+			retVal = append(retVal, *email)
+		}
 
 		if commitMetadata.Parents != nil {
 			for _, parent := range commitMetadata.Parents {
 				commitParentMetadata, err := gitGateway.GetCommitMetadata(gitSource, user, organizationName, gitRepoPath, parent.Sha)
 				if err == nil && commitParentMetadata != nil {
-					retVal = append(retVal, commitParentMetadata.GetAuthorEmail())
+					email = commitParentMetadata.GetAuthorEmail()
+					if email != nil {
+						retVal = append(retVal, *email)
+					}
 				}
 			}
 		}

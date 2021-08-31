@@ -1,7 +1,8 @@
 {
     "Server": {
-      "Port": "8080",
-      "LocalHostAddress": "http://localhost:8080"
+      "Port": "8000",
+      "LocalHostAddress": "http://localhost:8000",
+      "ApiExposedURL": "http://localhost:8000"
     },
     "Database": {
       "DbPath": "/badger",
@@ -12,7 +13,7 @@
       "AdminToken": "token admintoken"
     },
     "CmdConfig": {
-       "DefaultGatewayURL": "http://localhost:8080"
+       "DefaultGatewayURL": "http://localhost:8000"
     },
     "AdminToken": "admintoken",
     "TokenSigning": {
@@ -24,6 +25,9 @@
     "TriggersConfig": {
       "OrganizationsDefaultTriggerTime": 5,
       "RunFailedDefaultTriggerTime": 5,
-      "UsersDefaultTriggerTime": 1440
+      "UsersDefaultTriggerTime": 1440,
+      "StartOrganizationsTrigger": true,
+      "StartRunFailedTrigger": true,
+      "StartUsersTrigger": true
     }
 }

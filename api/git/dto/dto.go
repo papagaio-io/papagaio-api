@@ -24,8 +24,14 @@ type CommitMetadataDto struct {
 	Parents []CommitParentDto `json:"parents"`
 }
 
-func (commitMetadata *CommitMetadataDto) GetAuthorEmail() string {
-	return commitMetadata.Author["email"]
+func (commitMetadata *CommitMetadataDto) GetAuthorEmail() *string {
+	if commitMetadata.Author != nil {
+		email, ok := commitMetadata.Author["email"]
+		if ok {
+			return &email
+		}
+	}
+	return nil
 }
 
 type CommitParentDto struct {

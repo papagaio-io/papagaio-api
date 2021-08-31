@@ -298,7 +298,9 @@ func (giteaApi *GiteaApi) GetCommitMetadata(gitSource *model.GitSource, user *mo
 
 	if commitMetadata != nil && commitMetadata.CommitMeta != nil {
 		author := make(map[string]string)
-		author["email"] = commitMetadata.Author.Email
+		if commitMetadata.Author != nil {
+			author["email"] = commitMetadata.Author.Email
+		}
 
 		retVal := dto.CommitMetadataDto{
 			Sha:    commitMetadata.CommitMeta.SHA,

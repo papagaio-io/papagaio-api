@@ -26,7 +26,7 @@ papagaio gitsource add
       --delete-remotesource          true to delete the Agola remotesource(default false)
 
 
-example: papagaio gitsource add --name {gitSourceName} --type gitea --git-token {gitUserToken} --git-api-url  {gitUrl --agola-remotesource {agolaRemoteSource} --agola-token {agolaUserToken} --token {papagaioAdminToken}
+example: papagaio gitsource add --name {gitSourceName} --type gitea --git-api-url {gitUrl} --git-client-id {gitClientId} --git-client-secret {gitClientSecret} --agola-remotesource {agolaRemoteSource} --token {papagaioAdminToken}
 
 * Change user role
 papagaio user change-role

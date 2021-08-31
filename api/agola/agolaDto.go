@@ -94,6 +94,10 @@ func (run *RunDto) GetCommitSha() string {
 	return run.Annotations["commit_sha"]
 }
 
+func (run *RunDto) IsBranch() bool {
+	return strings.Compare(run.Annotations["ref_type"], "branch") == 0
+}
+
 type TaskDto struct {
 	ID        string        `json:"id"`
 	Name      string        `json:"name"`

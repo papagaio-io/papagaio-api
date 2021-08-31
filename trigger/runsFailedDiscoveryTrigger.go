@@ -83,6 +83,10 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 				runList = takeWebhookTrigger(runList)
 
 				for _, run := range *runList {
+					if !run.IsBranch() { //skip tags
+						continue
+					}
+
 					newRun := model.RunInfo{
 						ID:           run.ID,
 						Branch:       run.GetBranchName(),

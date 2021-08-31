@@ -24,16 +24,18 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	gitTeamMembers := make(map[int64]dto.UserTeamResponseDto)
 
 	for _, team := range *gitTeams {
+		log.Println("team", team.Name, "owner permission:", team.HasOwnerPermission(), team.Permission)
 		teamMembers, _ := gitGateway.GiteaApi.GetTeamMembers(gitSource, user, team.ID)
 
 		var teamToCheck *map[int64]dto.UserTeamResponseDto
-		if strings.Compare(team.Permission, "owner") == 0 {
+		if team.HasOwnerPermission() {
 			teamToCheck = &gitTeamOwners
 		} else {
 			teamToCheck = &gitTeamMembers
 		}
 
 		for _, member := range *teamMembers {
+			log.Println("team member:", member.Username)
 			(*teamToCheck)[member.ID] = member
 		}
 	}
@@ -50,7 +52,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		}
 
 		if agolaMember, ok := (*agolaOrganizationMembersMap)[agolaUserRef]; !ok || agolaMember.Role == agola.Owner {
-			err := agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "member")
+			err := agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, string(agola.Member))
 			if err != nil {
 				log.Println("AddOrUpdateOrganizationMember error:", err)
 			}
@@ -64,7 +66,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 		}
 
 		if agolaMember, ok := (*agolaOrganizationMembersMap)[agolaUserRef]; !ok || agolaMember.Role == agola.Member {
-			err := agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, "owner")
+			err := agolaApi.AddOrUpdateOrganizationMember(organization, agolaUserRef, string(agola.Owner))
 			if err != nil {
 				log.Println("AddOrUpdateOrganizationMember error:", err)
 			}

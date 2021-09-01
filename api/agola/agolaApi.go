@@ -549,7 +549,7 @@ func (agolaApi *AgolaApi) CreateUserToken(user *model.User) error {
 	reqBody := strings.NewReader(string(data))
 
 	req, _ := http.NewRequest("POST", URLApi, reqBody)
-	req.Header.Set("Authorization", config.Config.Agola.AdminToken)
+	req.Header.Set("Authorization", "token "+config.Config.Agola.AdminToken)
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -678,7 +678,7 @@ type httpClient struct {
 
 func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 	if c.isAdminUser {
-		req.Header.Set("Authorization", config.Config.Agola.AdminToken)
+		req.Header.Set("Authorization", "token "+config.Config.Agola.AdminToken)
 		return c.c.Do(req)
 	}
 

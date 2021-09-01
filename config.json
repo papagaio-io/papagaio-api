@@ -10,7 +10,7 @@
     },
     "Agola": {
       "AgolaAddr": "https://agoladev.sorintdev.it",
-      "AdminToken": "token admintoken"
+      "AdminToken": "admintoken"
     },
     "CmdConfig": {
        "DefaultGatewayURL": "http://localhost:8000"

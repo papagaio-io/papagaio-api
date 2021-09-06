@@ -2,7 +2,7 @@
     "Server": {
       "Port": "8000",
       "LocalHostAddress": "http://localhost:8000",
-      "ApiExposedURL": "http://localhost:8000"
+      "ApiExposedURL": "http://localhost:8000/api"
     },
     "Database": {
       "DbPath": "/badger",

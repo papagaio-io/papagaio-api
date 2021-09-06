@@ -154,7 +154,7 @@ local task_docker_build_push_public() = {
         EOF
       |||,
     },
-    { type: "run", name: "kanico executor", command: "/kaniko/executor --context=dir:///kaniko/papagaio --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.0 --dockerfile Dockerfile --destination tulliobotti/$APPNAME:$AGOLA_GIT_TAG" },
+    { type: "run", name: "kanico executor", command: "/kaniko/executor --context=dir:///kaniko/papagaio --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.2 --dockerfile Dockerfile --destination tulliobotti/$APPNAME:$AGOLA_GIT_TAG" },
    ],
   depends: ["build go"]
 };

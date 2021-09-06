@@ -62,6 +62,7 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 	setupCreateOrganizationEndpoint(apirouter.PathPrefix("/createorganization").Subrouter(), ctrlOrganization)
 	setupDeleteOrganizationEndpoint(apirouter.PathPrefix("/deleteorganization").Subrouter(), ctrlOrganization)
 	setupAddOrganizationExternalUserEndpoint(apirouter.PathPrefix("/addexternaluser").Subrouter(), ctrlOrganization)
+	setupGetOrganizationExternalUsersEndpoint(apirouter.PathPrefix("/getexternalusers").Subrouter(), ctrlOrganization)
 	setupDeleteOrganizationExternalUserEndpoint(apirouter.PathPrefix("/deleteexternaluser").Subrouter(), ctrlOrganization)
 	setupReportEndpoint(apirouter.PathPrefix("/report").Subrouter(), ctrlOrganization)
 	setupOrganizationReportEndpoint(apirouter.PathPrefix("/report").Subrouter(), ctrlOrganization)
@@ -115,6 +116,11 @@ func setupDeleteOrganizationEndpoint(router *mux.Router, ctrl OrganizationContro
 func setupAddOrganizationExternalUserEndpoint(router *mux.Router, ctrl OrganizationController) {
 	router.Use(handleLoggedUserRoutes)
 	router.HandleFunc("/{organizationRef}", ctrl.AddExternalUser).Methods("POST")
+}
+
+func setupGetOrganizationExternalUsersEndpoint(router *mux.Router, ctrl OrganizationController) {
+	router.Use(handleLoggedUserRoutes)
+	router.HandleFunc("/{organizationRef}", ctrl.GetExternalUsers).Methods("GET")
 }
 
 func setupDeleteOrganizationExternalUserEndpoint(router *mux.Router, ctrl OrganizationController) {

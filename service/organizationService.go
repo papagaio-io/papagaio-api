@@ -549,6 +549,8 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	gitSource, err := service.Db.GetGitSourceByName(organization.GitSourceName)
 	if err != nil || gitSource == nil {
 		log.Println("gitSource not found err:", err)
+		InternalServerError(w)
+		return
 	}
 
 	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.GitPath)
@@ -582,6 +584,7 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	if err != nil {
 		log.Println("SaveOrganization error:", err)
 		InternalServerError(w)
+		return
 	}
 
 	JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.NoError})

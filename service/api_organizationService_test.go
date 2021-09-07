@@ -317,7 +317,7 @@ func TestGetExternalUsersOK(t *testing.T) {
 
 	client := ts.Client()
 
-	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", nil)
+	resp, err := client.Get(ts.URL + "/" + org.AgolaOrganizationRef)
 
 	var dtoResponse = dto.ExternalUsersDto{}
 
@@ -328,4 +328,129 @@ func TestGetExternalUsersOK(t *testing.T) {
 	assert.Equal(t, len(*dtoResponse.EmailList), len(org.ExternalUsers))
 	assert.Equal(t, mailTest, (*dtoResponse.EmailList)[0])
 	assert.Equal(t, dtoResponse.ErrorCode, dto.NoError)
+}
+func TestGetExternalUsersWhenUserNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db: db,
+	}
+	org := (*test.MakeOrganizationList())[0]
+	user := test.MakeUser()
+
+	db.EXPECT().GetUserByUserId(gomock.Any()).Return(nil, nil)
+	router := test.SetupBaseRouter(user)
+
+	router.HandleFunc("/{organizationName}", serviceOrganization.GetExternalUsers)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + org.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
+}
+
+func TestGetExternalUserWhenAgolarefNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:       db,
+		AgolaApi: agolaApi,
+	}
+	org := (*test.MakeOrganizationList())[0]
+	org.AgolaOrganizationRef = "orgNotFound"
+	user := test.MakeUser()
+
+	db.EXPECT().GetUserByUserId(gomock.Any()).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(nil, nil)
+
+	router := test.SetupBaseRouter(user)
+
+	router.HandleFunc("/{organizationName}", serviceOrganization.GetExternalUsers)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + org.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not OK")
+}
+func TestGetExternalUserWhenGitSourceNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:       db,
+		AgolaApi: agolaApi,
+	}
+	org := (*test.MakeOrganizationList())[0]
+	user := test.MakeUser()
+
+	db.EXPECT().GetUserByUserId(gomock.Any()).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Any()).Return(nil, nil)
+
+	router := test.SetupBaseRouter(user)
+
+	router.HandleFunc("/{organizationName}", serviceOrganization.GetExternalUsers)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + org.AgolaOrganizationRef)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
+}
+
+func TestGetExternalUserWhenIsnotOwner(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:         db,
+		AgolaApi:   agolaApi,
+		GitGateway: &git.GitGateway{GiteaApi: giteaApi},
+	}
+	org := (*test.MakeOrganizationList())[0]
+	user := test.MakeUser()
+	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
+
+	db.EXPECT().GetUserByUserId(gomock.Any()).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.GitPath).Return(false, nil)
+
+	router := test.SetupBaseRouter(user)
+
+	router.HandleFunc("/{organizationName}", serviceOrganization.GetExternalUsers)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	resp, err := client.Get(ts.URL + "/" + org.AgolaOrganizationRef)
+
+	var dtoResponse = dto.ExternalUsersDto{}
+	test.ParseBody(resp, &dtoResponse)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode not correct")
+	assert.Equal(t, dtoResponse.ErrorCode, dto.UserNotOwnerError)
 }

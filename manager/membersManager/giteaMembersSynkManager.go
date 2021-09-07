@@ -40,7 +40,7 @@ func SyncMembersForGitea(organization *model.Organization, gitSource *model.GitS
 	}
 
 	// clear gitTeamMembers
-	for userId, _ := range gitTeamOwners {
+	for userId := range gitTeamOwners {
 		_, ok := gitTeamMembers[userId]
 		if ok {
 			delete(gitTeamMembers, userId)

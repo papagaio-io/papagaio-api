@@ -9,6 +9,10 @@ type Project struct {
 	Branchs map[string]Branch `json:"branchs"` //use branch name as key
 }
 
+func (project *Project) ExistsInAgola() bool {
+	return len(project.AgolaProjectID) > 0
+}
+
 func (project *Project) GetLastRun() RunInfo {
 	var lastRun RunInfo
 

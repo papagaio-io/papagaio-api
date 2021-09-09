@@ -166,7 +166,12 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 					return
 				}
 
-				project := model.Project{GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID, AgolaProjectRef: agolaProjectRef}
+				if !projectExist {
+					project = model.Project{GitRepoPath: webHookMessage.Repository.Name, AgolaProjectID: projectID, AgolaProjectRef: agolaProjectRef}
+				} else {
+					project.AgolaProjectID = projectID
+					project.AgolaProjectRef = agolaProjectRef
+				}
 				organization.Projects[webHookMessage.Repository.Name] = project
 				err = service.Db.SaveOrganization(organization)
 

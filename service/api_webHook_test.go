@@ -314,7 +314,7 @@ func TestRepositoryPushWithAgolaConfAndProjectArchivied(t *testing.T) {
 
 	repositoryRef := "repositoryTest"
 	organization.Projects = make(map[string]model.Project)
-	organization.Projects[repositoryRef] = model.Project{AgolaProjectRef: repositoryRef, Archivied: true}
+	organization.Projects[repositoryRef] = model.Project{AgolaProjectRef: repositoryRef, Archivied: true, AgolaProjectID: "test"}
 
 	webHookMessage := dto.WebHookDto{
 		Repository: dto.RepositoryDto{ID: 1, Name: repositoryRef},
@@ -373,7 +373,7 @@ func TestRepositoryPushWithAgolaConfAndProjectArchiviedWithErrors(t *testing.T) 
 
 	repositoryRef := "repositoryTest"
 	organization.Projects = make(map[string]model.Project)
-	organization.Projects[repositoryRef] = model.Project{AgolaProjectRef: repositoryRef, Archivied: true}
+	organization.Projects[repositoryRef] = model.Project{AgolaProjectRef: repositoryRef, Archivied: true, AgolaProjectID: "test"}
 
 	webHookMessage := dto.WebHookDto{
 		Repository: dto.RepositoryDto{ID: 1, Name: repositoryRef},
@@ -440,7 +440,7 @@ func TestRepositoryPushWithAgolaConfAndProjectNotArchivied(t *testing.T) {
 
 	repositoryRef := "repositoryTest"
 	organization.Projects = make(map[string]model.Project)
-	organization.Projects[repositoryRef] = model.Project{AgolaProjectRef: repositoryRef, Archivied: false}
+	organization.Projects[repositoryRef] = model.Project{AgolaProjectRef: repositoryRef, Archivied: false, AgolaProjectID: "test"}
 
 	webHookMessage := dto.WebHookDto{
 		Repository: dto.RepositoryDto{ID: 1, Name: repositoryRef},

@@ -157,7 +157,7 @@ func (service *WebHookService) WebHookOrganization(w http.ResponseWriter, r *htt
 		agolaConfExists, _ := service.GitGateway.CheckRepositoryAgolaConfExists(gitSource, user, organization.GitPath, webHookMessage.Repository.Name)
 
 		if agolaConfExists {
-			if !projectExist {
+			if !projectExist || !project.ExistsInAgola() {
 				agolaProjectRef := utils.ConvertToAgolaProjectRef(webHookMessage.Repository.Name)
 				projectID, err := service.AgolaApi.CreateProject(webHookMessage.Repository.Name, agolaProjectRef, organization, gitSource.AgolaRemoteSource, user)
 				if err != nil {

@@ -30,12 +30,11 @@ func CheckoutAllGitRepository(db repository.Database, user *model.User, organiza
 		log.Println("Start add repository:", repo)
 
 		agolaConfExists, _ := gitGateway.CheckRepositoryAgolaConfExists(gitSource, user, organization.GitPath, repo)
-		project := model.Project{GitRepoPath: repo, Archivied: true, AgolaProjectRef: utils.ConvertToAgolaProjectRef(repo)}
+		project := model.Project{GitRepoPath: repo, Archivied: false, AgolaProjectRef: utils.ConvertToAgolaProjectRef(repo)}
 
 		if agolaConfExists {
 			projectID, err := agolaApi.CreateProject(repo, project.AgolaProjectRef, organization, gitSource.AgolaRemoteSource, user)
 			project.AgolaProjectID = projectID
-			project.Archivied = false
 			if err != nil {
 				log.Println("Warning!!! Agola CreateProject API error:", err.Error())
 			}

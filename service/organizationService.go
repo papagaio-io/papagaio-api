@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -590,6 +591,12 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.NoError})
 }
 
+type ByName []dto.OrganizationDto
+
+func (a ByName) Len() int           { return len(a) }
+func (a ByName) Less(i, j int) bool { return strings.Compare(a[i].Name, a[j].Name) < 0 }
+func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+
 // @Summary Get Report
 // @Description Obtain a full report of all organizations
 // @Tags Organization
@@ -624,6 +631,8 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 			retVal = append(retVal, manager.GetOrganizationDto(user, &organization, gitsource, service.GitGateway))
 		}
 	}
+
+	sort.Sort(ByName(retVal))
 
 	JSONokResponse(w, retVal)
 }

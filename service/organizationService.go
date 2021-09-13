@@ -591,12 +591,6 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 	JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.NoError})
 }
 
-type ByName []dto.OrganizationDto
-
-func (a ByName) Len() int           { return len(a) }
-func (a ByName) Less(i, j int) bool { return strings.Compare(a[i].Name, a[j].Name) < 0 }
-func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-
 // @Summary Get Report
 // @Description Obtain a full report of all organizations
 // @Tags Organization
@@ -625,14 +619,16 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 
 	organizations, _ := service.Db.GetOrganizations()
 
-	retVal := make([]dto.OrganizationDto, 0)
+	var retVal []dto.OrganizationDto = make([]dto.OrganizationDto, 0)
 	for _, organization := range *organizations {
 		if strings.Compare(organization.GitSourceName, user.GitSourceName) == 0 {
 			retVal = append(retVal, manager.GetOrganizationDto(user, &organization, gitsource, service.GitGateway))
 		}
 	}
 
-	sort.Sort(ByName(retVal))
+	sort.SliceStable(retVal, func(i, j int) bool {
+		return strings.Compare(strings.ToLower(retVal[i].Name), strings.ToLower(retVal[j].Name)) < 0
+	})
 
 	JSONokResponse(w, retVal)
 }
@@ -681,7 +677,13 @@ func (service *OrganizationService) GetOrganizationReport(w http.ResponseWriter,
 		return
 	}
 
-	JSONokResponse(w, manager.GetOrganizationDto(user, organization, gitsource, service.GitGateway))
+	organizationDto := manager.GetOrganizationDto(user, organization, gitsource, service.GitGateway)
+
+	sort.SliceStable(organizationDto.Projects, func(i, j int) bool {
+		return strings.Compare(strings.ToLower(organizationDto.Projects[i].Name), strings.ToLower(organizationDto.Projects[j].Name)) < 0
+	})
+
+	JSONokResponse(w, organizationDto)
 }
 
 // @Summary Get Report from a specific organization/project
@@ -740,7 +742,12 @@ func (service *OrganizationService) GetProjectReport(w http.ResponseWriter, r *h
 
 	project := organization.Projects[projectName]
 
-	JSONokResponse(w, manager.GetProjectDto(&project, organization))
+	projectDto := manager.GetProjectDto(&project, organization)
+	sort.SliceStable(projectDto.Branchs, func(i, j int) bool {
+		return strings.Compare(strings.ToLower(projectDto.Branchs[i].Name), strings.ToLower(projectDto.Branchs[j].Name)) < 0
+	})
+
+	JSONokResponse(w, projectDto)
 }
 
 // @Summary Return the organization ref list
@@ -767,6 +774,10 @@ func (service *OrganizationService) GetAgolaOrganizations(w http.ResponseWriter,
 			agolaRefList = append(agolaRefList, agolaOrganization.Name)
 		}
 	}
+
+	sort.SliceStable(agolaRefList, func(i, j int) bool {
+		return strings.Compare(strings.ToLower(agolaRefList[i]), strings.ToLower(agolaRefList[j])) < 0
+	})
 
 	JSONokResponse(w, agolaRefList)
 }

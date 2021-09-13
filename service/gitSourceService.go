@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -321,6 +322,12 @@ func (service *GitSourceService) GetGitOrganizations(w http.ResponseWriter, r *h
 	}
 
 	if organizations != nil {
-		JSONokResponse(w, organizations)
+		retVal := *organizations
+
+		sort.SliceStable(retVal, func(i, j int) bool {
+			return strings.Compare(strings.ToLower(retVal[i].Path), strings.ToLower(retVal[j].Path)) < 0
+		})
+
+		JSONokResponse(w, retVal)
 	}
 }

@@ -111,7 +111,11 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 						}
 						subject := makeSubject(org, project.GitRepoPath, run)
 
-						utils.SendConfirmEmail(emailMap, nil, subject, body)
+						if utils.CanSendEmail() {
+							utils.SendConfirmEmail(emailMap, nil, subject, body)
+						} else {
+							log.Println("Can not send email, settings are not correct")
+						}
 					}
 				}
 

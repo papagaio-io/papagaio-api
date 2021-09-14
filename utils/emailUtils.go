@@ -2,6 +2,7 @@ package utils
 
 import (
 	"log"
+	"net/url"
 	"os"
 	"time"
 
@@ -74,6 +75,11 @@ func SendConfirmEmail(addressTo map[string]bool, addressCC map[string]bool, subj
 	}
 
 	log.Println("sendConfirmEmail end")
+}
+
+func CanSendEmail() bool {
+	_, err := url.ParseRequestURI(getSMTPServer())
+	return err == nil && getSMTPPort() > 0 && len(getUsername()) > 0 && len(getPassword()) > 0 && len(getFrom()) > 0
 }
 
 func getUsername() string {

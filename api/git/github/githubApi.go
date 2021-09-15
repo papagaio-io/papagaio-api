@@ -52,7 +52,7 @@ func (githubApi *GithubApi) CreateWebHook(gitSource *model.GitSource, user *mode
 	webHookName := "web"
 	active := true
 	conf := make(map[string]interface{})
-	conf["url"] = config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + organizationRef
+	conf["url"] = config.Config.Server.ApiExposedURL + controller.GetWebHookPath() + "/" + organizationRef
 	conf["content_type"] = "json"
 	hook := &github.Hook{Name: &webHookName, Events: []string{"repository", "push", "create", "delete"}, Active: &active, Config: conf}
 	hook, _, err := client.Organizations.CreateHook(context.Background(), gitOrgRef, hook)

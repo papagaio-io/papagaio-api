@@ -17,7 +17,7 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	docs.SwaggerInfo.Host = config.Config.Server.LocalHostAddress
+	docs.SwaggerInfo.Host = config.Config.Server.ApiExposedURL
 
 	cmd.Execute()
 }

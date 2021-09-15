@@ -48,7 +48,7 @@ func (gitlabApi *GitlabApi) CreateWebHook(gitSource *model.GitSource, user *mode
 	client, _ := gitlabApi.getClient(gitSource, user)
 
 	groupHook, _, err := client.Groups.AddGroupHook(gitOrgRef, &gitlab.AddGroupHookOptions{
-		URL:        gitlab.String(config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + organizationRef),
+		URL:        gitlab.String(config.Config.Server.ApiExposedURL + controller.GetWebHookPath() + "/" + organizationRef),
 		PushEvents: gitlab.Bool(true),
 	})
 	hookID := int64(-1)

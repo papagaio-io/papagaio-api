@@ -86,7 +86,7 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 
 	setupChangeUserRole(apirouter.PathPrefix("/changeuserrole").Subrouter(), ctrlUser)
 
-	router.PathPrefix("/").HandlerFunc(NewWebBundleHandlerFunc(config.Config.Server.ApiExposedURL))
+	router.PathPrefix("/").HandlerFunc(NewWebBundleHandlerFunc(config.Config.Server.ApiExposedURL + config.Config.Server.ApiBasePath))
 }
 
 func setupPingRouter(router *mux.Router) {
@@ -383,5 +383,5 @@ func checkIsAdminUser(authorization string) bool {
 const redirectPath string = "%s/auth/callback"
 
 func GetRedirectUrl() string {
-	return fmt.Sprintf(redirectPath, config.Config.Server.LocalHostAddress)
+	return fmt.Sprintf(redirectPath, config.Config.Server.ApiExposedURL)
 }

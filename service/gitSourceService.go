@@ -49,7 +49,7 @@ func (service *GitSourceService) GetGitSources(w http.ResponseWriter, r *http.Re
 	gs := make([]dto.GitSourcesDto, 0)
 
 	for _, v := range *gitSources {
-		login := config.Config.Server.LocalHostAddress + "/api/auth/login/" + v.Name
+		login := config.Config.Server.ApiExposedURL + "/api/auth/login/" + v.Name
 		gs = append(gs, dto.GitSourcesDto{Name: v.Name, GitAPIURL: v.GitAPIURL, LoginURL: login, GitType: v.GitType})
 	}
 

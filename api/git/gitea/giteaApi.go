@@ -58,7 +58,7 @@ func (giteaApi *GiteaApi) CreateWebHook(gitSource *model.GitSource, user *model.
 
 	optConf := map[string]string{
 		"content_type": "json",
-		"url":          config.Config.Server.LocalHostAddress + controller.GetWebHookPath() + "/" + organizationRef,
+		"url":          config.Config.Server.ApiExposedURL + controller.GetWebHookPath() + "/" + organizationRef,
 		"http_method":  "post",
 	}
 

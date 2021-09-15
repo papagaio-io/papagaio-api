@@ -30,13 +30,13 @@ local task_build_go() =
     environment:
     {
       "USERNAME": {
-        from_variable: "NEXUSUSERNAME"
+        from_variable: "NEXUS-USERNAME"
       },
        "PASSWORD": {
-        from_variable: "NEXUSPASSWORD"
+        from_variable: "NEXUS-PASSWORD"
       },
-        "urlrepoupload": {
-        from_variable: "URLREPOUPLOAD"
+        "url_repo_upload": {
+        from_variable: "URL-REPO-UPLOAD"
       },
     },
     steps: 
@@ -58,7 +58,7 @@ local task_build_go() =
               export TARBALL=papagaio-latest.tar.gz ; fi
 
             mkdir dist && cp bin/papagaio dist/ && tar -zcvf ${TARBALL} dist
-            curl -v -k -u $USERNAME:$PASSWORD --upload-file ${TARBALL} ${urlrepoupload}${TARBALL}
+            curl -v -k -u $USERNAME:$PASSWORD --upload-file ${TARBALL} ${url_repo_upload}${TARBALL}
           |||,
         },
       ],
@@ -164,7 +164,7 @@ local task_kubernetes_deploy(namespace, changeImageVersion) =
     environment:
     {
       "KUBERNETESCONF": {
-        from_variable: "SORINTDEVKUBERNETESCONF"
+        from_variable: "SORINT-DEV-KUBERNETES-CONF"
       },
     },
     runtime:
@@ -205,11 +205,11 @@ local task_kubernetes_deploy(namespace, changeImageVersion) =
         {
           username:
           {
-            from_variable: "NEXUSUSERNAME"
+            from_variable: "NEXUS-USERNAME"
           },
           password:
           {
-            from_variable: "NEXUSPASSWORD"
+            from_variable: "NEXUS-PASSWORD"
           }
         }
       },

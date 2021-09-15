@@ -261,9 +261,14 @@ func TestGetAgolaOrganizationsOK(t *testing.T) {
 	}
 
 	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	db := mock_repository.NewMockDatabase(ctl)
+
 	agolaApi.EXPECT().GetOrganizations().Return(&agolaOrganizations, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(agolaOrganizations[0].Name).Return(nil, nil)
+
 	serviceOrganization := OrganizationService{
 		AgolaApi: agolaApi,
+		Db:       db,
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(serviceOrganization.GetAgolaOrganizations))

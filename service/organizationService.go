@@ -771,7 +771,11 @@ func (service *OrganizationService) GetAgolaOrganizations(w http.ResponseWriter,
 	agolaRefList := make([]string, 0)
 	if organizations != nil {
 		for _, agolaOrganization := range *organizations {
-			agolaRefList = append(agolaRefList, agolaOrganization.Name)
+			org, _ := service.Db.GetOrganizationByAgolaRef(agolaOrganization.Name)
+
+			if org == nil {
+				agolaRefList = append(agolaRefList, agolaOrganization.Name)
+			}
 		}
 	}
 

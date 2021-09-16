@@ -4,7 +4,6 @@ import (
 	"errors"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"wecode.sorint.it/opensource/papagaio-api/types"
 )
@@ -26,7 +25,7 @@ func (org *CreateOrganizationRequestDto) IsAgolaRefValid() bool {
 }
 
 func (org *CreateOrganizationRequestDto) IsValid() error {
-	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.GitPath) > 0 && len(org.AgolaRef) > 0 && !strings.Contains(org.AgolaRef, ".") {
+	if org.Visibility.IsValid() == nil && org.BehaviourType.IsValid() == nil && org.IsBehaviourValid() && len(org.GitPath) > 0 && len(org.AgolaRef) > 0 && org.IsAgolaRefValid() {
 		return nil
 	}
 	return errors.New("fields not valid")

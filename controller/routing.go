@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -39,12 +38,6 @@ type Claim struct {
 
 func GetWebHookPath() string {
 	return apiPath + WebHookPath
-}
-
-func SetupHTTPClient() {
-	if config.Config.DisableSSLCertificateValidation {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
 }
 
 func SetupRouter(signingData *common.TokenSigningData, database repository.Database, router *mux.Router, ctrlOrganization OrganizationController, ctrlGitSource GitSourceController, ctrlWebHook WebHookController, ctrlTrigger TriggersController, ctrlOauth2 Oauth2Controller, ctrlUser UserController) {

@@ -105,7 +105,6 @@ func serve(cmd *cobra.Command, args []string) {
 
 	router := mux.NewRouter()
 
-	controller.SetupHTTPClient()
 	controller.SetupRouter(sd, &db, router, &ctrlOrganization, &ctrlGitSource, &ctrlWebHook, &ctrlTrigger, &ctrlOauth2, &ctrlUser)
 
 	log.Println("Papagaio Server Starting on port ", config.Config.Server.Port)

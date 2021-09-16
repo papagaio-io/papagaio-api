@@ -19,10 +19,6 @@ type Configuration struct {
 	LogHTTPRequest bool
 	// Database specific informations
 	Database DbConfig
-	// Disable SSL certificate validation of keycloak
-	DisableSSLCertificateValidation bool
-	// Keycloak configuration
-	Keycloak KeycloakConfig
 	//Agola address
 	Agola AgolaConfig
 	//Papagaio admin token
@@ -70,14 +66,6 @@ type Server struct {
 	ApiBasePath   string
 }
 
-type KeycloakConfig struct {
-	Realm         string
-	AuthURL       string
-	Resource      string
-	PubKey        string
-	TokenValidity int `json:"Token-validity"`
-}
-
 type EmailConfig struct {
 	// Hostname/ip of the smtp server
 	SMTPServer *string
@@ -108,8 +96,6 @@ type TokenSigning struct {
 
 // Config contains global configuration read with config.ReadConfig()
 var Config Configuration
-
-var KeycloakPubKey interface{}
 
 func readConfig() {
 	var raw []byte

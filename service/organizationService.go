@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/mail"
 	"sort"
 	"strconv"
 	"strings"
@@ -365,6 +366,11 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	JSONokResponse(w, response)
 }
 
+func validEmail(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
+}
+
 // @Summary Add External User
 // @Description Add an external user
 // @Tags Organization
@@ -430,8 +436,20 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 		return
 	}
 
+	if !req.IsEmailValid() {
+		JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.InvalidEmail})
+		return
+	}
+
 	if organization.ExternalUsers == nil {
 		organization.ExternalUsers = make(map[string]bool)
+	}
+
+	for k := range organization.ExternalUsers {
+		if k == req.Email {
+			JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.EmailAlreadyExists})
+			return
+		}
 	}
 
 	organization.ExternalUsers[req.Email] = true
@@ -505,6 +523,7 @@ func (service OrganizationService) GetExternalUsers(w http.ResponseWriter, r *ht
 		for email := range organization.ExternalUsers {
 			externalUserList = append(externalUserList, email)
 		}
+		sort.Strings(externalUserList)
 	}
 
 	JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.NoError, EmailList: &externalUserList})
@@ -575,7 +594,13 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 		return
 	}
 
-	delete(organization.ExternalUsers, req.Email)
+	if _, exist := organization.ExternalUsers[req.Email]; exist {
+		delete(organization.ExternalUsers, req.Email)
+	} else {
+		JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.EmailNotFound})
+		return
+	}
+
 	err = service.Db.SaveOrganization(organization)
 
 	mutex.Unlock()

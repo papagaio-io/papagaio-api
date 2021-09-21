@@ -76,6 +76,9 @@ const (
 	AgolaRefNotValid                OrganizationResponseStatusCode = "AGOLA_REF_NOT_VALID"
 	UserNotOwnerError               OrganizationResponseStatusCode = "USER_NOT_OWNER"
 	UserAgolaRefNotFoundError       OrganizationResponseStatusCode = "USER_AGOLAREF_NOT_FOUND"
+	InvalidEmail                    OrganizationResponseStatusCode = "INVALID_EMAIL"
+	EmailAlreadyExists              OrganizationResponseStatusCode = "EMAIL_ALREADY_EXISTS"
+	EmailNotFound                   OrganizationResponseStatusCode = "EMAIL_NOT_FOUND"
 )
 
 type DeleteOrganizationResponseDto struct {

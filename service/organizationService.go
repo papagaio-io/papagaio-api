@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"net/mail"
 	"sort"
 	"strconv"
 	"strings"
@@ -366,11 +365,6 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 	JSONokResponse(w, response)
 }
 
-func validEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
-}
-
 // @Summary Add External User
 // @Description Add an external user
 // @Tags Organization
@@ -415,15 +409,9 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 		return
 	}
 
-	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.GitPath)
-	if err != nil {
-		log.Println("Error from IsUserOwner:", err)
-		InternalServerError(w)
-		return
-	}
+	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, user, organization.GitPath)
 	if !isOwner {
 		log.Println("User", userId, "is not owner")
-
 		JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.UserNotOwnerError})
 		return
 	}
@@ -435,7 +423,6 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 		InternalServerError(w)
 		return
 	}
-
 	if !req.IsEmailValid() {
 		JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.InvalidEmail})
 		return
@@ -446,7 +433,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 	}
 
 	for k := range organization.ExternalUsers {
-		if k == req.Email {
+		if strings.Compare(k, req.Email) == 0 {
 			JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.EmailAlreadyExists})
 			return
 		}
@@ -504,15 +491,9 @@ func (service OrganizationService) GetExternalUsers(w http.ResponseWriter, r *ht
 		return
 	}
 
-	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.GitPath)
-	if err != nil {
-		log.Println("Error from IsUserOwner:", err)
-		InternalServerError(w)
-		return
-	}
+	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, user, organization.GitPath)
 	if !isOwner {
 		log.Println("User", userId, "is not owner")
-
 		JSONokResponse(w, dto.ExternalUsersDto{ErrorCode: dto.UserNotOwnerError})
 		return
 	}
@@ -573,12 +554,7 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 		return
 	}
 
-	isOwner, err := service.GitGateway.IsUserOwner(gitSource, user, organization.GitPath)
-	if err != nil {
-		log.Println("Error from IsUserOwner:", err)
-		InternalServerError(w)
-		return
-	}
+	isOwner, _ := service.GitGateway.IsUserOwner(gitSource, user, organization.GitPath)
 	if !isOwner {
 		log.Println("User", userId, "is not owner")
 

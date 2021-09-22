@@ -65,6 +65,9 @@ func TestAddExternalUser(t *testing.T) {
 	user := test.MakeUser()
 
 	org := (*test.MakeOrganizationList())[0]
+	mailTest := "emailtest@sorint.it"
+	org.ExternalUsers = make(map[string]bool)
+
 	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
 
 	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
@@ -80,13 +83,42 @@ func TestAddExternalUser(t *testing.T) {
 
 	client := ts.Client()
 
-	data, _ := json.Marshal(user)
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mailTest})
 	requestBody := strings.NewReader(string(data))
 	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
 
 }
+
+func TestAddExternalUserWhenUserNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		CommonMutex: &commonMutex,
+	}
+	user := test.MakeUser()
+	organizationRefTest := "anyOrganization"
+	db.EXPECT().GetUserByUserId(gomock.Any()).Return(nil, nil)
+
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/{organizationName}", serviceOrganization.AddExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(user)
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+organizationRefTest, "application/json", requestBody)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
+}
+
 func TestAddExternalUserWhenOrganizationNotFound(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()
@@ -117,6 +149,187 @@ func TestAddExternalUserWhenOrganizationNotFound(t *testing.T) {
 	resp, err := client.Post(ts.URL+"/"+organizationRefTest, "application/json", requestBody)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not OK")
+}
+
+func TestAddExternalUserWhenGitSourceNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+	user := test.MakeUser()
+
+	org := (*test.MakeOrganizationList())[0]
+	mailTest := "emailtest@sorint.it"
+	org.ExternalUsers = make(map[string]bool)
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(nil, nil)
+
+	router := test.SetupBaseRouter(user)
+
+	router.HandleFunc("/{organizationName}", serviceOrganization.AddExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mailTest})
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode is not OK")
+}
+
+func TestAddExternalUserWhenUserIsNotOwner(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+	user := test.MakeUser()
+
+	org := (*test.MakeOrganizationList())[0]
+	mailTest := "emailtest@sorint.it"
+	org.ExternalUsers = make(map[string]bool)
+
+	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.GitPath).Return(false, nil)
+
+	router := test.SetupBaseRouter(user)
+
+	router.HandleFunc("/{organizationName}", serviceOrganization.AddExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mailTest})
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
+
+	var responseDto dto.ExternalUsersDto
+	test.ParseBody(resp, &responseDto)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+	assert.Equal(t, responseDto.ErrorCode, dto.UserNotOwnerError, "ErrorCode is not correct")
+}
+
+func TestAddExternalUserWhenEmailIsNotValid(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+	user := test.MakeUser()
+
+	org := (*test.MakeOrganizationList())[0]
+	mailTest := "emailtestsorint.it"
+	org.ExternalUsers = make(map[string]bool)
+
+	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.GitPath).Return(true, nil)
+
+	router := test.SetupBaseRouter(user)
+
+	router.HandleFunc("/{organizationName}", serviceOrganization.AddExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mailTest})
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
+
+	var responseDto dto.ExternalUsersDto
+	test.ParseBody(resp, &responseDto)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+	assert.Equal(t, responseDto.ErrorCode, dto.InvalidEmail, "ErrorCode is not correct")
+}
+
+func TestAddExternalUserWhenEmailAlreadyExists(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+	user := test.MakeUser()
+
+	org := (*test.MakeOrganizationList())[0]
+	mailTest := "emailtest@sorint.it"
+	org.ExternalUsers = make(map[string]bool)
+	org.ExternalUsers[mailTest] = true
+
+	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.GitPath).Return(true, nil)
+
+	router := test.SetupBaseRouter(user)
+
+	router.HandleFunc("/{organizationName}", serviceOrganization.AddExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mailTest})
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
+
+	var responseDto dto.ExternalUsersDto
+	test.ParseBody(resp, &responseDto)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
+	assert.Equal(t, responseDto.ErrorCode, dto.EmailAlreadyExists, "ErrorCode is not correct")
 }
 
 func TestRemoveExternalUserOk(t *testing.T) {
@@ -162,6 +375,87 @@ func TestRemoveExternalUserOk(t *testing.T) {
 	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode not correct")
 	exist := org.ExternalUsers[mail]
 	assert.Check(t, !exist, "")
+}
+
+func TestRemoveExternalUserWhenUserNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		CommonMutex: &commonMutex,
+	}
+	mail := "user@email.com"
+	user := test.MakeUser()
+
+	org := (*test.MakeOrganizationList())[0]
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(nil, nil)
+
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/{organizationName}", serviceOrganization.RemoveExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mail})
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
+
+	var responseDto dto.CreateOrganizationResponseDto
+	test.ParseBody(resp, &responseDto)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "ErrorCode is not correct")
+}
+
+func TestRemoveExternalUserWhenGitSourceNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+	mail := "user@email.com"
+	user := test.MakeUser()
+
+	org := (*test.MakeOrganizationList())[0]
+	org.ExternalUsers = make(map[string]bool)
+	org.ExternalUsers[mail] = true
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(nil, nil)
+
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/{organizationName}", serviceOrganization.RemoveExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mail})
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
+
+	exist := org.ExternalUsers[mail]
+	assert.Check(t, exist, "")
+
+	var responseDto dto.CreateOrganizationResponseDto
+	test.ParseBody(resp, &responseDto)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError, "http StatusCode not correct")
 }
 
 func TestRemoveExternalUserNotOwner(t *testing.T) {
@@ -250,7 +544,51 @@ func TestRemoveExternalUserWhenAgolaRefNotFound(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.StatusCode, http.StatusNotFound, "http StatusCode is not OK")
 }
+func TestRemoveExternalUserWhenEmailNotFound(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
 
+	commonMutex := utils.NewEventMutex()
+	db := mock_repository.NewMockDatabase(ctl)
+	agolaApi := mock_agola.NewMockAgolaApiInterface(ctl)
+	giteaApi := mock_gitea.NewMockGiteaInterface(ctl)
+
+	serviceOrganization := OrganizationService{
+		Db:          db,
+		AgolaApi:    agolaApi,
+		GitGateway:  &git.GitGateway{GiteaApi: giteaApi},
+		CommonMutex: &commonMutex,
+	}
+	mail := "user@email.com"
+	user := test.MakeUser()
+
+	org := (*test.MakeOrganizationList())[0]
+	org.ExternalUsers = make(map[string]bool)
+
+	gitSource := (*test.MakeGitSourceMap())[org.GitSourceName]
+
+	db.EXPECT().GetUserByUserId(*user.UserID).Return(user, nil)
+	db.EXPECT().GetOrganizationByAgolaRef(gomock.Any()).Return(&org, nil)
+	db.EXPECT().GetGitSourceByName(gomock.Eq(org.GitSourceName)).Return(&gitSource, nil)
+	giteaApi.EXPECT().IsUserOwner(gomock.Any(), gomock.Any(), org.GitPath).Return(true, nil)
+
+	router := test.SetupBaseRouter(user)
+	router.HandleFunc("/{organizationName}", serviceOrganization.RemoveExternalUser)
+	ts := httptest.NewServer(router)
+
+	client := ts.Client()
+
+	data, _ := json.Marshal(dto.ExternalUserDto{Email: mail})
+	requestBody := strings.NewReader(string(data))
+	resp, err := client.Post(ts.URL+"/"+org.AgolaOrganizationRef, "application/json", requestBody)
+
+	var responseDto dto.ExternalUsersDto
+	test.ParseBody(resp, &responseDto)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode not correct")
+	assert.Equal(t, responseDto.ErrorCode, dto.EmailNotFound, "ErrorCode is not correct")
+}
 func TestGetAgolaOrganizationsOK(t *testing.T) {
 	ctl := gomock.NewController(t)
 	defer ctl.Finish()

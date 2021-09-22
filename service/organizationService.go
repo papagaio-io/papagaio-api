@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -53,19 +52,10 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	forceCreateQuery, ok := r.URL.Query()["force"]
-	forceCreate := false
-	if ok {
-		if len(forceCreateQuery[0]) == 0 {
-			forceCreate = true
-		} else {
-			var parsError error
-			forceCreate, parsError = strconv.ParseBool(forceCreateQuery[0])
-			if parsError != nil {
-				UnprocessableEntityResponse(w, "forceCreate param value is not valid")
-				return
-			}
-		}
+	forceCreate, err := getBoolParameter(r, "force")
+	if err != nil {
+		UnprocessableEntityResponse(w, err.Error())
+		return
 	}
 
 	userId := r.Context().Value(controller.UserIdParameter).(uint64)
@@ -77,7 +67,7 @@ func (service *OrganizationService) CreateOrganization(w http.ResponseWriter, r 
 	}
 
 	var req *dto.CreateOrganizationRequestDto
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Println("parsing error:", err)
 		InternalServerError(w)
@@ -274,19 +264,10 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 
 	log.Println("DeleteOrganization:", organizationRef)
 
-	internalonlyQuery, ok := r.URL.Query()["internalonly"]
-	internalonly := false
-	if ok {
-		if len(internalonlyQuery[0]) == 0 {
-			internalonly = true
-		} else {
-			var parsError error
-			internalonly, parsError = strconv.ParseBool(internalonlyQuery[0])
-			if parsError != nil {
-				UnprocessableEntityResponse(w, "internalonly param value is not valid")
-				return
-			}
-		}
+	internalonly, err := getBoolParameter(r, "internalonly")
+	if err != nil {
+		UnprocessableEntityResponse(w, err.Error())
+		return
 	}
 
 	userIdRequest, _ := r.Context().Value(controller.UserIdParameter).(uint64)

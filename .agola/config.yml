@@ -1,0 +1,237 @@
+runs:
+  - name: papagaio backend
+    tasks:
+      - name: test
+        runtime:
+          type: pod
+          arch: amd64
+          containers:
+            - image: registry.sorintdev.it/golang:1.15
+        steps:
+          - type: clone
+          - dest_dir: "/go/pkg/mod/cache"
+            keys:
+            - cache-sum-{{ md5sum "go.sum" }}
+            - cache-date-
+            type: restore_cache
+          - command: go test -coverprofile testCover.out ./service
+            name: go unit tests
+            type: run
+          - contents:
+            - source_dir: "/go/pkg/mod/cache"
+            key: cache-sum-{{ md5sum "go.sum" }}
+            type: save_cache
+          - contents:
+            - source_dir: "/go/pkg/mod/cache"
+            key: cache-date-{{ year }}-{{ month }}-{{ day }}
+            type: save_cache
+      - name: build go
+        depends: ["test"]
+        environment:
+          PASSWORD:
+            from_variable: NEXUS-PASSWORD
+          USERNAME:
+            from_variable: NEXUS-USERNAME
+          url_repo_upload:
+            from_variable: URL-REPO-UPLOAD
+        runtime:
+          type: pod
+          arch: amd64
+          containers:
+            - image: registry.sorintdev.it/golang:1.15
+        steps:
+          - type: clone
+          - contents:
+            - dest_dir: "."
+              paths:
+              - "**"
+              source_dir: "."
+            type: save_to_workspace
+          - dest_dir: "/go/pkg/mod/cache"
+            keys:
+            - cache-sum-{{ md5sum "go.sum" }}
+            - cache-date-
+            type: restore_cache
+          - command: make
+            type: run
+          - contents:
+            - source_dir: "/go/pkg/mod/cache"
+            key: cache-sum-{{ md5sum "go.sum" }}
+            type: save_cache
+          - contents:
+            - source_dir: "/go/pkg/mod/cache"
+            key: cache-date-{{ year }}-{{ month }}-{{ day }}
+            type: save_cache
+          - contents:
+            - dest_dir: "/bin/"
+              paths:
+              - "*"
+              source_dir: "./bin"
+            type: save_to_workspace
+          - command: |
+              export
+              if [ ${AGOLA_GIT_TAG} ]; then
+                export TARBALL=papagaio-${AGOLA_GIT_TAG}.tar.gz ;
+              else
+                export TARBALL=papagaio-latest.tar.gz ; fi
+
+              mkdir dist && cp bin/papagaio dist/ && tar -zcvf ${TARBALL} dist
+              curl -v -k -u $USERNAME:$PASSWORD --upload-file ${TARBALL} ${url_repo_upload}${TARBALL}
+            name: Create and deploy Nexus
+            type: run
+      - name: docker build and push private
+        depends: ["build go"]
+        environment:
+          PRIVATE_DOCKERAUTH:
+            from_variable: dockerauth
+        runtime:
+          arch: amd64
+          containers:
+            - image: registry.sorintdev.it/buildah
+              privileged: true
+              volumes: 
+                - path: "/var/lib/containers"
+                  tmpfs:
+                    size: 5120Mi
+                - path: "/run/containers"
+                  tmpfs: {}
+        shell: "sh"
+        steps:
+          - dest_dir: "/buildah/papagaio"
+            name: restore workspace
+            type: restore_workspace
+          - command: |
+              cat << EOF > /buildah/config.json
+              {
+                "auths": {
+                  "registry.sorintdev.it": { "auth": "$PRIVATE_DOCKERAUTH" }
+                }
+              }
+              EOF
+            name: generate docker config
+            type: run
+          - command: |
+              echo "branch" $AGOLA_GIT_BRANCH
+              if [ $AGOLA_GIT_TAG ]; then
+                buildah bud --format=docker --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.3 --target papagaio -t registry.sorintdev.it/papagaio:$AGOLA_GIT_TAG /buildah/papagaio;
+                buildah push --authfile /buildah/config.json registry.sorintdev.it/papagaio:$AGOLA_GIT_TAG;
+              else
+                buildah bud --format=docker --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.3 --target papagaio -t registry.sorintdev.it/papagaio:latest /buildah/papagaio;
+                buildah push --authfile /buildah/config.json registry.sorintdev.it/papagaio:latest; fi
+            name: Build image and push
+            type: run
+        when:
+          branch: master
+          tag: "#.*#"
+        working_dir: "/buildah"
+      - name: docker build and push public
+        depends: ["build go"]
+        environment:
+          PUBLIC_DOCKERAUTH:
+            from_variable: TULLIO-DOCKERAUTH
+        runtime:
+          containers:
+          - image: registry.sorintdev.it/buildah
+            privileged: true
+            volumes: 
+              - path: "/var/lib/containers"
+                tmpfs:
+                  size: 5120Mi
+              - path: "/run/containers"
+                tmpfs: {}
+        shell: "sh"
+        steps:
+          - dest_dir: "/buildah/papagaio"
+            name: restore workspace
+            type: restore_workspace
+          - command: |
+              cat << EOF > /buildah/config.json
+              {
+                "auths": {
+                  "https://index.docker.io/v1/": { "auth": "$PUBLIC_DOCKERAUTH" }
+                }
+              }
+              EOF
+            name: generate docker config
+            type: run
+          - command: |
+              buildah bud --format=docker --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.3 --target papagaio -t tulliobotti/papagaio:$AGOLA_GIT_TAG /buildah/papagaio
+              buildah push --authfile /buildah/config.json tulliobotti/papagaio:$AGOLA_GIT_TAG
+            name: Build image and push
+            type: run
+        when:
+          tag: "#.*#"
+        working_dir: "/buildah"
+      - name: kubernetes deploy ci-dev
+        environment:
+          KUBERNETESCONF:
+            from_variable: SORINT-DEV-KUBERNETES-CONF
+        runtime:
+          containers:
+          - image: registry.sorintdev.it/bitnami/kubectl:1.19
+            volumes:
+            - path: "/mnt/data"
+              tmpfs: {}
+        working_dir: "/mnt/data"
+        steps:
+          - command: mkdir kubernetes
+            name: create folder kubernetes
+            type: run
+          - command: echo $KUBERNETESCONF | base64 -d > kubernetes/kubernetes.conf
+            name: generate kubernetes config
+            type: run
+          - command: kubectl --kubeconfig=kubernetes/kubernetes.conf -n ci-dev delete pods -l app=papagaio
+            name: kubectl replace
+            type: run
+        when:
+          branch: master
+        depends: ["docker build and push private"]
+      - name: kubernetes deploy ci-stable
+        environment:
+          KUBERNETESCONF:
+            from_variable: SORINT-DEV-KUBERNETES-CONF
+        runtime:
+          containers:
+          - image: registry.sorintdev.it/bitnami/kubectl:1.19
+            volumes:
+            - path: "/mnt/data"
+              tmpfs: {}
+        working_dir: "/mnt/data"
+        when:
+          tag: "#.*#"
+        depends: ["docker build and push private", "docker build and push public"]
+        steps:
+          - command: mkdir kubernetes
+            name: create folder kubernetes
+            type: run
+          - command: echo $KUBERNETESCONF | base64 -d > kubernetes/kubernetes.conf
+            name: generate kubernetes config
+            type: run
+          - command: kubectl --kubeconfig=kubernetes/kubernetes.conf -n ci-stable set image deployment/papagaio papagaio=registry.sorintdev.it/papagaio:$AGOLA_GIT_TAG
+            name: kubectl replace
+            type: run
+      - name: kubernetes deploy ci
+        environment:
+          KUBERNETESCONF:
+            from_variable: SORINT-DEV-KUBERNETES-CONF
+        runtime:
+          containers:
+          - image: registry.sorintdev.it/bitnami/kubectl:1.19
+            volumes:
+            - path: "/mnt/data"
+              tmpfs: {}
+        working_dir: "/mnt/data"
+        when:
+          tag: "#.*#"
+        depends: ["docker build and push private", "docker build and push public"]
+        approval: true
+        steps:
+          - command: mkdir kubernetes
+            name: create folder kubernetes
+            type: run
+          - command: echo $KUBERNETESCONF | base64 -d > kubernetes/kubernetes.conf
+            name: generate kubernetes config
+            type: run
+          - command: kubectl --kubeconfig=kubernetes/kubernetes.conf -n ci set image deployment/papagaio papagaio=registry.sorintdev.it/papagaio:$AGOLA_GIT_TAG
+            name: kubectl replace
+            type: run

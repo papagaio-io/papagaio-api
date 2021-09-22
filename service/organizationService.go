@@ -593,15 +593,22 @@ func (service *OrganizationService) RemoveExternalUser(w http.ResponseWriter, r 
 }
 
 // @Summary Get Report
-// @Description Obtain a full report of all organizations
+// @Description Obtain a full report of all organizations. If the "onlyowner" query parameter is specified, only the organizations the user owns will be listed.
 // @Tags Organization
 // @Produce  json
+// @Param onlyowner query bool true "?onlyowner"
 // @Success 200 {array} dto.OrganizationDto "ok"
 // @Router /report [get]
 // @Security ApiKeyToken
 func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	onlyOwner, err := getBoolParameter(r, "onlyowner")
+	if err != nil {
+		UnprocessableEntityResponse(w, err.Error())
+		return
+	}
 
 	userId, _ := r.Context().Value(controller.UserIdParameter).(uint64)
 	user, _ := service.Db.GetUserByUserId(userId)
@@ -621,8 +628,15 @@ func (service *OrganizationService) GetReport(w http.ResponseWriter, r *http.Req
 	organizations, _ := service.Db.GetOrganizations()
 
 	var retVal []dto.OrganizationDto = make([]dto.OrganizationDto, 0)
+
 	for _, organization := range *organizations {
 		if strings.Compare(organization.GitSourceName, user.GitSourceName) == 0 {
+			if onlyOwner {
+				isOwner, _ := service.GitGateway.IsUserOwner(gitsource, user, organization.GitPath)
+				if !isOwner {
+					continue
+				}
+			}
 			retVal = append(retVal, manager.GetOrganizationDto(user, &organization, gitsource, service.GitGateway))
 		}
 	}

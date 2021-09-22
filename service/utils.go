@@ -77,19 +77,19 @@ func InternalServerError(w http.ResponseWriter) {
 }
 
 func getBoolParameter(r *http.Request, parameterName string) (bool, error) {
-	forceCreateQuery, ok := r.URL.Query()[parameterName]
-	forceCreate := false
+	paramQuery, ok := r.URL.Query()[parameterName]
+	paramValue := false
 	if ok {
-		if len(forceCreateQuery[0]) == 0 {
-			forceCreate = true
+		if len(paramQuery[0]) == 0 {
+			paramValue = true
 		} else {
 			var parsError error
-			forceCreate, parsError = strconv.ParseBool(forceCreateQuery[0])
+			paramValue, parsError = strconv.ParseBool(paramQuery[0])
 			if parsError != nil {
 				return false, errors.New(parameterName + " is not valid")
 			}
 		}
 	}
 
-	return forceCreate, nil
+	return paramValue, nil
 }

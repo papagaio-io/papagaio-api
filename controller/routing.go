@@ -73,6 +73,7 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 	setupGetTriggersConfigEndpoint(apirouter.PathPrefix("/gettriggersconfig").Subrouter(), ctrlTrigger)
 	setupSaveTriggersConfigEndpoint(apirouter.PathPrefix("/savetriggersconfig").Subrouter(), ctrlTrigger)
 	setupRestartTriggersConfigEndpoint(apirouter.PathPrefix("/restarttriggers").Subrouter(), ctrlTrigger)
+	setupGetTriggersStatusEndpoint(apirouter.PathPrefix("/triggersstatus").Subrouter(), ctrlTrigger)
 
 	setupOauth2Login(apirouter.PathPrefix("/auth/login").Subrouter(), ctrlOauth2)
 	setupOauth2Callback(apirouter.PathPrefix("/auth/callback").Subrouter(), ctrlOauth2)
@@ -177,6 +178,11 @@ func setupSaveTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController
 func setupRestartTriggersConfigEndpoint(router *mux.Router, ctrl TriggersController) {
 	router.Use(handleLoggedUserWithAdminRoleRoutes)
 	router.HandleFunc("", ctrl.RestartTriggers).Methods("POST")
+}
+
+func setupGetTriggersStatusEndpoint(router *mux.Router, ctrl TriggersController) {
+	router.Use(handleLoggedUserWithAdminRoleRoutes)
+	router.HandleFunc("", ctrl.GetTriggersStatus).Methods("GET")
 }
 
 func setupGetAgolaRefs(router *mux.Router, ctrl OrganizationController) {

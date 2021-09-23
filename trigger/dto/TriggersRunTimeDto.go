@@ -2,8 +2,17 @@ package dto
 
 import "time"
 
-type TriggersRunTimeDto struct {
-	OrganizationsTriggerLastRun      time.Time
-	DiscoveryRunFailedTriggerLastRun time.Time
-	UsersTriggerLastRun              time.Time
+type TriggerRunTimeDto struct {
+	Chan           chan TriggerStarter
+	Starter        TriggerStarter
+	TriggerLastRun time.Time
+	TimerLastRun   time.Time
+	IsRunning      bool
 }
+
+type TriggerStarter string
+
+const (
+	Trigger TriggerStarter = "TRIGGER"
+	Service TriggerStarter = "SERVICE"
+)

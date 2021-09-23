@@ -351,7 +351,7 @@ func (service *OrganizationService) DeleteOrganization(w http.ResponseWriter, r 
 // @Tags Organization
 // @Produce  json
 // @Param organizationRef path string true "Organization name"
-// @Param email body string true "external user email"
+// @Param email body dto.ExternalUserDto true "external user email"
 // @Success 200 "ok"
 // @Failure 404 "not found"
 // @Router /addexternaluser/{organizationRef} [post]
@@ -438,7 +438,7 @@ func (service *OrganizationService) AddExternalUser(w http.ResponseWriter, r *ht
 // @Summary Get a list of External Users e-mails
 // @Description Return the organization e-mail list of External Users
 // @Tags Organization
-// @Param email body string "external user email"
+// @Param organizationRef path string true "Organization Name"
 // @Produce  json
 // @Success 200 {array} string "ok"
 // @Failure 400 "bad request"

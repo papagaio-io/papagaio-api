@@ -33,6 +33,7 @@ type TriggersController interface {
 	GetTriggersConfig(w http.ResponseWriter, r *http.Request)
 	SaveTriggersConfig(w http.ResponseWriter, r *http.Request)
 	RestartTriggers(w http.ResponseWriter, r *http.Request)
+	GetTriggersStatus(w http.ResponseWriter, r *http.Request)
 }
 
 type Oauth2Controller interface {

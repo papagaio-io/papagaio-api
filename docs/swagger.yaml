@@ -22,16 +22,10 @@ definitions:
     type: object
   dto.ConfigTriggersDto:
     properties:
-      discoveryRunFailedTriggerLastRun:
-        type: string
-      organizationsTriggerLastRun:
-        type: string
       organizationsTriggerTime:
         type: integer
       runFailedTriggerTime:
         type: integer
-      usersTriggerLastRun:
-        type: string
       usersTriggerTime:
         type: integer
     type: object
@@ -79,6 +73,11 @@ definitions:
   dto.DeleteOrganizationResponseDto:
     properties:
       errorCode:
+        type: string
+    type: object
+  dto.ExternalUserDto:
+    properties:
+      email:
         type: string
     type: object
   dto.GitSourcesDto:
@@ -183,7 +182,7 @@ paths:
         name: email
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/dto.ExternalUserDto'
       produces:
       - application/json
       responses:
@@ -298,6 +297,31 @@ paths:
       security:
       - ApiKeyToken: []
       summary: Delete Organization
+      tags:
+      - Organization
+  /getexternaluser/{organizationRef}:
+    get:
+      description: Return the organization e-mail list of External Users
+      parameters:
+      - description: Organization Name
+        in: path
+        name: organizationRef
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: bad request
+      security:
+      - ApiKeyToken: []
+      summary: Get a list of External Users e-mails
       tags:
       - Organization
   /gettriggersconfig:
@@ -420,7 +444,14 @@ paths:
       - GitSources
   /report:
     get:
-      description: Obtain a full report of all organizations
+      description: Obtain a full report of all organizations. If the "onlyowner" query
+        parameter is specified, only the organizations the user owns will be listed.
+      parameters:
+      - description: ?onlyowner
+        in: query
+        name: onlyowner
+        required: true
+        type: boolean
       produces:
       - application/json
       responses:
@@ -488,7 +519,7 @@ paths:
       - Organization
   /restarttriggers:
     post:
-      description: Restartr timers
+      description: Restart timers
       parameters:
       - description: ?restartAll
         in: query
@@ -534,6 +565,19 @@ paths:
       security:
       - ApiKeyToken: []
       summary: Save time triggers
+      tags:
+      - Triggers
+  /triggersstatus:
+    get:
+      description: Get triggers status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+      security:
+      - ApiKeyToken: []
+      summary: get triggers status
       tags:
       - Triggers
 securityDefinitions:

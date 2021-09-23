@@ -15,16 +15,17 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string, rtDto *dto.TriggersRunTimeDto) {
-	go discoveryRunFails(db, tr, commonMutex, agolaApi, gitGateway, c, rtDto)
-	go discoveryRunFailsTimer(tr, c)
+func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
+	go discoveryRunFails(db, tr, commonMutex, agolaApi, gitGateway, rtDto)
+	go discoveryRunFailsTimer(tr, rtDto)
 }
 
-func discoveryRunFailsTimer(tr utils.ConfigUtils, c chan string) {
+func discoveryRunFailsTimer(tr utils.ConfigUtils, rtDto *dto.TriggerRunTimeDto) {
 	for {
 		log.Println("discoveryRunFailsTimer wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetRunFailedTriggerTime())))
 		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetRunFailedTriggerTime())))
-		c <- "resume"
+		rtDto.Chan <- dto.Trigger
+		rtDto.TimerLastRun = time.Now()
 	}
 }
 
@@ -32,10 +33,15 @@ func discoveryRunFailsTimer(tr utils.ConfigUtils, c chan string) {
 Scan Agola project runs and store it for elaborating of reports.
 If find failed runs send email to users
 */
-func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string, rtDto *dto.TriggersRunTimeDto) {
+func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
+	rtDto.Starter = dto.Trigger
+	rtDto.TimerLastRun = time.Now()
+
 	for {
+		rtDto.IsRunning = true
+
 		log.Println("Start discoveryRunFails")
-		rtDto.DiscoveryRunFailedTriggerLastRun = time.Now()
+		rtDto.TriggerLastRun = time.Now()
 
 		organizationsRef, _ := db.GetOrganizationsRef()
 
@@ -131,7 +137,10 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 			utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
 		}
 
-		fmt.Println("discoveryRunFails:", <-c)
+		rtDto.IsRunning = false
+
+		rtDto.Starter = <-rtDto.Chan
+		fmt.Println("start discoveryRunFails from:", rtDto.Starter)
 	}
 }
 

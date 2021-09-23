@@ -53,7 +53,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/dto.ExternalUserDto"
                         }
                     }
                 ],
@@ -225,6 +225,46 @@ var doc = `{
                     },
                     "500": {
                         "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/getexternaluser/{organizationRef}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyToken": []
+                    }
+                ],
+                "description": "Return the organization e-mail list of External Users",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "summary": "Get a list of External Users e-mails",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization Name",
+                        "name": "organizationRef",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "bad request"
                     }
                 }
             }
@@ -428,7 +468,7 @@ var doc = `{
                         "ApiKeyToken": []
                     }
                 ],
-                "description": "Obtain a full report of all organizations",
+                "description": "Obtain a full report of all organizations. If the \"onlyowner\" query parameter is specified, only the organizations the user owns will be listed.",
                 "produces": [
                     "application/json"
                 ],
@@ -436,6 +476,15 @@ var doc = `{
                     "Organization"
                 ],
                 "summary": "Get Report",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "?onlyowner",
+                        "name": "onlyowner",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "ok",
@@ -537,7 +586,7 @@ var doc = `{
                         "ApiKeyToken": []
                     }
                 ],
-                "description": "Restartr timers",
+                "description": "Restart timers",
                 "produces": [
                     "application/json"
                 ],
@@ -610,6 +659,28 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/triggersstatus": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyToken": []
+                    }
+                ],
+                "description": "Get triggers status",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Triggers"
+                ],
+                "summary": "get triggers status",
+                "responses": {
+                    "200": {
+                        "description": "ok"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -646,20 +717,11 @@ var doc = `{
         "dto.ConfigTriggersDto": {
             "type": "object",
             "properties": {
-                "discoveryRunFailedTriggerLastRun": {
-                    "type": "string"
-                },
-                "organizationsTriggerLastRun": {
-                    "type": "string"
-                },
                 "organizationsTriggerTime": {
                     "type": "integer"
                 },
                 "runFailedTriggerTime": {
                     "type": "integer"
-                },
-                "usersTriggerLastRun": {
-                    "type": "string"
                 },
                 "usersTriggerTime": {
                     "type": "integer"
@@ -733,6 +795,14 @@ var doc = `{
             "type": "object",
             "properties": {
                 "errorCode": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ExternalUserDto": {
+            "type": "object",
+            "properties": {
+                "email": {
                     "type": "string"
                 }
             }

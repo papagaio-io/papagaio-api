@@ -55,10 +55,15 @@ func serve(cmd *cobra.Command, args []string) {
 
 	commonMutex := utils.NewEventMutex()
 
-	chanOrganizationSynk := make(chan string)
-	chanDiscoveryRunFails := make(chan string)
-	chanUserSynk := make(chan string)
-	rtDto := triggerDto.TriggersRunTimeDto{}
+	rtDtoOrganizationSynk := triggerDto.TriggerRunTimeDto{
+		Chan: make(chan triggerDto.TriggerStarter),
+	}
+	rtDtoDiscoveryRunFails := triggerDto.TriggerRunTimeDto{
+		Chan: make(chan triggerDto.TriggerStarter),
+	}
+	rtDtoUserSynk := triggerDto.TriggerRunTimeDto{
+		Chan: make(chan triggerDto.TriggerStarter),
+	}
 
 	ctrlOrganization := service.OrganizationService{
 		Db:          &db,
@@ -81,12 +86,11 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	ctrlTrigger := service.TriggersService{
-		Db:                    &db,
-		Tr:                    tr,
-		ChanOrganizationSynk:  chanOrganizationSynk,
-		ChanDiscoveryRunFails: chanDiscoveryRunFails,
-		ChanUserSynk:          chanUserSynk,
-		RtDto:                 &rtDto,
+		Db:                     &db,
+		Tr:                     tr,
+		RtDtoOrganizationSynk:  &rtDtoOrganizationSynk,
+		RtDtoDiscoveryRunFails: &rtDtoDiscoveryRunFails,
+		RtDtoUserSynk:          &rtDtoUserSynk,
 	}
 
 	sd, err := config.InitTokenSigninData(&config.Config.TokenSigning)
@@ -117,13 +121,13 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	if config.Config.TriggersConfig.StartOrganizationsTrigger {
-		trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanOrganizationSynk, &rtDto)
+		trigger.StartOrganizationSync(&db, tr, &commonMutex, &agolaApi, &gitGateway, &rtDtoOrganizationSynk)
 	}
 	if config.Config.TriggersConfig.StartRunFailedTrigger {
-		trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanDiscoveryRunFails, &rtDto)
+		trigger.StartRunFailsDiscovery(&db, tr, &commonMutex, &agolaApi, &gitGateway, &rtDtoDiscoveryRunFails)
 	}
 	if config.Config.TriggersConfig.StartUsersTrigger {
-		trigger.StartSynkUsers(&db, tr, &commonMutex, &agolaApi, &gitGateway, chanUserSynk, &rtDto)
+		trigger.StartSynkUsers(&db, tr, &commonMutex, &agolaApi, &gitGateway, &rtDtoUserSynk)
 	}
 
 	if e := http.ListenAndServe(":"+config.Config.Server.Port, cors.AllowAll().Handler(logRouter)); e != nil {

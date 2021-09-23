@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
@@ -13,12 +14,11 @@ import (
 )
 
 type TriggersService struct {
-	Db                    repository.Database
-	Tr                    utils.ConfigUtils
-	ChanOrganizationSynk  chan string
-	ChanDiscoveryRunFails chan string
-	ChanUserSynk          chan string
-	RtDto                 *triggerDto.TriggersRunTimeDto
+	Db                     repository.Database
+	Tr                     utils.ConfigUtils
+	RtDtoOrganizationSynk  *triggerDto.TriggerRunTimeDto
+	RtDtoDiscoveryRunFails *triggerDto.TriggerRunTimeDto
+	RtDtoUserSynk          *triggerDto.TriggerRunTimeDto
 }
 
 const RESTART_ALL = "restartAll"
@@ -41,9 +41,6 @@ func (service *TriggersService) GetTriggersConfig(w http.ResponseWriter, r *http
 	dto.OrganizationsTriggerTime = service.Tr.GetOrganizationsTriggerTime()
 	dto.RunFailedTriggerTime = service.Tr.GetRunFailedTriggerTime()
 	dto.UsersTriggerTime = service.Tr.GetUsersTriggerTime()
-	dto.OrganizationsTriggerLastRun = service.RtDto.OrganizationsTriggerLastRun
-	dto.DiscoveryRunFailedTriggerLastRun = service.RtDto.DiscoveryRunFailedTriggerLastRun
-	dto.UsersTriggerLastRun = service.RtDto.UsersTriggerLastRun
 
 	JSONokResponse(w, dto)
 }
@@ -89,7 +86,7 @@ func (service *TriggersService) SaveTriggersConfig(w http.ResponseWriter, r *htt
 }
 
 // @Summary restart triggers
-// @Description Restartr timers
+// @Description Restart timers
 // @Tags Triggers
 // @Produce  json
 // @Param restartAll query bool false "?restartAll"
@@ -109,9 +106,9 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		return
 	}
 	if restartAll {
-		service.ChanDiscoveryRunFails <- "resume from TriggersService"
-		service.ChanOrganizationSynk <- "resume from TriggersService"
-		service.ChanUserSynk <- "resume from TriggersService"
+		service.RtDtoDiscoveryRunFails.Chan <- triggerDto.Service
+		service.RtDtoOrganizationSynk.Chan <- triggerDto.Service
+		service.RtDtoUserSynk.Chan <- triggerDto.Service
 
 		return
 	}
@@ -122,7 +119,7 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		return
 	}
 	if restartOrganizationSynkTrigger {
-		service.ChanOrganizationSynk <- "resume from TriggersService"
+		service.RtDtoOrganizationSynk.Chan <- triggerDto.Service
 	}
 
 	restartRunsFailedDiscoveryTrigger, err := getBoolParameter(r, RESTART_RUNS_FAILED_DISCOVERY_TRIGGER)
@@ -131,7 +128,7 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		return
 	}
 	if restartRunsFailedDiscoveryTrigger {
-		service.ChanDiscoveryRunFails <- "resume from TriggersService"
+		service.RtDtoDiscoveryRunFails.Chan <- triggerDto.Service
 	}
 
 	restartUsersSynkTrigger, err := getBoolParameter(r, RESTART_USERS_SYNK_TRIGGER)
@@ -140,6 +137,38 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		return
 	}
 	if restartUsersSynkTrigger {
-		service.ChanUserSynk <- "resume from TriggersService"
+		service.RtDtoUserSynk.Chan <- triggerDto.Service
 	}
+}
+
+// @Summary get triggers status
+// @Description Get triggers status
+// @Tags Triggers
+// @Produce  json
+// @Success 200 "ok"
+// @Router /triggersstatus [get]
+// @Security ApiKeyToken
+func (service *TriggersService) GetTriggersStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	retVal := dto.TriggersStatusDto{
+		OrganizationStatus:      dto.TriggerDto{},
+		DiscoveryRunFailsStatus: dto.TriggerDto{},
+		UserSynkStatus:          dto.TriggerDto{},
+	}
+
+	retVal.OrganizationStatus.IsRunning = service.RtDtoOrganizationSynk.IsRunning
+	retVal.OrganizationStatus.LastRun = service.RtDtoOrganizationSynk.TriggerLastRun
+	retVal.OrganizationStatus.TimeLeft = uint(time.Until(service.RtDtoOrganizationSynk.TimerLastRun.Add(time.Duration(time.Minute.Nanoseconds() * int64(service.Tr.GetOrganizationsTriggerTime())))))
+
+	retVal.DiscoveryRunFailsStatus.IsRunning = service.RtDtoDiscoveryRunFails.IsRunning
+	retVal.DiscoveryRunFailsStatus.LastRun = service.RtDtoDiscoveryRunFails.TriggerLastRun
+	retVal.DiscoveryRunFailsStatus.TimeLeft = uint(time.Until(service.RtDtoDiscoveryRunFails.TimerLastRun.Add(time.Duration(time.Minute.Nanoseconds() * int64(service.Tr.GetRunFailedTriggerTime())))))
+
+	retVal.UserSynkStatus.IsRunning = service.RtDtoUserSynk.IsRunning
+	retVal.UserSynkStatus.LastRun = service.RtDtoUserSynk.TriggerLastRun
+	retVal.UserSynkStatus.TimeLeft = uint(time.Until(service.RtDtoUserSynk.TimerLastRun.Add(time.Duration(time.Minute.Nanoseconds() * int64(service.Tr.GetUsersTriggerTime())))))
+
+	JSONokResponse(w, retVal)
 }

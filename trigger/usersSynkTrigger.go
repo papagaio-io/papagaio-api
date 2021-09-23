@@ -15,23 +15,29 @@ import (
 	"wecode.sorint.it/opensource/papagaio-api/utils"
 )
 
-func StartSynkUsers(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string, rtDto *dto.TriggersRunTimeDto) {
-	go synkUsersRun(db, tr, commonMutex, agolaApi, gitGateway, c, rtDto)
-	go userRunTimer(tr, c)
+func StartSynkUsers(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
+	go synkUsersRun(db, tr, commonMutex, agolaApi, gitGateway, rtDto)
+	go userRunTimer(tr, rtDto)
 }
 
-func userRunTimer(tr utils.ConfigUtils, c chan string) {
+func userRunTimer(tr utils.ConfigUtils, rtDto *dto.TriggerRunTimeDto) {
 	for {
 		log.Println("userRunTimer wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetUsersTriggerTime())))
 		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetUsersTriggerTime())))
-		c <- "resume"
+		rtDto.Chan <- dto.Trigger
+		rtDto.TimerLastRun = time.Now()
 	}
 }
 
-func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, c chan string, rtDto *dto.TriggersRunTimeDto) {
+func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
+	rtDto.Starter = dto.Trigger
+	rtDto.TimerLastRun = time.Now()
+
 	for {
+		rtDto.IsRunning = true
+
 		log.Println("start users synk")
-		rtDto.UsersTriggerLastRun = time.Now()
+		rtDto.TriggerLastRun = time.Now()
 
 		usersVerifiedOK := make(map[uint64]*model.User)
 
@@ -130,7 +136,10 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 			utils.ReleaseOrganizationMutex(organizationRef, commonMutex)
 		}
 
-		fmt.Println("synkUsersRun:", <-c)
+		rtDto.IsRunning = false
+
+		rtDto.Starter = <-rtDto.Chan
+		fmt.Println("start synkUsersRun from:", rtDto.Starter)
 	}
 }
 

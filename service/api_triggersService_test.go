@@ -24,18 +24,22 @@ func setupTriggerMock(t *testing.T) {
 
 	db = mock_repository.NewMockDatabase(ctl)
 	tr := utils.ConfigUtils{Db: db}
-	chanOrganizationSynk := make(chan string)
+	/*chanOrganizationSynk := make(chan string)
 	chanDiscoveryRunFails := make(chan string)
-	chanUserSynk := make(chan string)
-	rtDto := triggerDto.TriggersRunTimeDto{}
+	chanUserSynk := make(chan string)*/
 
 	serviceTrigger = TriggersService{
-		Db:                    db,
-		Tr:                    tr,
-		ChanOrganizationSynk:  chanOrganizationSynk,
-		ChanDiscoveryRunFails: chanDiscoveryRunFails,
-		ChanUserSynk:          chanUserSynk,
-		RtDto:                 &rtDto,
+		Db: db,
+		Tr: tr,
+		RtDtoOrganizationSynk: &triggerDto.TriggerRunTimeDto{
+			Chan: make(chan triggerDto.TriggerStarter),
+		},
+		RtDtoDiscoveryRunFails: &triggerDto.TriggerRunTimeDto{
+			Chan: make(chan triggerDto.TriggerStarter),
+		},
+		RtDtoUserSynk: &triggerDto.TriggerRunTimeDto{
+			Chan: make(chan triggerDto.TriggerStarter),
+		},
 	}
 }
 
@@ -91,7 +95,7 @@ func TestSaveTriggetsConfigOK(t *testing.T) {
 	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
 }
 
-func getChannel(c chan string) {
+func getChannel(c chan triggerDto.TriggerStarter) {
 	<-c
 }
 
@@ -103,9 +107,9 @@ func TestRestartTriggersOK(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	go getChannel(serviceTrigger.ChanOrganizationSynk)
-	go getChannel(serviceTrigger.ChanDiscoveryRunFails)
-	go getChannel(serviceTrigger.ChanUserSynk)
+	go getChannel(serviceTrigger.RtDtoOrganizationSynk.Chan)
+	go getChannel(serviceTrigger.RtDtoDiscoveryRunFails.Chan)
+	go getChannel(serviceTrigger.RtDtoUserSynk.Chan)
 
 	client := ts.Client()
 	resp, err := client.Get(ts.URL + "/restarttriggers?restartorganizationsynktrigger&restartRunsFailedDiscoveryTrigger&restartUsersSynkTrigger")
@@ -122,9 +126,9 @@ func TestRestartTriggersAllOK(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	go getChannel(serviceTrigger.ChanOrganizationSynk)
-	go getChannel(serviceTrigger.ChanDiscoveryRunFails)
-	go getChannel(serviceTrigger.ChanUserSynk)
+	go getChannel(serviceTrigger.RtDtoOrganizationSynk.Chan)
+	go getChannel(serviceTrigger.RtDtoDiscoveryRunFails.Chan)
+	go getChannel(serviceTrigger.RtDtoUserSynk.Chan)
 
 	client := ts.Client()
 	resp, err := client.Get(ts.URL + "/restarttriggers?restartAll")

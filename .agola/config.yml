@@ -113,10 +113,10 @@ runs:
           - command: |
               echo "branch" $AGOLA_GIT_BRANCH
               if [ $AGOLA_GIT_TAG ]; then
-                buildah bud --format=docker --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.3 --target papagaio -t registry.sorintdev.it/papagaio:$AGOLA_GIT_TAG /buildah/papagaio;
+                buildah bud --format=docker --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.4 --target papagaio -t registry.sorintdev.it/papagaio:$AGOLA_GIT_TAG /buildah/papagaio;
                 buildah push --authfile /buildah/config.json registry.sorintdev.it/papagaio:$AGOLA_GIT_TAG;
               else
-                buildah bud --format=docker --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.3 --target papagaio -t registry.sorintdev.it/papagaio:latest /buildah/papagaio;
+                buildah bud --format=docker --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.4 --target papagaio -t registry.sorintdev.it/papagaio:latest /buildah/papagaio;
                 buildah push --authfile /buildah/config.json registry.sorintdev.it/papagaio:latest; fi
             name: Build image and push
             type: run
@@ -155,7 +155,7 @@ runs:
             name: generate docker config
             type: run
           - command: |
-              buildah bud --format=docker --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.3 --target papagaio -t tulliobotti/papagaio:$AGOLA_GIT_TAG /buildah/papagaio
+              buildah bud --format=docker --build-arg PAPAGAIOWEB_IMAGE=tulliobotti/papagaio-web:v2.0.4 --target papagaio -t tulliobotti/papagaio:$AGOLA_GIT_TAG /buildah/papagaio
               buildah push --authfile /buildah/config.json tulliobotti/papagaio:$AGOLA_GIT_TAG
             name: Build image and push
             type: run

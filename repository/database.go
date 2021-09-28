@@ -54,7 +54,7 @@ func NewAppDb(config config.Configuration) AppDb {
 func (db *AppDb) Init(config config.Configuration) {
 	var err error
 
-	db.DB, err = badger.Open(badger.DefaultOptions(config.Database.DbPath + "/" + config.Database.DbName).WithSyncWrites(true).WithLogger(nil))
+	db.DB, err = badger.Open(badger.DefaultOptions(config.Database.DbPath + "/" + config.Database.DbName).WithSyncWrites(true).WithLogger(nil).WithValueLogFileSize(256 * 1024 * 1024))
 	if err != nil {
 		log.Fatal(err)
 	}

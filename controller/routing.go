@@ -85,6 +85,8 @@ func SetupRouter(signingData *common.TokenSigningData, database repository.Datab
 
 func setupPingRouter(router *mux.Router) {
 	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
 		_, err := w.Write([]byte("Pong"))
 		if err != nil {
 			log.Println("ping error:", err)
@@ -205,6 +207,8 @@ func setupChangeUserRole(router *mux.Router, ctrl UserController) {
 
 func handleLoggedUserWithAdminRoleRoutes(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
 		tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if tokenString == "" {
 			log.Println("Undefined Authorization")
@@ -255,6 +259,8 @@ func handleLoggedUserWithAdminRoleRoutes(h http.Handler) http.Handler {
 
 func handleLoggedUserRoutes(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
 		tokenString := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if tokenString == "" {
 			log.Println("Undefined Authorization")
@@ -305,6 +311,8 @@ func handleLoggedUserRoutes(h http.Handler) http.Handler {
 
 func handleRestrictedAdminRoutes(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
 		if !checkIsAdminUser(r.Header.Get("Authorization")) {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
@@ -319,6 +327,8 @@ func handleRestrictedAdminRoutes(h http.Handler) http.Handler {
 
 func handleRestrictedAllRoutes(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
 		if checkIsAdminUser(r.Header.Get("Authorization")) {
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, AdminUserParameter, true)

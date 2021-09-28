@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"log"
 
-	"github.com/dgraph-io/badger"
+	badger "github.com/dgraph-io/badger/v3"
 	"github.com/google/uuid"
 	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/model"
@@ -54,7 +54,7 @@ func NewAppDb(config config.Configuration) AppDb {
 func (db *AppDb) Init(config config.Configuration) {
 	var err error
 
-	db.DB, err = badger.Open(badger.DefaultOptions(config.Database.DbPath + "/" + config.Database.DbName).WithSyncWrites(true).WithTruncate(true).WithLogger(nil))
+	db.DB, err = badger.Open(badger.DefaultOptions(config.Database.DbPath + "/" + config.Database.DbName).WithSyncWrites(true).WithLogger(nil))
 	if err != nil {
 		log.Fatal(err)
 	}

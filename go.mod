@@ -5,7 +5,7 @@ go 1.15
 require (
 	code.gitea.io/sdk/gitea v0.14.1
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/dgraph-io/badger v1.6.2
+	github.com/dgraph-io/badger/v3 v3.2103.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/go-bindata/go-bindata v1.0.0

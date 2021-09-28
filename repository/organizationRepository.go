@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/dgraph-io/badger"
+	badger "github.com/dgraph-io/badger/v3"
 	"wecode.sorint.it/opensource/papagaio-api/model"
 )
 

@@ -4,7 +4,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/dgraph-io/badger"
+	badger "github.com/dgraph-io/badger/v3"
 )
 
 const organizationTriggerTime string = "organizationTriggerTime"

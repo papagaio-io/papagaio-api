@@ -17,24 +17,12 @@ import (
 
 func StartSynkUsers(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
 	go synkUsersRun(db, tr, commonMutex, agolaApi, gitGateway, rtDto)
-	go userRunTimer(tr, rtDto)
-}
-
-func userRunTimer(tr utils.ConfigUtils, rtDto *dto.TriggerRunTimeDto) {
-	for {
-		log.Println("userRunTimer wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetUsersTriggerTime())))
-		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetUsersTriggerTime())))
-		rtDto.Chan <- dto.Trigger
-		rtDto.TimerLastRun = time.Now()
-	}
 }
 
 func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
-	rtDto.Starter = dto.Trigger
-	rtDto.TimerLastRun = time.Now()
-
 	for {
 		rtDto.IsRunning = true
+		rtDto.TimerLastRun = time.Now()
 
 		log.Println("start users synk")
 		rtDto.TriggerLastRun = time.Now()
@@ -138,8 +126,14 @@ func synkUsersRun(db repository.Database, tr utils.ConfigUtils, commonMutex *uti
 
 		rtDto.IsRunning = false
 
-		rtDto.Starter = <-rtDto.Chan
-		fmt.Println("start synkUsersRun from:", rtDto.Starter)
+		fmt.Println("synkUsersRun end")
+
+		select {
+		case message := <-rtDto.Chan:
+			fmt.Println("synkUsersRun message:", message)
+
+		case <-time.After(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetUsersTriggerTime()))):
+		}
 	}
 }
 

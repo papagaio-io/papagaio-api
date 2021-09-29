@@ -32,13 +32,13 @@ func setupTriggerMock(t *testing.T) {
 		Db: db,
 		Tr: tr,
 		RtDtoOrganizationSynk: &triggerDto.TriggerRunTimeDto{
-			Chan: make(chan triggerDto.TriggerStarter),
+			Chan: make(chan triggerDto.TriggerMessage),
 		},
 		RtDtoDiscoveryRunFails: &triggerDto.TriggerRunTimeDto{
-			Chan: make(chan triggerDto.TriggerStarter),
+			Chan: make(chan triggerDto.TriggerMessage),
 		},
 		RtDtoUserSynk: &triggerDto.TriggerRunTimeDto{
-			Chan: make(chan triggerDto.TriggerStarter),
+			Chan: make(chan triggerDto.TriggerMessage),
 		},
 	}
 }
@@ -95,7 +95,7 @@ func TestSaveTriggetsConfigOK(t *testing.T) {
 	assert.Equal(t, resp.StatusCode, http.StatusOK, "http StatusCode is not OK")
 }
 
-func getChannel(c chan triggerDto.TriggerStarter) {
+func getChannel(c chan triggerDto.TriggerMessage) {
 	<-c
 }
 

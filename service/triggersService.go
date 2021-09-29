@@ -2,10 +2,12 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"time"
 
+	"wecode.sorint.it/opensource/papagaio-api/config"
 	"wecode.sorint.it/opensource/papagaio-api/dto"
 	"wecode.sorint.it/opensource/papagaio-api/repository"
 	"wecode.sorint.it/opensource/papagaio-api/utils"
@@ -106,9 +108,9 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		return
 	}
 	if restartAll {
-		service.RtDtoDiscoveryRunFails.Chan <- triggerDto.Service
-		service.RtDtoOrganizationSynk.Chan <- triggerDto.Service
-		service.RtDtoUserSynk.Chan <- triggerDto.Service
+		service.RtDtoDiscoveryRunFails.Chan <- triggerDto.Restart
+		service.RtDtoOrganizationSynk.Chan <- triggerDto.Restart
+		service.RtDtoUserSynk.Chan <- triggerDto.Restart
 
 		return
 	}
@@ -119,7 +121,7 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		return
 	}
 	if restartOrganizationSynkTrigger {
-		service.RtDtoOrganizationSynk.Chan <- triggerDto.Service
+		service.RtDtoOrganizationSynk.Chan <- triggerDto.Restart
 	}
 
 	restartRunsFailedDiscoveryTrigger, err := getBoolParameter(r, RESTART_RUNS_FAILED_DISCOVERY_TRIGGER)
@@ -128,7 +130,7 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		return
 	}
 	if restartRunsFailedDiscoveryTrigger {
-		service.RtDtoDiscoveryRunFails.Chan <- triggerDto.Service
+		service.RtDtoDiscoveryRunFails.Chan <- triggerDto.Restart
 	}
 
 	restartUsersSynkTrigger, err := getBoolParameter(r, RESTART_USERS_SYNK_TRIGGER)
@@ -137,8 +139,56 @@ func (service *TriggersService) RestartTriggers(w http.ResponseWriter, r *http.R
 		return
 	}
 	if restartUsersSynkTrigger {
-		service.RtDtoUserSynk.Chan <- triggerDto.Service
+		service.RtDtoUserSynk.Chan <- triggerDto.Restart
 	}
+}
+
+func (service *TriggersService) restartOrganizationSynkTrigger() error {
+	if !config.Config.TriggersConfig.StartOrganizationsTrigger {
+		return errors.New("OrganizationsTrigger is disabled")
+	}
+	if service.RtDtoOrganizationSynk == nil {
+		return errors.New("OrganizationsTrigger nil")
+	}
+	if service.RtDtoOrganizationSynk.IsRunning {
+		return errors.New("OrganizationsTrigger can't restart at the moment")
+	}
+
+	service.RtDtoOrganizationSynk.Chan <- triggerDto.Restart
+
+	return nil
+}
+
+func (service *TriggersService) restartRunsFailedDiscoveryTrigger() error {
+	if !config.Config.TriggersConfig.StartRunFailedTrigger {
+		return errors.New("RunsFailedDiscoveryTrigger is disabled")
+	}
+	if service.RtDtoDiscoveryRunFails == nil {
+		return errors.New("RunsFailedDiscoveryTrigger nil")
+	}
+	if service.RtDtoDiscoveryRunFails.IsRunning {
+		return errors.New("RunsFailedDiscoveryTrigger can't restart at the moment")
+	}
+
+	service.RtDtoDiscoveryRunFails.Chan <- triggerDto.Restart
+
+	return nil
+}
+
+func (service *TriggersService) restartUsersSynkTrigger() error {
+	if !config.Config.TriggersConfig.StartUsersTrigger {
+		return errors.New("UsersSynkTrigger is disabled")
+	}
+	if service.RtDtoUserSynk == nil {
+		return errors.New("UsersSynkTrigger nil")
+	}
+	if service.RtDtoUserSynk.IsRunning {
+		return errors.New("UsersSynkTrigger can't restart at the moment")
+	}
+
+	service.RtDtoUserSynk.Chan <- triggerDto.Restart
+
+	return nil
 }
 
 // @Summary get triggers status

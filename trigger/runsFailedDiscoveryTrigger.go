@@ -17,16 +17,6 @@ import (
 
 func StartRunFailsDiscovery(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
 	go discoveryRunFails(db, tr, commonMutex, agolaApi, gitGateway, rtDto)
-	go discoveryRunFailsTimer(tr, rtDto)
-}
-
-func discoveryRunFailsTimer(tr utils.ConfigUtils, rtDto *dto.TriggerRunTimeDto) {
-	for {
-		log.Println("discoveryRunFailsTimer wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetRunFailedTriggerTime())))
-		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetRunFailedTriggerTime())))
-		rtDto.Chan <- dto.Trigger
-		rtDto.TimerLastRun = time.Now()
-	}
 }
 
 /*
@@ -34,11 +24,9 @@ Scan Agola project runs and store it for elaborating of reports.
 If find failed runs send email to users
 */
 func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
-	rtDto.Starter = dto.Trigger
-	rtDto.TimerLastRun = time.Now()
-
 	for {
 		rtDto.IsRunning = true
+		rtDto.TimerLastRun = time.Now()
 
 		log.Println("Start discoveryRunFails")
 		rtDto.TriggerLastRun = time.Now()
@@ -139,8 +127,14 @@ func discoveryRunFails(db repository.Database, tr utils.ConfigUtils, commonMutex
 
 		rtDto.IsRunning = false
 
-		rtDto.Starter = <-rtDto.Chan
-		fmt.Println("start discoveryRunFails from:", rtDto.Starter)
+		fmt.Println("discoveryRunFails end")
+
+		select {
+		case message := <-rtDto.Chan:
+			fmt.Println("discoveryRunFails message:", message)
+
+		case <-time.After(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetRunFailedTriggerTime()))):
+		}
 	}
 }
 

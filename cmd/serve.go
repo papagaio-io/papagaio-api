@@ -56,13 +56,13 @@ func serve(cmd *cobra.Command, args []string) {
 	commonMutex := utils.NewEventMutex()
 
 	rtDtoOrganizationSynk := triggerDto.TriggerRunTimeDto{
-		Chan: make(chan triggerDto.TriggerStarter),
+		Chan: make(chan triggerDto.TriggerMessage),
 	}
 	rtDtoDiscoveryRunFails := triggerDto.TriggerRunTimeDto{
-		Chan: make(chan triggerDto.TriggerStarter),
+		Chan: make(chan triggerDto.TriggerMessage),
 	}
 	rtDtoUserSynk := triggerDto.TriggerRunTimeDto{
-		Chan: make(chan triggerDto.TriggerStarter),
+		Chan: make(chan triggerDto.TriggerMessage),
 	}
 
 	ctrlOrganization := service.OrganizationService{

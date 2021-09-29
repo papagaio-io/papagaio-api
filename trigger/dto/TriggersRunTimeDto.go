@@ -3,16 +3,15 @@ package dto
 import "time"
 
 type TriggerRunTimeDto struct {
-	Chan           chan TriggerStarter
-	Starter        TriggerStarter
+	Chan           chan TriggerMessage
 	TriggerLastRun time.Time
 	TimerLastRun   time.Time
 	IsRunning      bool
 }
 
-type TriggerStarter string
+type TriggerMessage string
 
 const (
-	Trigger TriggerStarter = "TRIGGER"
-	Service TriggerStarter = "SERVICE"
+	Restart TriggerMessage = "RESTART"
+	Stop    TriggerMessage = "STOP"
 )

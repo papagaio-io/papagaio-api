@@ -16,25 +16,13 @@ import (
 
 func StartOrganizationSync(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
 	go syncOrganizationRun(db, tr, commonMutex, agolaApi, gitGateway, rtDto)
-	go syncOrganizationRunTimer(tr, rtDto)
-}
-
-func syncOrganizationRunTimer(tr utils.ConfigUtils, rtDto *dto.TriggerRunTimeDto) {
-	for {
-		log.Println("syncOrganizationRunTimer wait for", time.Duration(time.Minute.Nanoseconds()*int64(tr.GetOrganizationsTriggerTime())))
-		time.Sleep(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetOrganizationsTriggerTime())))
-		rtDto.Chan <- dto.Trigger
-		rtDto.TimerLastRun = time.Now()
-	}
 }
 
 //Synchronize projects and members of organizations
 func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMutex *utils.CommonMutex, agolaApi agola.AgolaApiInterface, gitGateway *git.GitGateway, rtDto *dto.TriggerRunTimeDto) {
-	rtDto.Starter = dto.Trigger
-	rtDto.TimerLastRun = time.Now()
-
 	for {
 		rtDto.IsRunning = true
+		rtDto.TimerLastRun = time.Now()
 
 		log.Println("start syncOrganizationRun")
 		rtDto.TriggerLastRun = time.Now()
@@ -164,7 +152,13 @@ func syncOrganizationRun(db repository.Database, tr utils.ConfigUtils, commonMut
 
 		rtDto.IsRunning = false
 
-		rtDto.Starter = <-rtDto.Chan
-		fmt.Println("start syncOrganizationRun from:", rtDto.Starter)
+		fmt.Println("syncOrganizationRun end")
+
+		select {
+		case message := <-rtDto.Chan:
+			fmt.Println("syncOrganizationRun message:", message)
+
+		case <-time.After(time.Duration(time.Minute.Nanoseconds() * int64(tr.GetOrganizationsTriggerTime()))):
+		}
 	}
 }
